@@ -26,3 +26,9 @@ dist-ssr
 .json
 .examples
 .env.example
+.env
+.env.*
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
