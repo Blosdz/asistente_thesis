@@ -1,0 +1,472 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Choose Advisor - Student Portal</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'ios-blue': '#007AFF',
+              'ios-gray': '#8E8E93',
+              'ios-bg': '#F2F2F7',
+              primary: '#007AFF', // Updated to vibrant light blue
+            },
+            fontFamily: {
+              sans: [
+                'Inter',
+                '-apple-system',
+                'BlinkMacSystemFont',
+                'SF Pro Text',
+                'SF Pro Display',
+                'sans-serif',
+              ],
+            },
+            borderRadius: {
+              DEFAULT: '0.5rem',
+              lg: '0.75rem',
+              xl: '1rem',
+              '2xl': '1.5rem',
+              '3xl': '2rem',
+              full: '9999px',
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        background-color: #f0f2f5;
+        background-image:
+          radial-gradient(
+            at 0% 0%,
+            rgba(199, 210, 254, 0.5) 0,
+            transparent 50%
+          ),
+          radial-gradient(
+            at 50% 0%,
+            rgba(224, 231, 255, 0.5) 0,
+            transparent 50%
+          ),
+          radial-gradient(
+            at 100% 0%,
+            rgba(254, 202, 202, 0.3) 0,
+            transparent 50%
+          ),
+          radial-gradient(
+            at 0% 100%,
+            rgba(191, 219, 254, 0.4) 0,
+            transparent 50%
+          ),
+          radial-gradient(
+            at 100% 100%,
+            rgba(219, 234, 254, 0.4) 0,
+            transparent 50%
+          );
+        background-attachment: fixed;
+      }
+      .glass-card {
+        background: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+          0 10px 30px -5px rgba(0, 0, 0, 0.05);
+      }
+      .glass-nav {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      }
+    </style>
+  </head>
+  <body
+    class="font-sans text-slate-900 min-h-screen transition-colors duration-300"
+  >
+    <!-- Persistent Top Navigation (Styled like SCREEN_7) -->
+    <header class="glass-nav sticky top-0 z-50 px-8 py-4">
+      <div class="max-w-[1400px] mx-auto flex items-center justify-between">
+        <div class="flex items-center gap-8">
+          <div class="flex items-center gap-4">
+            <div
+              class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-xl"
+            >
+              M
+            </div>
+            <div>
+              <h1 class="text-xl font-bold">Mock Student</h1>
+              <p class="text-sm text-ios-gray">Mi Tesis de Prueba</p>
+            </div>
+          </div>
+          <nav class="hidden md:flex items-center gap-2">
+            <a
+              class="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              href="#"
+              >Documento</a
+            >
+            <a
+              class="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              href="#"
+              >Observaciones</a
+            >
+            <a
+              class="px-6 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium"
+              href="#"
+              >Servicios</a
+            >
+            <a
+              class="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              href="#"
+              >Estadística</a
+            >
+          </nav>
+        </div>
+        <div class="flex items-center gap-4">
+          <button
+            class="hidden sm:block px-6 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg text-sm font-bold"
+          >
+            Soporte WhatsApp
+          </button>
+          <button
+            class="px-6 py-2 bg-red-500 text-white rounded-lg text-sm font-bold"
+          >
+            Salir
+          </button>
+        </div>
+      </div>
+    </header>
+    <main class="max-w-[1400px] mx-auto px-8 py-10">
+      <!-- Hero Section -->
+      <div class="mb-12">
+        <h1
+          class="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4"
+        >
+          Choose Your Advisor
+        </h1>
+        <p class="text-lg text-gray-600 max-w-2xl leading-relaxed">
+          Connect with experienced mentors who can guide your academic path and
+          career aspirations.
+        </p>
+      </div>
+      <!-- Filter Bar -->
+      <div class="flex flex-wrap items-center gap-4 mb-10">
+        <div class="flex-1 min-w-[300px]">
+          <div class="relative">
+            <span
+              class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-ios-gray font-light"
+              >search</span
+            >
+            <input
+              class="w-full glass-card rounded-2xl py-3.5 pl-12 pr-4 text-gray-900 border-none focus:ring-2 focus:ring-ios-blue shadow-sm placeholder:text-ios-gray/60"
+              placeholder="Search by name, specialty, or department..."
+              type="text"
+            />
+          </div>
+        </div>
+        <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+          <button
+            class="px-6 py-2.5 rounded-full bg-ios-blue text-white font-bold text-sm shadow-lg shadow-ios-blue/20"
+          >
+            All
+          </button>
+          <button
+            class="px-6 py-2.5 rounded-full glass-card text-gray-700 font-semibold text-sm hover:bg-white/60 transition-all border-white/50"
+          >
+            Academic
+          </button>
+          <button
+            class="px-6 py-2.5 rounded-full glass-card text-gray-700 font-semibold text-sm hover:bg-white/60 transition-all border-white/50"
+          >
+            Career
+          </button>
+          <button
+            class="px-6 py-2.5 rounded-full glass-card text-gray-700 font-semibold text-sm hover:bg-white/60 transition-all border-white/50"
+          >
+            Financial
+          </button>
+          <button
+            class="px-6 py-2.5 rounded-full glass-card text-gray-700 font-semibold text-sm hover:bg-white/60 transition-all border-white/50"
+          >
+            Research
+          </button>
+        </div>
+      </div>
+      <!-- Advisor Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- Advisor Card 1 -->
+        <div
+          class="glass-card rounded-3xl p-8 flex flex-col hover:translate-y-[-4px] transition-all duration-300"
+        >
+          <div class="flex items-start justify-between mb-6">
+            <div class="relative">
+              <div
+                class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/50 shadow-sm"
+              >
+                <img
+                  alt="Advisor Portrait"
+                  class="w-full h-full object-cover"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuD503S5MJtmeDviClO1vBMnQ6N4kQkNEiu4ffC2nVg6qltNDu4xvDwIYq8biOBL8jul-lRRtQzrDLuG7Fe5zQ5JWwtZLhe7GGWhNRshoCjRaVhstRdlWbhnpEjIhGdgiVDbfr5-qXkE9lS8elHzTz6VwMljjRN5xBnElCuaSGBGDculxyYUC6LFw1ZsgV9kyQKQ6x17D0xM9wt36SeXfUb4N4MMwHBqcvaJN22FN_9Do5ZMv3pu2Cgj94paW9wq9tTqJrU14a0_hNw"
+                />
+              </div>
+              <div
+                class="absolute -bottom-1.5 -right-1.5 bg-green-500 w-5 h-5 rounded-full border-4 border-white shadow-sm"
+                title="Online"
+              ></div>
+            </div>
+            <div
+              class="flex items-center gap-1 bg-ios-blue/10 text-ios-blue px-3 py-1 rounded-full text-sm font-bold"
+            >
+              <span
+                class="material-symbols-outlined text-sm leading-none font-bold"
+                >star</span
+              >
+              <span>4.9</span>
+            </div>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-1">
+            Dr. Sarah Jenkins
+          </h3>
+          <p class="text-ios-blue font-semibold text-sm mb-4">
+            Senior Academic Advisor
+          </p>
+          <p class="text-gray-600 text-sm mb-8 leading-relaxed line-clamp-2">
+            Specializing in STEM curriculum planning and international student
+            placement with over 12 years of experience.
+          </p>
+          <div class="flex flex-wrap gap-2 mb-8 mt-auto">
+            <span
+              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
+              >Curriculum</span
+            >
+            <span
+              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
+              >Research</span
+            >
+            <span
+              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
+              >STEM</span
+            >
+          </div>
+          <button
+            class="w-full py-4 bg-ios-blue text-white rounded-2xl font-bold shadow-xl shadow-ios-blue/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            Book Session
+            <span class="material-symbols-outlined text-lg font-light"
+              >calendar_today</span
+            >
+          </button>
+        </div>
+        <!-- Advisor Card 2 -->
+        <div
+          class="glass-card rounded-3xl p-8 flex flex-col hover:translate-y-[-4px] transition-all duration-300"
+        >
+          <div class="flex items-start justify-between mb-6">
+            <div class="relative">
+              <div
+                class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/50 shadow-sm"
+              >
+                <img
+                  alt="Advisor Portrait"
+                  class="w-full h-full object-cover"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdDkzb1r-831wYI-ZF4u60_Z-gWMVdwK0-F5QJXGQ7oMe1IqYVbv-sac_SuONvI3chU-HnTJYzf7e42r92M5lkzAf73dQZSKk4QLi-HfPChAsnYWQP7sX3NY_v5SCj0SxhSkJu4jbFWWXyVbTcxHaoTAFFEu2y1vgqlwpIeLNg5M4Rdj8WRop3X0qU76Of60hks6gVtNPA8V59U1UISj7AFtUzyxvjYSaDXKyu6ABkRKvZnZXnjaEGuYxEiD9pzjiLPFs9iCZPu5I"
+                />
+              </div>
+              <div
+                class="absolute -bottom-1.5 -right-1.5 bg-gray-400 w-5 h-5 rounded-full border-4 border-white shadow-sm"
+                title="Offline"
+              ></div>
+            </div>
+            <div
+              class="flex items-center gap-1 bg-ios-blue/10 text-ios-blue px-3 py-1 rounded-full text-sm font-bold"
+            >
+              <span
+                class="material-symbols-outlined text-sm leading-none font-bold"
+                >star</span
+              >
+              <span>4.8</span>
+            </div>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-1">Michael Chen</h3>
+          <p class="text-ios-blue font-semibold text-sm mb-4">
+            Career Strategy Lead
+          </p>
+          <p class="text-gray-600 text-sm mb-8 leading-relaxed line-clamp-2">
+            Helping students navigate internship applications and tech industry
+            interview preparation since 2015.
+          </p>
+          <div class="flex flex-wrap gap-2 mb-8 mt-auto">
+            <span
+              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
+              >Tech</span
+            >
+            <span
+              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
+              >Interviews</span
+            >
+            <span
+              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
+              >Networking</span
+            >
+          </div>
+          <button
+            class="w-full py-4 bg-ios-blue text-white rounded-2xl font-bold shadow-xl shadow-ios-blue/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            Book Session
+            <span class="material-symbols-outlined text-lg font-light"
+              >calendar_today</span
+            >
+          </button>
+        </div>
+        <!-- Advisor Card 3 -->
+        <div
+          class="glass-card rounded-3xl p-8 flex flex-col hover:translate-y-[-4px] transition-all duration-300"
+        >
+          <div class="flex items-start justify-between mb-6">
+            <div class="relative">
+              <div
+                class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/50 shadow-sm"
+              >
+                <img
+                  alt="Advisor Portrait"
+                  class="w-full h-full object-cover"
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeJy4A2lWKeY8NoL89eNWNY154uq4egc5d893Ulb-JDIbv7L2wmYOdbZcWMPYX8wbqSNiexuM5JW-dzd_wsTVnRlvEKcJlFAxwCpBCFHFExYU9aU4ML-7I1LZsOyBUm5HtgRzMRBs4x22OBV0o4fzoqdIdkHEOq5rWswqF5r30e7oA14L23tkqDeGcJlTmAI2pC9aEJw8W8UsuN8pByZjozYM5FxQf6yZJNwD3t9srDcojGbZYVwdcV-UX2kq01R9xtZFG4ZVXwBw"
+                />
+              </div>
+              <div
+                class="absolute -bottom-1.5 -right-1.5 bg-green-500 w-5 h-5 rounded-full border-4 border-white shadow-sm"
+                title="Online"
+              ></div>
+            </div>
+            <div
+              class="flex items-center gap-1 bg-ios-blue/10 text-ios-blue px-3 py-1 rounded-full text-sm font-bold"
+            >
+              <span
+                class="material-symbols-outlined text-sm leading-none font-bold"
+                >star</span
+              >
+              <span>5.0</span>
+            </div>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-1">Elena Rodriguez</h3>
+          <p class="text-ios-blue font-semibold text-sm mb-4">
+            Financial Planning Advisor
+          </p>
+          <p class="text-gray-600 text-sm mb-8 leading-relaxed line-clamp-2">
+            Expert in scholarship applications, FAFSA guidance, and student
+            budget management strategies.
+          </p>
+          <div class="flex flex-wrap gap-2 mb-8 mt-auto">
+            <span
+              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
+              >Finance</span
+            >
+            <span
+              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
+              >Grants</span
+            >
+            <span
+              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
+              >Scholarships</span
+            >
+          </div>
+          <button
+            class="w-full py-4 bg-ios-blue text-white rounded-2xl font-bold shadow-xl shadow-ios-blue/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            Book Session
+            <span class="material-symbols-outlined text-lg font-light"
+              >calendar_today</span
+            >
+          </button>
+        </div>
+      </div>
+      <!-- Match Assistance Callout (Styled like Priority Action in SCREEN_7) -->
+      <div
+        class="mt-16 glass-card rounded-[40px] p-12 bg-gradient-to-br from-white/60 to-white/20 relative overflow-hidden"
+      >
+        <div
+          class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8"
+        >
+          <div class="text-center md:text-left">
+            <div
+              class="w-16 h-16 bg-ios-blue rounded-3xl flex items-center justify-center text-white shadow-xl shadow-ios-blue/30 mb-6 mx-auto md:mx-0"
+            >
+              <span class="material-symbols-outlined text-3xl font-light"
+                >handshake</span
+              >
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900 mb-3 tracking-tight">
+              Can't find the right match?
+            </h2>
+            <p class="text-gray-600 max-w-lg leading-relaxed">
+              Our concierge team can help pair you with an advisor based on your
+              specific academic goals and needs.
+            </p>
+          </div>
+          <button
+            class="whitespace-nowrap bg-ios-blue text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-2xl shadow-ios-blue/40 hover:scale-[1.02] active:scale-95 transition-all"
+          >
+            Request Match Assistance
+          </button>
+        </div>
+        <!-- Decorative elements inspired by SCREEN_7 -->
+        <div
+          class="absolute -top-10 -right-10 w-40 h-40 bg-blue-400/10 rounded-full blur-3xl"
+        ></div>
+        <div
+          class="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-400/10 rounded-full blur-3xl"
+        ></div>
+      </div>
+    </main>
+    <footer
+      class="max-w-[1400px] mx-auto px-8 py-12 border-t border-white/30 mt-12"
+    >
+      <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <p class="text-ios-gray text-sm">
+          © 2024 Academic Excellence Portal. All rights reserved.
+        </p>
+        <div class="flex gap-8">
+          <a
+            class="text-ios-gray text-sm hover:text-ios-blue transition-colors"
+            href="#"
+            >Support</a
+          >
+          <a
+            class="text-ios-gray text-sm hover:text-ios-blue transition-colors"
+            href="#"
+            >Privacy Policy</a
+          >
+          <a
+            class="text-ios-gray text-sm hover:text-ios-blue transition-colors"
+            href="#"
+            >Terms of Service</a
+          >
+        </div>
+      </div>
+    </footer>
+    <script>
+      // Standard system preference handler
+      if (
+        window.matchMedia &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+      ) {
+        // Keeping it light for the bone-colored glass pop requested
+        // document.documentElement.classList.add('dark');
+      }
+    </script>
+  </body>
+</html>

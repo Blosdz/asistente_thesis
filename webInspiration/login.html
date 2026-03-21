@@ -1,0 +1,200 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Student Portal - Login</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;900&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#007AFF', // Updated to vibrant iOS blue for the request
+              'background-light': '#F2F2F7',
+              'background-dark': '#1C1C1E',
+            },
+            fontFamily: {
+              display: [
+                'Public Sans',
+                'SF Pro Display',
+                'system-ui',
+                'sans-serif',
+              ],
+            },
+            borderRadius: {
+              DEFAULT: '0.5rem',
+              lg: '0.75rem',
+              xl: '1.25rem', // iOS style more rounded
+              full: '9999px',
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+      .dark .glass-card {
+        background: rgba(28, 28, 30, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .ios-blur-nav {
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        background: rgba(255, 255, 255, 0.5);
+      }
+      .dark .ios-blur-nav {
+        background: rgba(28, 28, 30, 0.5);
+      }
+      .bg-abstract-gradient {
+        background: radial-gradient(circle at 0% 0%, #fdfcfb 0%, #e2d1c3 100%);
+      }
+    </style>
+  </head>
+  <body
+    class="font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased overflow-hidden"
+  >
+    <!-- Dynamic Abstract Background -->
+    <div
+      class="fixed inset-0 z-0 bg-abstract-gradient dark:bg-none dark:bg-zinc-900"
+      data-alt="Dynamic bone colored abstract gradient background"
+    ></div>
+    <div class="relative z-10 flex h-screen w-full flex-col overflow-x-hidden">
+      <!-- Persistent Top Navigation Bar -->
+      <main class="flex flex-1 items-center justify-center p-6">
+        <!-- Glassmorphism Login Card -->
+        <div
+          class="glass-card w-full max-w-[420px] rounded-xl p-8 shadow-2xl shadow-slate-200/50 dark:shadow-black/50 border border-white/50 dark:border-white/10"
+        >
+          <div class="mb-8 text-center">
+            <h1
+              class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white mb-2"
+            >
+              Welcome Back
+            </h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm">
+              Sign in to continue to your dashboard
+            </p>
+          </div>
+          <form class="space-y-5">
+            <!-- Username/Email Input -->
+            <div class="flex flex-col gap-1.5">
+              <label
+                class="text-[13px] font-medium text-slate-500 dark:text-slate-400 ml-1"
+                >Username or Email</label
+              >
+              <div class="relative group">
+                <div
+                  class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors"
+                >
+                  <span class="material-symbols-outlined text-xl">person</span>
+                </div>
+                <input
+                  class="block w-full rounded-xl border-none bg-slate-100/50 dark:bg-slate-800/50 py-3.5 pl-11 pr-4 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                  placeholder="name@university.edu"
+                  type="text"
+                />
+              </div>
+            </div>
+            <!-- Password Input -->
+            <div class="flex flex-col gap-1.5">
+              <div class="flex justify-between items-center ml-1 pr-1">
+                <label
+                  class="text-[13px] font-medium text-slate-500 dark:text-slate-400"
+                  >Password</label
+                >
+                <a
+                  class="text-[13px] font-medium text-primary hover:opacity-80 transition-opacity"
+                  href="#"
+                  >Forgot?</a
+                >
+              </div>
+              <div class="relative group">
+                <div
+                  class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors"
+                >
+                  <span class="material-symbols-outlined text-xl">lock</span>
+                </div>
+                <input
+                  class="block w-full rounded-xl border-none bg-slate-100/50 dark:bg-slate-800/50 py-3.5 pl-11 pr-12 text-slate-900 dark:text-white placeholder:text-slate-400 focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                  placeholder="••••••••"
+                  type="password"
+                />
+                <button
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  type="button"
+                >
+                  <span class="material-symbols-outlined text-xl"
+                    >visibility</span
+                  >
+                </button>
+              </div>
+            </div>
+            <!-- Login Button -->
+            <button
+              class="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] mt-4"
+              type="submit"
+            >
+              Sign In
+            </button>
+          </form>
+          <div class="mt-8 flex flex-col gap-4 text-center">
+            <div
+              class="flex items-center gap-4 text-slate-300 dark:text-slate-700"
+            >
+              <div class="h-px w-full bg-current"></div>
+              <span
+                class="text-xs uppercase tracking-widest font-semibold text-slate-400"
+                >or</span
+              >
+              <div class="h-px w-full bg-current"></div>
+            </div>
+            <!-- Face ID / Touch ID Hint (iOS style) -->
+            <div class="flex justify-center gap-6">
+              <button
+                class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all"
+              >
+                <span class="material-symbols-outlined">face</span>
+              </button>
+              <button
+                class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-100/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-700/50 transition-all"
+              >
+                <span class="material-symbols-outlined">fingerprint</span>
+              </button>
+            </div>
+            <p class="text-sm text-slate-500 dark:text-slate-400">
+              Don't have an account?
+              <a class="text-primary font-semibold hover:underline" href="#"
+                >Sign up</a
+              >
+            </p>
+          </div>
+        </div>
+      </main>
+      <footer
+        class="p-6 text-center text-xs text-slate-400 dark:text-slate-600"
+      >
+        © 2024 University Student Portal. All rights reserved.
+      </footer>
+    </div>
+  </body>
+</html>

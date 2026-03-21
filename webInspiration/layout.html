@@ -1,0 +1,403 @@
+<!doctype html>
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Mock Student - Dashboard de Tesis</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Google Fonts - Using Inter as a close web-safe alternative to SF Pro -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              'ios-blue': '#007AFF',
+              'ios-gray': '#8E8E93',
+              'ios-bg': '#F2F2F7',
+              'ios-card': 'rgba(255, 255, 255, 0.8)',
+            },
+          },
+        },
+      };
+    </script>
+    <style data-purpose="glassmorphism">
+      .glass-card {
+        background: rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(25px) saturate(180%);
+        -webkit-backdrop-filter: blur(25px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+      }
+      .ios-scroll::-webkit-scrollbar {
+        width: 6px;
+      }
+      .ios-scroll::-webkit-scrollbar-thumb {
+        background-color: #c7c7cc;
+        border-radius: 10px;
+      }
+      body {
+        background-color: #f0f2f5;
+        background-image:
+          radial-gradient(
+            at 0% 0%,
+            rgba(199, 210, 254, 0.5) 0,
+            transparent 50%
+          ),
+          radial-gradient(
+            at 50% 0%,
+            rgba(224, 231, 255, 0.5) 0,
+            transparent 50%
+          ),
+          radial-gradient(
+            at 100% 0%,
+            rgba(254, 202, 202, 0.3) 0,
+            transparent 50%
+          ),
+          radial-gradient(
+            at 0% 100%,
+            rgba(191, 219, 254, 0.4) 0,
+            transparent 50%
+          ),
+          radial-gradient(
+            at 100% 100%,
+            rgba(219, 234, 254, 0.4) 0,
+            transparent 50%
+          );
+        background-attachment: fixed;
+      }
+    </style>
+  </head>
+  <body class="font-sans text-gray-900 min-h-screen">
+    <!-- BEGIN: MainHeader -->
+    <header
+      class="sticky top-0 z-50 glass-card border-b border-gray-200 px-8 py-4"
+      data-purpose="top-navigation"
+    >
+      <div class="max-w-[1400px] mx-auto flex items-center justify-between">
+        <!-- Profile Info -->
+        <div class="flex items-center gap-4">
+          <div
+            class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-xl"
+          >
+            M
+          </div>
+          <div>
+            <h1 class="text-xl font-bold">Mock Student</h1>
+            <p class="text-sm text-ios-gray">Mi Tesis de Prueba</p>
+          </div>
+        </div>
+        <!-- Navigation Tabs -->
+        <nav class="flex items-center gap-2">
+          <button
+            class="px-6 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium"
+          >
+            Documento
+          </button>
+          <button
+            class="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+          >
+            Observaciones
+          </button>
+          <button
+            class="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+          >
+            Servicios
+          </button>
+          <button
+            class="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+          >
+            Estadística
+          </button>
+          <button
+            class="px-6 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg text-sm font-bold ml-4"
+          >
+            Soporte WhatsApp
+          </button>
+          <button
+            class="px-6 py-2 bg-red-500 text-white rounded-lg text-sm font-bold ml-2"
+          >
+            Salir
+          </button>
+        </nav>
+      </div>
+      <!-- Status Bar Below Nav -->
+      <div
+        class="max-w-[1400px] mx-auto mt-4 flex flex-wrap items-center justify-between text-xs text-ios-gray"
+      >
+        <div class="flex gap-6">
+          <span
+            >Estado de revisión:
+            <strong class="text-gray-900">Borrador</strong></span
+          >
+          <span
+            >Checklist:
+            <strong class="text-gray-900"
+              >1 pend · 0 prog · 1 list</strong
+            ></span
+          >
+        </div>
+        <div class="flex items-center gap-4">
+          <span>Avance</span>
+          <div class="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div class="bg-ios-blue h-full" style="width: 0%"></div>
+          </div>
+          <span class="font-bold">0%</span>
+          <button
+            class="bg-ios-blue text-white px-6 py-1.5 rounded-xl font-bold shadow-lg shadow-blue-200"
+          >
+            Pagar
+          </button>
+        </div>
+      </div>
+      <!-- Selection Bar -->
+      <div
+        class="max-w-[1400px] mx-auto mt-4 pt-4 border-t border-gray-100 flex gap-8 text-xs font-medium text-gray-500"
+      >
+        <span
+          >Formato: <strong class="text-gray-900 uppercase">Otros</strong></span
+        >
+        <span>Selección: <strong class="text-gray-900">0</strong></span>
+        <span>Total: <strong class="text-gray-900">S/ 0</strong></span>
+        <span class="ml-auto italic"
+          >Selecciona partes de la tesis para habilitar el pago.</span
+        >
+      </div>
+    </header>
+    <!-- END: MainHeader -->
+    <main class="max-w-[1400px] mx-auto p-8 flex gap-8">
+      <!-- BEGIN: LeftSidebar -->
+      <aside class="w-1/4 flex flex-col gap-6" data-purpose="chapter-sidebar">
+        <div class="flex justify-between items-center mb-2 px-2">
+          <span
+            class="text-xs font-semibold text-gray-500 uppercase tracking-wider"
+            >Partes de la tesis</span
+          >
+          <button class="text-xs text-ios-blue font-medium underline">
+            Limpiar
+          </button>
+        </div>
+        <!-- Capítulo I -->
+        <div class="glass-card rounded-3xl p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-sm font-bold w-2/3 leading-tight">
+              Capítulo I: Planteamiento del problema
+            </h3>
+            <button
+              class="text-xs border border-white/40 bg-white/20 px-3 py-1 rounded-full text-gray-600"
+            >
+              Todo
+            </button>
+          </div>
+          <div class="w-full h-1 bg-black/5 rounded-full mb-4">
+            <div class="bg-ios-blue h-full w-0"></div>
+          </div>
+          <span class="text-[10px] text-gray-500 block mb-4">0%</span>
+          <ul class="space-y-3">
+            <li class="flex items-center justify-between text-xs text-gray-700">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  class="rounded border-gray-300 text-ios-blue focus:ring-0 bg-white/50"
+                  type="checkbox"
+                />
+                Introducción
+              </label>
+              <span class="font-medium">S/ 120</span>
+            </li>
+            <li class="flex items-center justify-between text-xs text-gray-700">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  class="rounded border-gray-300 text-ios-blue focus:ring-0 bg-white/50"
+                  type="checkbox"
+                />
+                Realidad problemática
+              </label>
+              <span class="font-medium">S/ 120</span>
+            </li>
+            <li class="flex items-center justify-between text-xs text-gray-700">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  class="rounded border-gray-300 text-ios-blue focus:ring-0 bg-white/50"
+                  type="checkbox"
+                />
+                Formulación del problema
+              </label>
+              <span class="font-medium">S/ 120</span>
+            </li>
+            <li class="flex items-center justify-between text-xs text-gray-700">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  class="rounded border-gray-300 text-ios-blue focus:ring-0 bg-white/50"
+                  type="checkbox"
+                />
+                Objetivos
+              </label>
+              <span class="font-medium">S/ 120</span>
+            </li>
+            <li class="flex items-center justify-between text-xs text-gray-700">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  class="rounded border-gray-300 text-ios-blue focus:ring-0 bg-white/50"
+                  type="checkbox"
+                />
+                Justificación
+              </label>
+              <span class="font-medium">S/ 120</span>
+            </li>
+          </ul>
+        </div>
+        <!-- Capítulo II -->
+        <div class="glass-card rounded-3xl p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-sm font-bold w-2/3 leading-tight">
+              Capítulo II: Marco Teórico
+            </h3>
+            <button
+              class="text-xs border border-white/40 bg-white/20 px-3 py-1 rounded-full text-gray-600"
+            >
+              Todo
+            </button>
+          </div>
+          <div class="w-full h-1 bg-black/5 rounded-full mb-6"></div>
+          <ul class="space-y-3">
+            <li class="flex items-center justify-between text-xs text-gray-700">
+              <label class="flex items-center gap-2 cursor-pointer"
+                ><input
+                  class="rounded border-gray-300 text-ios-blue focus:ring-0 bg-white/50"
+                  type="checkbox"
+                />
+                Marco teórico</label
+              >
+              <span class="font-medium">S/ 250</span>
+            </li>
+            <li class="flex items-center justify-between text-xs text-gray-700">
+              <label class="flex items-center gap-2 cursor-pointer"
+                ><input
+                  class="rounded border-gray-300 text-ios-blue focus:ring-0 bg-white/50"
+                  type="checkbox"
+                />
+                Antecedentes</label
+              >
+              <span class="font-medium">S/ 250</span>
+            </li>
+          </ul>
+        </div>
+        <!-- Capítulo III -->
+        <div class="glass-card rounded-3xl p-6">
+          <div class="flex justify-between items-start mb-4">
+            <h3 class="text-sm font-bold w-2/3 leading-tight">
+              Capítulo III: Marco Metodológico
+            </h3>
+            <button
+              class="text-xs border border-white/40 bg-white/20 px-3 py-1 rounded-full text-gray-600"
+            >
+              Todo
+            </button>
+          </div>
+          <div class="w-full h-1 bg-black/5 rounded-full mb-6"></div>
+          <p class="text-[10px] text-gray-500">0%</p>
+        </div>
+      </aside>
+      <!-- END: LeftSidebar -->
+      <!-- BEGIN: MainContent -->
+      <div
+        class="w-3/4 flex flex-col gap-8"
+        data-purpose="document-upload-workspace"
+      >
+        <!-- Upload Card -->
+        <section class="glass-card rounded-3xl p-10">
+          <div class="flex justify-between items-start mb-6">
+            <div>
+              <h2 class="text-lg font-bold">Documento</h2>
+              <p class="text-sm text-gray-600 mt-1">
+                Sube tu archivo y trabaja desde aquí.
+              </p>
+            </div>
+            <span class="text-xs text-gray-500"
+              >Registro: <strong class="text-gray-900">Sí</strong></span
+            >
+          </div>
+          <div class="flex flex-col items-center justify-center py-8">
+            <p class="text-sm text-gray-500 mb-6">
+              Aún no has subido tu archivo.
+            </p>
+            <button
+              class="bg-ios-blue text-white px-8 py-3 rounded-xl font-bold text-base shadow-lg shadow-blue-400/30 transition-transform active:scale-95"
+            >
+              Seleccionar archivo
+            </button>
+          </div>
+          <!-- Google Doc Link -->
+          <div
+            class="mt-10 border border-white/30 rounded-2xl p-4 flex items-center justify-between bg-white/20"
+          >
+            <div class="flex flex-col gap-1">
+              <span class="text-[10px] font-bold text-gray-500 uppercase"
+                >Registrado</span
+              >
+              <a
+                class="text-xs text-ios-blue hover:underline transition-colors"
+                href="#"
+                >https://docs.google.com/document/d/mock-drive-doc-id/edit</a
+              >
+            </div>
+            <span class="text-xs font-bold text-gray-900">Sí</span>
+          </div>
+        </section>
+        <!-- Preview Card -->
+        <section class="glass-card rounded-3xl p-10">
+          <div class="mb-10">
+            <h2 class="text-lg font-bold">Previsualización</h2>
+            <p class="text-sm text-gray-600 mt-1">
+              En producción: anotaciones, highlights y control de versiones.
+            </p>
+          </div>
+          <!-- Dropzone Area -->
+          <div
+            class="border-2 border-dashed border-white/40 rounded-[40px] p-20 flex flex-col items-center justify-center text-center bg-white/10"
+          >
+            <h3 class="text-xl font-bold text-gray-900 mb-2">
+              Arrastra tu PDF o Word aquí
+            </h3>
+            <p class="text-sm text-gray-600 mb-8 max-w-md">
+              O selecciona un archivo. Esta área será el visor principal del
+              sistema.
+            </p>
+            <div class="flex items-center gap-4">
+              <button
+                class="bg-ios-blue text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg shadow-blue-400/30"
+              >
+                Seleccionar archivo
+              </button>
+              <button
+                class="bg-white/40 border border-white/50 text-gray-800 px-8 py-3 rounded-xl font-bold text-sm backdrop-blur-md"
+              >
+                Cancelar
+              </button>
+            </div>
+            <p class="text-[10px] text-gray-500 mt-8 uppercase tracking-widest">
+              Formatos: PDF, DOC, DOCX · Tamaño recomendado: &lt; 15MB (demo).
+            </p>
+          </div>
+        </section>
+      </div>
+      <!-- END: MainContent -->
+    </main>
+    <style data-purpose="custom-styling">
+      /* Precise iOS 17 glass effect refinements */
+      .glass-card {
+        box-shadow:
+          inset 0 0 0 1px rgba(255, 255, 255, 0.5),
+          0 10px 30px -5px rgba(0, 0, 0, 0.05);
+      }
+    </style>
+  </body>
+</html>
