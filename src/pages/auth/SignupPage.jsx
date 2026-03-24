@@ -10,7 +10,7 @@ import {
   EyeOff,
   CheckCircle2,
 } from 'lucide-react';
-import { registrarEstudiante } from '../../services/authService';
+import { registrarAsesor, registrarEstudiante } from '../../services/authService';
 import { clsx } from 'clsx';
 
 const SignupPage = () => {
@@ -29,12 +29,11 @@ const SignupPage = () => {
     setIsLoading(true);
 
     try {
-      // Currently only student registration is available
-      if (role !== 'student') {
-        throw new Error('Advisor registration coming soon');
+      if (role === 'student') {
+        await registrarEstudiante(email, password);
+      } else {
+        await registrarAsesor(email, password);
       }
-
-      await registrarEstudiante(email, password);
 
       // Registration successful, redirect to login
       navigate('/login', {

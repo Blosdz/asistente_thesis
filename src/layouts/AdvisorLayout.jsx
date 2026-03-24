@@ -7,9 +7,16 @@ import {
   LogOut,
   Settings,
   Phone,
+  KeyRound,
+  Copy,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getCurrentUser, logout } from '../services/authService';
+import {
+  generarCodigoAsesor,
+  obtenerMiCodigoPublicoAsesor,
+} from '../services/advisorService';
+import { toast } from 'react-hot-toast';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -20,6 +27,8 @@ function cn(...inputs) {
 const AdvisorLayout = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [codigoPublico, setCodigoPublico] = useState(null);
+  const [codigoLoading, setCodigoLoading] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -35,6 +44,19 @@ const AdvisorLayout = () => {
     fetchUser();
   }, [navigate]);
 
+  useEffect(() => {
+    const fetchCodigo = async () => {
+      try {
+        const codigo = await obtenerMiCodigoPublicoAsesor();
+        setCodigoPublico(codigo);
+      } catch (error) {
+        console.error('Failed to fetch advisor public code:', error);
+      }
+    };
+
+    fetchCodigo();
+  }, []);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -43,6 +65,48 @@ const AdvisorLayout = () => {
       console.error('Logout failed:', error);
     }
   };
+
+  const handleGenerateCodigo = async () => {
+    if (codigoLoading) return;
+
+    if (codigoPublico?.r_codigo_publico) {
+      const confirmed = window.confirm(
+        'Ya tienes un código activo. Si generas otro, el anterior se desactivará. ¿Deseas continuar?',
+      );
+
+      if (!confirmed) return;
+    }
+
+    try {
+      setCodigoLoading(true);
+      const nuevoCodigo = await generarCodigoAsesor();
+      setCodigoPublico(nuevoCodigo);
+    } catch (error) {
+      console.error('Error generando código público:', error);
+      alert('No se pudo generar el código. Intenta nuevamente.');
+    } finally {
+      setCodigoLoading(false);
+    }
+  };
+
+  const handleCopyCodigo = async () => {
+    if (!codigoTexto) return;
+
+    try {
+      await navigator.clipboard.writeText(codigoTexto);
+      toast.success('Copiado con éxito', {
+        className: 'animate-in slide-in-from-bottom-4 duration-300',
+      });
+    } catch (error) {
+      console.error('Error copying code:', error);
+      alert('No se pudo copiar el código.');
+    }
+  };
+
+  const codigoTexto = codigoPublico?.r_codigo_publico;
+  const codigoExpira = codigoPublico?.r_expira_en
+    ? new Date(codigoPublico.r_expira_en).toLocaleDateString()
+    : null;
 
   const navItems = [
     {
@@ -99,10 +163,7 @@ const AdvisorLayout = () => {
           <div className="max-w-[1400px] mx-auto flex flex-col gap-4">
             <div className="flex items-center justify-between">
               {/* Profile Info */}
-              <NavLink
-                to="/advisor/profile"
-                className="flex items-center gap-4 hover:opacity-80 transition-opacity"
-              >
+              <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold text-xl uppercase shadow-md">
                   {user?.email?.[0] || 'A'}
                 </div>
@@ -111,8 +172,35 @@ const AdvisorLayout = () => {
                     {user?.email || 'Advisor'}
                   </h1>
                   <p className="text-sm text-ios-blue font-medium">Panel de Asesor</p>
+                  <div className="mt-2 hidden md:flex items-center gap-2 text-xs font-semibold text-slate-600">
+                    <KeyRound size={14} className="text-ios-blue" />
+                    <span>
+                      {codigoTexto ? `Código: ${codigoTexto}` : 'Sin código'}
+                    </span>
+                      {codigoTexto && (
+                        <button
+                          onClick={handleCopyCodigo}
+                          className="ml-1 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold hover:bg-slate-200 transition-colors"
+                          title="Copiar código"
+                        >
+                          <Copy size={12} />
+                          Copiar
+                        </button>
+                      )}
+                    <button
+                      onClick={handleGenerateCodigo}
+                      className="ml-2 px-2.5 py-1 rounded-md bg-ios-blue text-white text-[11px] font-bold hover:bg-blue-600 transition-colors"
+                    >
+                      {codigoTexto ? 'Regenerar' : 'Generar'}
+                    </button>
+                    {codigoExpira && (
+                      <span className="ml-2 text-[11px] text-slate-400">
+                        Expira: {codigoExpira}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </NavLink>
+              </div>
 
               {/* Main Navigation - Liquid Glass */}
               <nav className="hidden lg:flex items-center liquid-glass-dark liquid-nav-container gap-1">

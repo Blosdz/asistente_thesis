@@ -304,3 +304,235 @@ body::after {
     filter: hue-rotate(0deg) contrast(1);
   }
 }
+
+@layer base {
+  :root {
+    --radius-xl: 24px;
+    --radius-lg: 18px;
+    --radius-md: 14px;
+    --radius-sm: 12px;
+
+    --shadow-xs: 0 1px 0 rgba(2, 6, 23, 0.04), 0 1px 8px rgba(2, 6, 23, 0.04);
+    --shadow-sm: 0 1px 0 rgba(2, 6, 23, 0.06), 0 8px 30px rgba(2, 6, 23, 0.08);
+    --shadow-md: 0 1px 0 rgba(2, 6, 23, 0.06), 0 18px 55px rgba(2, 6, 23, 0.12);
+    --shadow-glow: 0 0 0 4px rgba(56, 189, 248, 0.18);
+
+    --border-subtle: rgba(148, 163, 184, 0.28);
+    --glass: rgba(255, 255, 255, 0.78);
+    --glass-strong: rgba(255, 255, 255, 0.88);
+
+    --text-strong: rgb(15 23 42);
+    --text: rgb(30 41 59);
+    --muted: rgb(71 85 105);
+
+    --primary: rgb(2 132 199);
+    --primary-2: rgb(37 99 235);
+    --danger: rgb(225 29 72);
+    --success: rgb(16 185 129);
+
+    --ring: rgba(56, 189, 248, 0.32);
+  }
+}
+
+@layer components {
+  .glass {
+    background: var(--glass);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-radius: var(--radius-xl);
+  }
+
+  .glass-strong {
+    background: var(--glass-strong);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-md);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border-radius: var(--radius-xl);
+  }
+
+  .card-pro {
+    @apply glass;
+    padding: 28px;
+  }
+
+  .title {
+    @apply text-2xl md:text-3xl font-semibold;
+    letter-spacing: -0.03em;
+  }
+
+  .subtitle {
+    @apply text-sm text-slate-600;
+  }
+
+  .input-pro {
+    @apply w-full bg-white/70 text-slate-900 placeholder:text-slate-400;
+    @apply border border-slate-200/70 rounded-2xl px-4 py-3;
+    box-shadow: 0 1px 0 rgba(2, 6, 23, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease,
+      background 150ms ease;
+  }
+
+  .input-pro:focus {
+    outline: none;
+    border-color: rgba(56, 189, 248, 0.55);
+    box-shadow: var(--shadow-xs), var(--shadow-glow);
+    background: rgba(255, 255, 255, 0.85);
+    transform: translateY(-1px);
+  }
+
+  .input-pro:disabled {
+    @apply opacity-60 cursor-not-allowed;
+    transform: none;
+  }
+
+  .select-pro {
+    @apply input-pro;
+    padding-right: 2.75rem;
+    appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, rgba(100, 116, 139, 0.9) 50%),
+      linear-gradient(135deg, rgba(100, 116, 139, 0.9) 50%, transparent 50%);
+    background-position: calc(100% - 18px) calc(1em + 4px), calc(100% - 12px) calc(1em + 4px);
+    background-size: 6px 6px, 6px 6px;
+    background-repeat: no-repeat;
+  }
+
+  .text-area-pro {
+    @apply input-pro;
+    min-height: 120px;
+    resize: vertical;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold;
+    @apply rounded-2xl px-4 py-3;
+    transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease,
+      background 140ms ease, border-color 140ms ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn:active {
+    transform: translateY(1px) scale(0.995);
+    filter: brightness(0.98);
+  }
+
+  .btn:disabled {
+    @apply opacity-60 cursor-not-allowed;
+    transform: none;
+    filter: none;
+  }
+
+  .btn-primary {
+    color: white;
+    background: linear-gradient(135deg, rgba(2, 132, 199, 1), rgba(37, 99, 235, 1));
+    box-shadow: 0 1px 0 rgba(2, 6, 23, 0.08), 0 12px 28px rgba(37, 99, 235, 0.18);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 1px 0 rgba(2, 6, 23, 0.08), 0 18px 44px rgba(37, 99, 235, 0.22);
+  }
+
+  .btn-secondary {
+    @apply bg-white/75 text-slate-800 border border-slate-200/70;
+    box-shadow: var(--shadow-xs);
+  }
+
+  .btn-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+  .btn-danger {
+    color: white;
+    background: linear-gradient(135deg, rgba(225, 29, 72, 1), rgba(244, 63, 94, 1));
+    box-shadow: 0 1px 0 rgba(2, 6, 23, 0.08), 0 12px 28px rgba(225, 29, 72, 0.18);
+  }
+
+  .btn-danger:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 1px 0 rgba(2, 6, 23, 0.08), 0 18px 44px rgba(225, 29, 72, 0.22);
+  }
+
+  .btn-success {
+    color: white;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 1), rgba(5, 150, 105, 1));
+    box-shadow: 0 1px 0 rgba(2, 6, 23, 0.08), 0 12px 28px rgba(16, 185, 129, 0.16);
+  }
+
+  .btn-mini {
+    @apply btn px-3 py-2 text-sm rounded-xl;
+  }
+
+  .icon-btn {
+    @apply inline-flex items-center justify-center;
+    width: 40px;
+    height: 40px;
+    border-radius: 999px;
+    border: 1px solid var(--border-subtle);
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: var(--shadow-xs);
+    transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+  }
+
+  .icon-btn:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-2 text-xs font-semibold;
+    @apply px-3 py-1.5 rounded-full border;
+  }
+
+  .chip-muted {
+    @apply bg-slate-50/80 text-slate-700 border-slate-200/70;
+  }
+
+  .chip-blue {
+    @apply bg-sky-50/80 text-sky-800 border-sky-200/60;
+  }
+
+  .chip-good {
+    @apply bg-emerald-50/80 text-emerald-800 border-emerald-200/60;
+  }
+
+  .alert-pro {
+    @apply rounded-2xl border p-4 text-sm;
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(148, 163, 184, 0.32);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .alert-danger {
+    background: rgba(254, 242, 242, 0.8);
+    border-color: rgba(254, 202, 202, 0.8);
+    color: rgb(190, 18, 60);
+  }
+
+  .alert-info {
+    background: rgba(240, 249, 255, 0.85);
+    border-color: rgba(186, 230, 253, 0.85);
+    color: rgb(7, 89, 133);
+  }
+
+  .fade-in {
+    animation: fadeIn 220ms ease-out both;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

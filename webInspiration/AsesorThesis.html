@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AcademicAdvisor - Thesis Management</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-container": "#007cb1",
+              "surface-container": "#eceef0",
+              "outline-variant": "#c1c6d7",
+              "inverse-primary": "#adc6ff",
+              "error-container": "#ffdad6",
+              "surface-variant": "#e0e3e5",
+              "on-tertiary-container": "#fcfcff",
+              "on-primary-fixed-variant": "#004493",
+              "inverse-on-surface": "#eff1f3",
+              "primary": "#0058bc",
+              "surface-container-highest": "#e0e3e5",
+              "on-tertiary": "#ffffff",
+              "on-surface-variant": "#414755",
+              "background": "#f7f9fb",
+              "on-secondary-fixed": "#0b1c30",
+              "error": "#ba1a1a",
+              "outline": "#717786",
+              "surface-tint": "#005bc1",
+              "surface-container-high": "#e6e8ea",
+              "on-tertiary-fixed-variant": "#004c6e",
+              "on-tertiary-fixed": "#001e2f",
+              "surface": "#f7f9fb",
+              "secondary-container": "#d0e1fb",
+              "tertiary-fixed": "#c9e6ff",
+              "secondary-fixed-dim": "#b7c8e1",
+              "primary-container": "#0070eb",
+              "on-surface": "#191c1e",
+              "on-secondary-fixed-variant": "#38485d",
+              "secondary": "#505f76",
+              "surface-bright": "#f7f9fb",
+              "primary-fixed-dim": "#adc6ff",
+              "primary-fixed": "#d8e2ff",
+              "secondary-fixed": "#d3e4fe",
+              "on-primary-fixed": "#001a41",
+              "on-secondary": "#ffffff",
+              "inverse-surface": "#2d3133",
+              "on-primary": "#ffffff",
+              "on-secondary-container": "#54647a",
+              "on-error": "#ffffff",
+              "tertiary-fixed-dim": "#89ceff",
+              "on-background": "#191c1e",
+              "surface-container-lowest": "#ffffff",
+              "surface-container-low": "#f2f4f6",
+              "on-error-container": "#93000a",
+              "tertiary": "#00628d",
+              "surface-dim": "#d8dadc",
+              "on-primary-container": "#fefcff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .glass-strong {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+        }
+        .tonal-transition {
+            box-shadow: 0 12px 40px rgba(0, 88, 188, 0.06);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-white/70 backdrop-blur-xl flex justify-between items-center px-8 h-20 max-w-full shadow-[0_12px_40px_rgba(0,88,188,0.06)]">
+<div class="flex items-center gap-12">
+<span class="text-2xl font-extrabold tracking-tighter text-blue-700">AcademicAdvisor</span>
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-headline font-bold tracking-tight text-blue-700 border-b-2 border-blue-700 pb-1" href="#">Thesis</a>
+<a class="font-headline font-medium text-slate-500 hover:text-blue-600 transition-colors duration-200" href="#">Documents</a>
+<a class="font-headline font-medium text-slate-500 hover:text-blue-600 transition-colors duration-200" href="#">Observations</a>
+<a class="font-headline font-medium text-slate-500 hover:text-blue-600 transition-colors duration-200" href="#">Services</a>
+<a class="font-headline font-medium text-slate-500 hover:text-blue-600 transition-colors duration-200" href="#">Stats</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex items-center bg-surface-container-low px-4 py-2 rounded-full">
+<span class="material-symbols-outlined text-slate-400 mr-2">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm w-48 font-medium" placeholder="Search projects..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-blue-50 rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-blue-50 rounded-full transition-colors duration-200">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm">
+<img alt="Advisor Profile" class="w-full h-full object-cover" data-alt="Portrait of a professional academic advisor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3T3i0foGf8C7-wu3CgWBiRBNg5Mnf58N0LnCslT17Nmv-Sj4tVmpETY3AJZMNApFQbPBz7gvixYE1dGq9phNBC1Xw-qiL8_Ad6wQcokb5mpEnwrXDHukOGFbBFr1SYyEruoazir1JTMPJbepxmwYfrF95-xAvMftttdRYYLbv4GDxQRBa0D5n5Y57BpmfxWZ5F_3xYlHb0QYeJUsMoJ7tJ4y9he74o2o8p15xz-tkx7R_eeFeU1YJQalf9vFZVr_WxvXla3F1ln2J"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex pt-20 h-screen overflow-hidden">
+<!-- SideNavBar (Student List) -->
+<aside class="hidden lg:flex flex-col p-6 h-screen w-80 bg-slate-50 border-r-0 sticky top-0 overflow-y-auto">
+<div class="mb-8 px-2">
+<h2 class="text-xl font-black text-blue-700 tracking-tight">Active Research</h2>
+<p class="text-xs text-slate-500 font-semibold uppercase tracking-wider mt-1">12 Projects in Progress</p>
+</div>
+<div class="flex flex-col gap-2">
+<!-- Active Item -->
+<button class="flex flex-col gap-1 bg-white p-4 rounded-xl shadow-sm border-l-4 border-blue-600 text-left transition-transform active:translate-x-1">
+<div class="flex justify-between items-start">
+<span class="text-sm font-bold text-slate-900">Julian Casablancas</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">En Revisión</span>
+</div>
+<p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">Neural Networks in Modern Urban Planning</p>
+</button>
+<!-- Inactive Items -->
+<button class="flex flex-col gap-1 p-4 rounded-xl hover:bg-slate-200/50 text-left transition-all">
+<div class="flex justify-between items-start">
+<span class="text-sm font-semibold text-slate-700">Sarah Jenkins</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">Completado</span>
+</div>
+<p class="text-xs text-slate-400 line-clamp-1">Renewable Energy Infrastructure</p>
+</button>
+<button class="flex flex-col gap-1 p-4 rounded-xl hover:bg-slate-200/50 text-left transition-all">
+<div class="flex justify-between items-start">
+<span class="text-sm font-semibold text-slate-700">Marcus Wright</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full">Pendiente</span>
+</div>
+<p class="text-xs text-slate-400 line-clamp-1">Quantum Computing Ethics</p>
+</button>
+<button class="flex flex-col gap-1 p-4 rounded-xl hover:bg-slate-200/50 text-left transition-all">
+<div class="flex justify-between items-start">
+<span class="text-sm font-semibold text-slate-700">Elena Rossi</span>
+<span class="text-[10px] font-bold px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">En Revisión</span>
+</div>
+<p class="text-xs text-slate-400 line-clamp-1">Macroeconomics in the Digital Age</p>
+</button>
+</div>
+<div class="mt-auto pt-6 border-t border-slate-200">
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 text-slate-500 px-4 py-3 hover:bg-slate-200/50 rounded-xl transition-all font-semibold text-sm" href="#">
+<span class="material-symbols-outlined">help_outline</span>
+<span>Help Center</span>
+</a>
+<a class="flex items-center gap-3 text-error px-4 py-3 hover:bg-error-container/20 rounded-xl transition-all font-semibold text-sm" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</nav>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto bg-surface p-8 lg:p-12">
+<div class="max-w-5xl mx-auto">
+<!-- Thesis Header -->
+<div class="mb-12">
+<nav class="flex items-center gap-2 text-slate-400 text-xs font-bold uppercase tracking-widest mb-4">
+<span>Projects</span>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-blue-600">Thesis Detail</span>
+</nav>
+<h1 class="text-4xl lg:text-5xl font-extrabold tracking-tight text-on-surface leading-tight mb-4">
+                        Neural Networks in Modern <br/>Urban Planning
+                    </h1>
+<div class="flex flex-wrap gap-4 items-center">
+<div class="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm">
+<div class="w-6 h-6 rounded-full overflow-hidden">
+<img alt="Student" class="w-full h-full object-cover" data-alt="Student profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEgUfPc5Gni0Gbw_ISS58j4isag3-nf8AKCPopNtE4eQLXtVKbfKxOkhG7khKSBx0Zj2DZj1TeKX-F7FJZ33wbeFQIZ86iWAb_DzIUkBDG7R4pdBzCJFG0IacznMxrcigZeEvLj68q9iU6qBL3x5dv58AYLdnfKG2x0M4S7XioPDm7g7C6Mi8DhizNpKejZAjVZFynSLhm4v55KmqrSV-7YZNMLlW1l3cPxYGvKsD6omngn0ufe0ECH402a6QHro6WksZtVah5rD4P"/>
+</div>
+<span class="text-sm font-bold text-slate-700">Julian Casablancas</span>
+</div>
+<div class="h-1 w-1 bg-slate-300 rounded-full"></div>
+<span class="text-sm font-medium text-slate-500">Last updated: Oct 24, 2023</span>
+<span class="text-xs font-bold px-3 py-1 bg-primary text-white rounded-full">Masters Degree</span>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Document History Card -->
+<div class="md:col-span-2 glass-strong rounded-lg p-8 shadow-[0_12px_40px_rgba(0,88,188,0.06)] flex flex-col">
+<div class="flex justify-between items-center mb-8">
+<h3 class="text-xl font-bold tracking-tight">Document History</h3>
+<button class="text-sm font-bold text-blue-600 hover:underline">View All</button>
+</div>
+<div class="space-y-6">
+<div class="flex items-start gap-4 p-4 rounded-xl hover:bg-blue-50/50 transition-colors">
+<div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-blue-700">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<h4 class="font-bold text-slate-800">Final_Draft_V2.pdf</h4>
+<span class="text-xs font-semibold text-slate-400">Yesterday, 14:20</span>
+</div>
+<p class="text-xs text-slate-500 mt-1">Chapter 4: Implementation and Results</p>
+<div class="mt-3 flex gap-2">
+<button class="text-[10px] font-bold px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full transition-all">Download</button>
+<button class="text-[10px] font-bold px-3 py-1 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-full transition-all">Add Review</button>
+</div>
+</div>
+</div>
+<div class="flex items-start gap-4 p-4 rounded-xl opacity-60">
+<div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+<span class="material-symbols-outlined">description</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<h4 class="font-bold text-slate-800">Literature_Review_Draft.pdf</h4>
+<span class="text-xs font-semibold text-slate-400">Oct 12, 2023</span>
+</div>
+<p class="text-xs text-slate-500 mt-1">Preliminary research and bibliography</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Sidebar Stats / Quick Info -->
+<div class="space-y-6">
+<div class="glass-strong rounded-lg p-6 shadow-[0_12px_40px_rgba(0,88,188,0.06)] border-t-4 border-blue-600">
+<h3 class="text-lg font-bold mb-4">Project Status</h3>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-sm font-medium text-slate-500">Progress</span>
+<span class="text-sm font-bold text-blue-700">65%</span>
+</div>
+<div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-blue-600 rounded-full" style="width: 65%"></div>
+</div>
+<div class="pt-4 space-y-3">
+<div class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-emerald-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-slate-700">Proposal Approved</span>
+</div>
+<div class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-emerald-500 text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-slate-700">Research Complete</span>
+</div>
+<div class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-slate-300 text-sm">radio_button_unchecked</span>
+<span class="text-slate-400">Final Defense</span>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-blue-700 rounded-lg p-6 text-white shadow-xl">
+<h3 class="font-bold mb-2">Upcoming Meeting</h3>
+<p class="text-xs text-blue-100 mb-4 font-medium">Discussion on Chapter 4 findings</p>
+<div class="flex items-center gap-3 mb-6">
+<span class="material-symbols-outlined text-xl">calendar_today</span>
+<span class="text-sm font-bold">Oct 28, 2023 — 10:00 AM</span>
+</div>
+<button class="w-full bg-white text-blue-700 py-3 rounded-xl font-bold text-sm hover:scale-[1.02] transition-transform">
+                                Join Video Call
+                            </button>
+</div>
+</div>
+<!-- Upload Section (Full Width) -->
+<div class="md:col-span-3">
+<div class="bg-white/40 border-2 border-dashed border-blue-200 rounded-lg p-12 text-center hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer group">
+<div class="w-20 h-20 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl text-blue-600">upload_file</span>
+</div>
+<h3 class="text-2xl font-bold text-slate-800 mb-2">Upload Feedback</h3>
+<p class="text-slate-500 mb-8 max-w-sm mx-auto font-medium">Arrastra aquí tu documento o haz clic para subir observaciones o versiones corregidas.</p>
+<div class="flex justify-center gap-4">
+<button class="px-8 py-4 bg-primary text-white rounded-full font-bold shadow-lg shadow-blue-600/20 hover:scale-105 transition-all">
+                                    Select File
+                                </button>
+<button class="px-8 py-4 bg-white text-slate-600 rounded-full font-bold shadow-sm border border-slate-100 hover:bg-slate-50 transition-all">
+                                    Open Drive
+                                </button>
+</div>
+<p class="text-[10px] text-slate-400 mt-8 font-bold uppercase tracking-widest">Supports PDF, DOCX, ZIP (Max 50MB)</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

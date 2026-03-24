@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from "@/lib/supabase";
 
 export async function registrarEstudiante(email: string, password: string) {
   const { data, error } = await supabase.auth.signUp({
@@ -6,7 +6,22 @@ export async function registrarEstudiante(email: string, password: string) {
     password,
     options: {
       data: {
-        rol: 'estudiante',
+        rol: "estudiante",
+      },
+    },
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function registrarAsesor(email: string, password: string) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        rol: "asesor",
       },
     },
   });
@@ -23,6 +38,18 @@ export async function loginEstudiante(email: string, password: string) {
 
   if (error) throw error;
   return data;
+}
+
+export async function loginUsuario(email: string, password: string) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) throw error;
+
+  const role = data?.user?.user_metadata?.rol || "estudiante";
+  return { ...data, role };
 }
 
 export async function logout() {

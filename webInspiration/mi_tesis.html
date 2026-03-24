@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Editorial Scholar - Thesis Workspace</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-surface": "#2a3439",
+              "tertiary-dim": "#53506b",
+              "primary-container": "#d6e3ff",
+              "on-secondary-fixed-variant": "#4d5d73",
+              "outline-variant": "#a9b4b9",
+              "inverse-surface": "#0b0f10",
+              "surface-container-high": "#e1e9ee",
+              "surface-variant": "#d9e4ea",
+              "on-primary": "#f6f7ff",
+              "background": "#f7f9fb",
+              "error-container": "#fe8983",
+              "tertiary-fixed": "#d8d3f4",
+              "surface-dim": "#cfdce3",
+              "secondary-fixed": "#d3e4fe",
+              "inverse-on-surface": "#9a9d9f",
+              "error-dim": "#4e0309",
+              "on-secondary-fixed": "#314055",
+              "on-primary-fixed": "#254067",
+              "tertiary-fixed-dim": "#cac5e6",
+              "tertiary": "#5f5c78",
+              "secondary-container": "#d3e4fe",
+              "outline": "#717c82",
+              "on-secondary": "#f7f9ff",
+              "surface-container": "#e8eff3",
+              "on-tertiary": "#fcf7ff",
+              "primary-dim": "#39537c",
+              "error": "#9f403d",
+              "secondary-dim": "#44546a",
+              "on-surface-variant": "#566166",
+              "on-background": "#2a3439",
+              "tertiary-container": "#d8d3f4",
+              "on-error-container": "#752121",
+              "surface-container-lowest": "#ffffff",
+              "on-secondary-container": "#435368",
+              "surface-container-highest": "#d9e4ea",
+              "on-error": "#fff7f6",
+              "on-tertiary-container": "#4b4863",
+              "secondary-fixed-dim": "#c5d6f0",
+              "surface-container-low": "#f0f4f7",
+              "inverse-primary": "#b3cdfd",
+              "surface-tint": "#455f88",
+              "primary": "#455f88",
+              "on-tertiary-fixed-variant": "#54516d",
+              "surface-bright": "#f7f9fb",
+              "secondary": "#506076",
+              "on-tertiary-fixed": "#38354f",
+              "on-primary-fixed-variant": "#425c85",
+              "primary-fixed-dim": "#bfd5ff",
+              "surface": "#f7f9fb",
+              "on-primary-container": "#38527b",
+              "primary-fixed": "#d6e3ff"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+            color: #2a3439;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #d9e4ea;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="overflow-hidden">
+<!-- TopAppBar -->
+<header class="bg-white/80 dark:bg-slate-950/80 backdrop-blur-md docked full-width top-0 sticky z-50 flex justify-between items-center w-full px-6 py-3 no-border tonal-shift bg-slate-50 dark:bg-slate-900">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tighter text-blue-900 dark:text-blue-50">The Editorial Scholar</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-colors label-md" href="#">Drafts</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-colors label-md" href="#">Archive</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-800 transition-colors label-md" href="#">Citations</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors rounded-full">
+<span class="material-symbols-outlined text-slate-600" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transition-colors rounded-full">
+<span class="material-symbols-outlined text-slate-600" data-icon="settings">settings</span>
+</button>
+<img alt="User Account" class="w-8 h-8 rounded-full object-cover ml-2" data-alt="Close up portrait of a professional scholar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1EbCxq3_U7C90kgr3vEkw01q9bHkcYlRD5J18GPCuKkp86ehPRFH2Zo2bjimJF725sM9WiRc5SDXAinQK2smTu_gI76I1i90Uvd3BaMfv-2dIveaUyyvv-Iv90NCtGSpOi2LCf97BuM2sdW2A8r9M4U513tUby8Vm0BwT6yXNKiDK7YeGRXKwCXIp4I-evVBwkByjKtHFRfpDdlgE6EX4-_ovlUhJbaq6KHzfSWXXtUC4tcpzz0dnKV-EHY7MyN28uHBNw1gBQVXZ"/>
+</div>
+</header>
+<div class="flex h-[calc(100vh-60px)] w-full">
+<!-- SideNavBar / Left Column: Thesis Documents -->
+<aside class="w-72 bg-slate-50 dark:bg-slate-900 flex flex-col no-line bg-slate-100/50 dark:bg-slate-800/50 border-r border-transparent">
+<div class="p-6 space-y-6 flex flex-col h-full">
+<div>
+<button class="w-full bg-gradient-to-r from-primary to-primary-dim text-on-primary py-3 rounded-xl font-semibold shadow-md flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined" data-icon="add" style="font-variation-settings: 'FILL' 0;">add</span>
+                        New Document
+                    </button>
+</div>
+<div class="flex-1 overflow-y-auto custom-scrollbar space-y-2">
+<h3 class="text-xs font-bold uppercase tracking-widest text-on-surface-variant px-4 mb-4">Manuscripts</h3>
+<!-- Active Thesis Card -->
+<div class="bg-white dark:bg-slate-950 text-blue-900 dark:text-blue-100 rounded-xl shadow-sm p-4 cursor-pointer scale-95 transition-transform border border-primary/10">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="description" style="font-variation-settings: 'FILL' 1;">description</span>
+<div class="overflow-hidden">
+<p class="text-sm font-bold truncate">Quantum Dynamics in Neural Nets</p>
+<p class="text-[10px] text-on-surface-variant mt-1">Edited 2h ago</p>
+</div>
+</div>
+</div>
+<!-- Inactive Thesis Card -->
+<div class="p-4 hover:text-blue-700 dark:hover:text-blue-200 hover:bg-slate-200/50 rounded-xl cursor-pointer transition-colors group">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-blue-500" data-icon="description">description</span>
+<div class="overflow-hidden">
+<p class="text-sm font-medium text-slate-700 truncate">Epistemology of Modern AI</p>
+<p class="text-[10px] text-slate-400 mt-1">Edited Dec 12</p>
+</div>
+</div>
+</div>
+<!-- Inactive Thesis Card -->
+<div class="p-4 hover:text-blue-700 dark:hover:text-blue-200 hover:bg-slate-200/50 rounded-xl cursor-pointer transition-colors group">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-blue-500" data-icon="description">description</span>
+<div class="overflow-hidden">
+<p class="text-sm font-medium text-slate-700 truncate">Socio-Economic Impact of Data</p>
+<p class="text-[10px] text-slate-400 mt-1">Edited Nov 28</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Profile Info -->
+<div class="pt-6 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 px-2">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="person">person</span>
+</div>
+<div>
+<p class="text-sm font-bold text-on-surface">Thesis Workspace</p>
+<p class="text-xs text-on-surface-variant">PhD Candidate</p>
+</div>
+</div>
+</div>
+</div>
+</aside>
+<!-- Center Column: Document Viewer -->
+<main class="flex-1 bg-surface overflow-y-auto custom-scrollbar flex flex-col items-center py-12 px-8">
+<div class="w-full max-w-3xl space-y-12 bg-surface-container-lowest p-16 rounded-xl shadow-[0_40px_60px_-15px_rgba(0,0,0,0.06)] min-h-[1200px]">
+<header class="space-y-4 text-center">
+<span class="text-xs font-bold tracking-[0.2em] text-primary uppercase">Chapter 4: Implementation</span>
+<h1 class="text-4xl font-extrabold tracking-tight text-on-surface leading-tight">Quantum Dynamics and the Architecture of Artificial Neural Networks</h1>
+<div class="w-12 h-1 bg-primary-container mx-auto rounded-full"></div>
+</header>
+<div class="space-y-8 text-on-surface leading-[1.8] text-lg">
+<p>
+                        The integration of quantum computing principles into neural network architectures represents a paradigm shift in computational efficiency. As we explore the stochastic nature of gradient descent in high-dimensional spaces, we find that quantum tunneling effects offer a unique perspective on escaping local minima—a challenge that has historically plagued deep learning models.
+                    </p>
+<div class="relative group">
+<img alt="Abstract visualization of neural connections" class="w-full h-80 object-cover rounded-xl shadow-sm grayscale hover:grayscale-0 transition-all duration-700" data-alt="Abstract blue glowing network nodes and lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQsAsQgAn4k-NXXTECgrBRADRADZBMCKa4Xymah2D-tyAz4wP4tVzcMUbt-JuG32YnPBRcO5nV4E3ZAeLVdUVaOKiWTDhMaE-VrGHIkdQ_6JMf_kJF6uh3As2-HfYhb0OzqA_sZlFsJe3aQrd6L0m4RSsMiShWRgChYUOQqY-_88KDinO4t7PVlqjQlhJ1zplqsd01Z8VN2Mp0kOKuTNDPgirR4nFOid2lo9PyflHD_8-e5w--dfW7g6YSwGZOMGVoM0TWMDMCzRY_"/>
+<div class="mt-3 text-sm italic text-on-surface-variant text-center">Fig 4.2: Hypothetical mapping of quantum state superpositions within a three-layer perceptron.</div>
+</div>
+<p>
+                        Our research indicates that by leveraging qubits for weight representation, we can theoretically achieve an exponential increase in data density. However, the decoherence of these states remains the primary obstacle in maintaining consistent predictive accuracy. In the following sections, we will delineate the mathematical framework required to stabilize these interference patterns during the backpropagation phase.
+                    </p>
+<blockquote class="pl-6 border-l-4 border-primary-container italic text-on-surface-variant py-2 bg-surface-container-low rounded-r-lg">
+                        "The most profound breakthroughs in science are often found at the intersection of seemingly disparate disciplines, where the language of one clarifies the mysteries of the other."
+                        <cite class="block mt-2 font-bold not-italic text-xs uppercase tracking-wider text-primary">— Dr. Elena Sterling, 2024</cite>
+</blockquote>
+<p>
+                        Current simulations suggest that even a hybrid approach—utilizing classical nodes for input/output and quantum kernels for hidden layers—can yield significant improvements in natural language processing tasks, particularly those involving complex contextual dependencies.
+                    </p>
+</div>
+</div>
+</main>
+<!-- Right Column: AI Chat Assistant -->
+<aside class="w-96 bg-surface-container border-l border-transparent flex flex-col relative">
+<!-- Header -->
+<div class="p-6 flex items-center justify-between bg-white/40 backdrop-blur-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-bold tracking-tight">Editorial Assistant</span>
+</div>
+<div class="flex gap-1">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+<span class="text-[10px] text-on-surface-variant font-medium uppercase">Active</span>
+</div>
+</div>
+<!-- History -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
+<!-- AI Message -->
+<div class="flex flex-col gap-2 max-w-[85%]">
+<div class="bg-surface-container-lowest p-4 rounded-xl rounded-tl-none shadow-sm">
+<p class="text-sm leading-relaxed">I've analyzed your latest draft of Chapter 4. Would you like me to identify any potential gaps in your citations for the quantum tunneling section?</p>
+</div>
+<span class="text-[10px] text-on-surface-variant font-medium ml-1">10:42 AM</span>
+</div>
+<!-- User Message -->
+<div class="flex flex-col gap-2 max-w-[85%] ml-auto items-end">
+<div class="bg-primary text-on-primary p-4 rounded-xl rounded-tr-none shadow-sm">
+<p class="text-sm leading-relaxed">Yes, please. Also, summarize the main argument of the first three paragraphs.</p>
+</div>
+<span class="text-[10px] text-on-surface-variant font-medium mr-1">10:45 AM</span>
+</div>
+<!-- AI Message (Complex) -->
+<div class="flex flex-col gap-2 max-w-[85%]">
+<div class="bg-surface-container-lowest p-4 rounded-xl rounded-tl-none shadow-sm space-y-3">
+<p class="text-sm leading-relaxed font-bold">Summary of Chapter 4 (Part 1):</p>
+<p class="text-sm leading-relaxed text-on-surface-variant">The text argues that quantum mechanics can solve deep learning's local minima problems, though decoherence remains a critical hurdle for accuracy.</p>
+<div class="pt-2 flex flex-wrap gap-2">
+<span class="px-2 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-bold rounded uppercase">Key Concept: Decoherence</span>
+<span class="px-2 py-1 bg-tertiary-container text-on-tertiary-container text-[10px] font-bold rounded uppercase">Gap: Sterling (2024)</span>
+</div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-medium ml-1">10:46 AM</span>
+</div>
+</div>
+<!-- Quick Actions -->
+<div class="px-6 py-2 flex flex-wrap gap-2">
+<button class="bg-surface-container-highest hover:bg-white text-on-surface text-xs font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]" data-icon="summarize">summarize</span>
+                    Summarize
+                </button>
+<button class="bg-surface-container-highest hover:bg-white text-on-surface text-xs font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]" data-icon="format_quote">format_quote</span>
+                    Find Citations
+                </button>
+<button class="bg-surface-container-highest hover:bg-white text-on-surface text-xs font-semibold px-3 py-1.5 rounded-full transition-colors flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]" data-icon="spellcheck">spellcheck</span>
+                    Grammar
+                </button>
+</div>
+<!-- Input Area -->
+<div class="p-6">
+<div class="relative group">
+<textarea class="w-full bg-surface-container-lowest border-none rounded-xl p-4 pr-12 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-slate-400 resize-none h-24 custom-scrollbar transition-all" placeholder="Ask the assistant anything..."></textarea>
+<button class="absolute bottom-3 right-3 p-2 bg-primary text-on-primary rounded-lg hover:scale-105 transition-transform flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]" data-icon="send">send</span>
+</button>
+</div>
+</div>
+</aside>
+</div>
+</body></html>

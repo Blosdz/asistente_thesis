@@ -191,7 +191,7 @@ const StudentLayout = () => {
         </header>
 
         {/* Main Content Area */}
-        <main className="max-w-[1400px] mx-auto p-4 sm:p-8 flex-1">
+        <main className="w-full px-4 sm:px-8 flex-1">
           <Outlet />
         </main>
       </div>

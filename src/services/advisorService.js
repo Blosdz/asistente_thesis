@@ -62,6 +62,68 @@ export async function obtenerMiCodigoPublicoAsesor() {
   return data?.[0] ?? null;
 }
 
+function mapearPerfilAsesorRPC(raw) {
+  if (!raw) return null;
+  return {
+    tiene_informacion: raw.r_tiene_informacion,
+    asesor_id: raw.r_asesor_id,
+    perfil_id: raw.r_perfil_id,
+    nombre_mostrar: raw.r_nombre_mostrar,
+    universidad_id: raw.r_universidad_id,
+    slug: raw.r_slug,
+    email_publico: raw.r_email_publico,
+    biografia: raw.r_biografia,
+    foto_url: raw.r_foto_url,
+    especialidad_id: raw.r_especialidad_id,
+    carrera: raw.r_carrera,
+    nivel_academico: raw.r_nivel_academico,
+    nombres: raw.r_nombres,
+    apellidos: raw.r_apellidos,
+    dni: raw.r_dni,
+    telefono: raw.r_telefono,
+    creado_en: raw.r_creado_en,
+    mensaje: raw.r_mensaje,
+  };
+}
+
+export async function obtenerPerfilAsesor() {
+  const { data, error } = await atSchema().rpc('obtener_perfil_asesor');
+
+  if (error) {
+    console.error('Error obteniendo perfil de asesor:', error);
+    throw error;
+  }
+
+  const raw = Array.isArray(data) ? data[0] : data;
+  return mapearPerfilAsesorRPC(raw);
+}
+
+export async function guardarPerfilAsesor(perfil) {
+  const { data, error } = await atSchema().rpc('guardar_perfil_asesor', {
+    p_nombre_mostrar: perfil.nombre_mostrar,
+    p_universidad_id: perfil.universidad_id || null,
+    p_slug: perfil.slug,
+    p_email_publico: perfil.email_publico,
+    p_biografia: perfil.biografia,
+    p_foto_url: perfil.foto_url,
+    p_especialidad_id: perfil.especialidad_id || null,
+    p_carrera: perfil.carrera,
+    p_nivel_academico: perfil.nivel_academico,
+    p_nombres: perfil.nombres,
+    p_apellidos: perfil.apellidos,
+    p_dni: perfil.dni,
+    p_telefono: perfil.telefono || null,
+  });
+
+  if (error) {
+    console.error('Error guardando perfil de asesor:', error);
+    throw error;
+  }
+
+  const raw = Array.isArray(data) ? data[0] : data;
+  return mapearPerfilAsesorRPC(raw);
+}
+
 export async function crearScheduleAsesor(params) {
   const { data, error } = await atSchema().rpc('crear_schedule_asesor', params);
   
@@ -98,3 +160,103 @@ export async function crearCitaEstudianteAsesor(params) {
 
   return data;
 }
+
+export async function obtenerEstudiantesAsesor() {
+  const { data, error } = await atSchema().rpc('obtener_estudiantes_asesor');
+
+  if (error) {
+    console.error('Error obteniendo estudiantes del asesor:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function obtenerEstudiantesMisAsesorias() {
+  const { data, error } = await atSchema().rpc('obtener_estudiantes_mis_asesorias');
+
+  if (error) {
+    console.error('Error obteniendo detalles de asesorías:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function cambiarEstadoRelacion(relacionId, nuevoEstado) {
+  const { data, error } = await atSchema().rpc('cambiar_estado_relacion', {
+    p_relacion_id: relacionId,
+    p_estado: nuevoEstado,
+  });
+
+  if (error) {
+    console.error('Error al cambiar estado de la relación:', error);
+    throw error;
+  }
+
+  return data ?? null;
+}
+
+export async function obtenerMisAsesores() {
+  const { data, error } = await atSchema().rpc('obtener_mis_asesores');
+
+  if (error) {
+    console.error('Error obteniendo mis asesores:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function asignarTesisAsesor(relacionId, tesisId) {
+  const { data, error } = await atSchema().rpc('asignar_tesis_asesor', {
+    p_relacion_id: relacionId,
+    p_tesis_id: tesisId,
+  });
+
+  if (error) {
+    console.error('Error asignando tesis al asesor:', error);
+    throw error;
+  }
+
+  return data;
+}
+
+export async function getTesisAsesor() {
+  const { data, error } = await atSchema().rpc('get_tesis_asesor');
+
+  if (error) {
+    console.error('Error obteniendo tesis asignadas:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function getDocumentosApoyo(tesisId) {
+  const { data, error } = await atSchema().rpc('get_estudiante_documentos', {
+    p_tesis_id: tesisId,
+  });
+
+  if (error) {
+    console.error('Error obteniendo documentos de la tesis:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function obtenerSugerenciasAsesor(tesisId) {
+  const { data, error } = await atSchema().rpc('obtener_sugerencias_asesor', {
+    p_tesis_id: tesisId,
+  });
+
+  if (error) {
+    console.error('Error obteniendo sugerencias del asesor:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+

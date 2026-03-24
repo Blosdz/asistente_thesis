@@ -20,7 +20,7 @@ export async function crearMiTesis(payload) {
 
 // Obtener todas mis tesis
 export async function obtenerMisTesis() {
-  const { data, error } = await atSchema().rpc('obtener_mis_tesis');
+  const { data, error } = await atSchema().rpc('get_mis_tesis');
 
   if (error) {
     console.error('Error obteniendo mis tesis:', error);
@@ -51,6 +51,12 @@ export async function subirDocumentoAGoogleDrive({
   modo = 'tesis',
   tipoDocumento = '',
 }) {
+  if (modo === 'estudiante_documento' && !tipoDocumento) {
+    throw new Error(
+      'Se requiere tipo_documento cuando el modo es estudiante_documento',
+    );
+  }
+
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -92,6 +98,38 @@ export async function obtenerDocumentosComplementarios(tesisId) {
 
   if (error) {
     console.error('Error obteniendo documentos complementarios:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function crearSugerenciaAsesor({
+  tesisId,
+  documentoTesisId,
+  sugerencia,
+}) {
+  const { data, error } = await atSchema().rpc('crear_sugerencia_asesor', {
+    p_tesis_id: tesisId,
+    p_documento_tesis_id: documentoTesisId ?? null,
+    p_sugerencia: sugerencia,
+  });
+
+  if (error) {
+    console.error('Error creando sugerencia:', error);
+    throw error;
+  }
+
+  return data?.[0] ?? null;
+}
+
+export async function obtenerSugerenciasMiTesis(tesisId) {
+  const { data, error } = await atSchema().rpc('obtener_sugerencias_mi_tesis', {
+    p_tesis_id: tesisId,
+  });
+
+  if (error) {
+    console.error('Error obteniendo sugerencias:', error);
     throw error;
   }
 

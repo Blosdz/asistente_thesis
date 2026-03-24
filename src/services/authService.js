@@ -15,6 +15,21 @@ export async function registrarEstudiante(email, password) {
   return data;
 }
 
+export async function registrarAsesor(email, password) {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        rol: 'asesor',
+      },
+    },
+  });
+
+  if (error) throw error;
+  return data;
+}
+
 export async function loginEstudiante(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -23,6 +38,18 @@ export async function loginEstudiante(email, password) {
 
   if (error) throw error;
   return data;
+}
+
+export async function loginUsuario(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) throw error;
+
+  const role = data?.user?.user_metadata?.rol || 'estudiante';
+  return { ...data, role };
 }
 
 export async function logout() {

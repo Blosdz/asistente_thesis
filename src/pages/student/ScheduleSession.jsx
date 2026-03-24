@@ -5,6 +5,7 @@ import {
   PlusCircle,
   CheckCircle2,
 } from 'lucide-react';
+import { Button } from '../../components/ui/button';
 
 export default function ScheduleSession() {
   const [selectedSlot, setSelectedSlot] = useState('13:00');
@@ -137,9 +138,9 @@ export default function ScheduleSession() {
                 })}
               </div>
 
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl mt-4 shadow-lg shadow-blue-500/30 transition-all active:scale-95 border border-blue-500 backdrop-blur-sm">
+              <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl mt-4 shadow-lg shadow-blue-500/30 transition-all active:scale-95 border border-blue-500 backdrop-blur-sm">
                 Confirmar Reserva
-              </button>
+              </Button>
             </div>
 
             {/* Advisor Profile Quick Info */}

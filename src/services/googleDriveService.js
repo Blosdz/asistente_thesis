@@ -76,6 +76,10 @@ export function authenticate() {
  * @param {Function} onSelect Callback al seleccionar un archivo.
  */
 export async function openPicker(onSelect) {
+  if (!pickerApiLoaded) {
+    await loadGoogleScripts();
+  }
+
   if (!accessToken) {
     await authenticate();
   }

@@ -5,7 +5,7 @@ import SignupPage from './pages/auth/SignupPage';
 import StudentLayout from './layouts/StudentLayout';
 import Dashboard from './pages/student/Dashboard';
 import AdditionalDocuments from './pages/student/AdditionalDocuments';
-import MyThesis from './pages/student/MyThesis';
+import MyThesisWorkspace from './pages/student/MyThesisWorkspace';
 import Observations from './pages/student/Observations';
 import Services from './pages/student/Services';
 import AdvisorCatalog from './pages/student/AdvisorCatalog';
@@ -16,6 +16,8 @@ import AdvisorProfile from './pages/advisor/Profile';
 import AdvisorStudents from './pages/advisor/Students';
 import AdvisorCalendar from './pages/advisor/Calendar';
 import AdvisorThesisReview from './pages/advisor/ThesisReview';
+import AdvisorStudentDetail from './pages/advisor/StudentDetail';
+import AdminDashboard from './pages/admin/Dashboard';
 import { isAuthenticated } from './services/authService';
 
 const ProtectedRoute = ({ children }) => {
@@ -71,7 +73,7 @@ const AppRoutes = () => {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />
         <Route path="documents" element={<AdditionalDocuments />} />
-        <Route path="my-thesis" element={<MyThesis />} />
+  <Route path="my-thesis" element={<MyThesisWorkspace />} />
         <Route path="observations" element={<Observations />} />
         <Route path="services" element={<Services />} />
         <Route path="services/advisors" element={<AdvisorCatalog />} />
@@ -93,9 +95,19 @@ const AppRoutes = () => {
         <Route index element={<Navigate to="students" replace />} />
         <Route path="profile" element={<AdvisorProfile />} />
         <Route path="students" element={<AdvisorStudents />} />
+        <Route path="students/:studentId" element={<AdvisorStudentDetail />} />
         <Route path="calendar" element={<AdvisorCalendar />} />
         <Route path="thesis" element={<AdvisorThesisReview />} />
       </Route>
+
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<div>404 - Not Found</div>} />

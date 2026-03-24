@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight, PlusCircle, CheckCircle2, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Button } from '../../components/ui/button';
 
 export default function AdvisorCalendar() {
   const navigate = useNavigate();
@@ -15,13 +16,14 @@ export default function AdvisorCalendar() {
       <div className="w-full max-w-[1200px] flex flex-col gap-8">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-4">
-            <button
+            <Button
+              variant="link"
               onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
+              className="flex items-center gap-2 text-slate-600 hover:text-slate-900"
             >
               <ChevronLeft className="w-5 h-5" />
               <span className="font-medium">Volver</span>
-            </button>
+            </Button>
           </div>
 
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
@@ -38,12 +40,12 @@ export default function AdvisorCalendar() {
             <div className="flex items-center justify-between mb-8">
               <h3 className="text-xl font-bold text-slate-900">Noviembre 2023</h3>
               <div className="flex gap-2">
-                <button className="p-2 rounded-full hover:bg-white/40 text-slate-600 transition-colors">
+                <Button variant="ghost" className="p-2 rounded-full text-slate-600">
                   <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button className="p-2 rounded-full hover:bg-white/40 text-slate-600 transition-colors">
+                </Button>
+                <Button variant="ghost" className="p-2 rounded-full text-slate-600">
                   <ChevronRight className="w-5 h-5" />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -102,12 +104,12 @@ export default function AdvisorCalendar() {
               ))}
             </div>
 
-            <button className="w-full flex items-center justify-between p-5 rounded-3xl bg-ios-blue hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30 group">
+            <Button className="w-full flex items-center justify-between p-5 rounded-3xl bg-ios-blue hover:bg-blue-600 transition-colors shadow-lg shadow-blue-500/30 group">
               <span className="font-bold text-white text-lg">Configurar Horarios</span>
               <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white/30 transition-colors">
                 <PlusCircle className="text-white w-6 h-6" />
               </div>
-            </button>
+            </Button>
           </div>
         </div>
       </div>

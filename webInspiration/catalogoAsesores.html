@@ -1,472 +1,333 @@
-<!doctype html>
+<!DOCTYPE html>
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>Choose Advisor - Student Portal</title>
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-      rel="stylesheet"
-    />
-    <script id="tailwind-config">
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lumina Academy - Academic Hub</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
       tailwind.config = {
-        darkMode: 'class',
+        darkMode: "class",
         theme: {
           extend: {
             colors: {
-              'ios-blue': '#007AFF',
-              'ios-gray': '#8E8E93',
-              'ios-bg': '#F2F2F7',
-              primary: '#007AFF', // Updated to vibrant light blue
+              "inverse-primary": "#adc6ff",
+              "surface-container-high": "#e6e8ea",
+              "on-primary-fixed-variant": "#004493",
+              "on-tertiary": "#ffffff",
+              "on-primary": "#ffffff",
+              "on-tertiary-fixed": "#001e2f",
+              "tertiary": "#00628d",
+              "on-secondary-fixed": "#0b1c30",
+              "on-secondary-container": "#54647a",
+              "error": "#ba1a1a",
+              "surface-container-low": "#f2f4f6",
+              "surface": "#f7f9fb",
+              "tertiary-container": "#007cb1",
+              "surface-dim": "#d8dadc",
+              "secondary": "#505f76",
+              "on-primary-container": "#fefcff",
+              "inverse-surface": "#2d3133",
+              "surface-tint": "#005bc1",
+              "outline-variant": "#c1c6d7",
+              "secondary-fixed": "#d3e4fe",
+              "on-tertiary-fixed-variant": "#004c6e",
+              "on-secondary": "#ffffff",
+              "on-tertiary-container": "#fcfcff",
+              "surface-variant": "#e0e3e5",
+              "primary-fixed-dim": "#adc6ff",
+              "primary-fixed": "#d8e2ff",
+              "surface-bright": "#f7f9fb",
+              "primary-container": "#0070eb",
+              "on-error": "#ffffff",
+              "inverse-on-surface": "#eff1f3",
+              "secondary-container": "#d0e1fb",
+              "secondary-fixed-dim": "#b7c8e1",
+              "on-error-container": "#93000a",
+              "on-background": "#191c1e",
+              "tertiary-fixed": "#c9e6ff",
+              "on-secondary-fixed-variant": "#38485d",
+              "background": "#f7f9fb",
+              "tertiary-fixed-dim": "#89ceff",
+              "on-surface": "#191c1e",
+              "surface-container": "#eceef0",
+              "surface-container-highest": "#e0e3e5",
+              "primary": "#0058bc",
+              "on-primary-fixed": "#001a41",
+              "surface-container-lowest": "#ffffff",
+              "error-container": "#ffdad6",
+              "outline": "#717786",
+              "on-surface-variant": "#414755"
             },
             fontFamily: {
-              sans: [
-                'Inter',
-                '-apple-system',
-                'BlinkMacSystemFont',
-                'SF Pro Text',
-                'SF Pro Display',
-                'sans-serif',
-              ],
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
             },
-            borderRadius: {
-              DEFAULT: '0.5rem',
-              lg: '0.75rem',
-              xl: '1rem',
-              '2xl': '1.5rem',
-              '3xl': '2rem',
-              full: '9999px',
-            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
           },
         },
-      };
+      }
     </script>
-    <style>
-      body {
-        background-color: #f0f2f5;
-        background-image:
-          radial-gradient(
-            at 0% 0%,
-            rgba(199, 210, 254, 0.5) 0,
-            transparent 50%
-          ),
-          radial-gradient(
-            at 50% 0%,
-            rgba(224, 231, 255, 0.5) 0,
-            transparent 50%
-          ),
-          radial-gradient(
-            at 100% 0%,
-            rgba(254, 202, 202, 0.3) 0,
-            transparent 50%
-          ),
-          radial-gradient(
-            at 0% 100%,
-            rgba(191, 219, 254, 0.4) 0,
-            transparent 50%
-          ),
-          radial-gradient(
-            at 100% 100%,
-            rgba(219, 234, 254, 0.4) 0,
-            transparent 50%
-          );
-        background-attachment: fixed;
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       }
-      .glass-card {
-        background: rgba(255, 255, 255, 0.45);
-        backdrop-filter: blur(25px) saturate(180%);
-        -webkit-backdrop-filter: blur(25px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.4);
-        box-shadow:
-          inset 0 0 0 1px rgba(255, 255, 255, 0.5),
-          0 10px 30px -5px rgba(0, 0, 0, 0.05);
-      }
-      .glass-nav {
+      .glass-subtle {
         background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(20px) saturate(180%);
-        -webkit-backdrop-filter: blur(20px) saturate(180%);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+      }
+      .tonal-shift {
+        background-color: var(--tw-bg-opacity);
+      }
+      .no-border {
+        border: none !important;
       }
     </style>
-  </head>
-  <body
-    class="font-sans text-slate-900 min-h-screen transition-colors duration-300"
-  >
-    <!-- Persistent Top Navigation (Styled like SCREEN_7) -->
-    <header class="glass-nav sticky top-0 z-50 px-8 py-4">
-      <div class="max-w-[1400px] mx-auto flex items-center justify-between">
-        <div class="flex items-center gap-8">
-          <div class="flex items-center gap-4">
-            <div
-              class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-xl"
-            >
-              M
-            </div>
-            <div>
-              <h1 class="text-xl font-bold">Mock Student</h1>
-              <p class="text-sm text-ios-gray">Mi Tesis de Prueba</p>
-            </div>
-          </div>
-          <nav class="hidden md:flex items-center gap-2">
-            <a
-              class="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-              href="#"
-              >Documento</a
-            >
-            <a
-              class="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-              href="#"
-              >Observaciones</a
-            >
-            <a
-              class="px-6 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium"
-              href="#"
-              >Servicios</a
-            >
-            <a
-              class="px-6 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-              href="#"
-              >Estadística</a
-            >
-          </nav>
-        </div>
-        <div class="flex items-center gap-4">
-          <button
-            class="hidden sm:block px-6 py-2 bg-white border border-gray-300 text-gray-900 rounded-lg text-sm font-bold"
-          >
-            Soporte WhatsApp
-          </button>
-          <button
-            class="px-6 py-2 bg-red-500 text-white rounded-lg text-sm font-bold"
-          >
-            Salir
-          </button>
-        </div>
-      </div>
-    </header>
-    <main class="max-w-[1400px] mx-auto px-8 py-10">
-      <!-- Hero Section -->
-      <div class="mb-12">
-        <h1
-          class="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-4"
-        >
-          Choose Your Advisor
-        </h1>
-        <p class="text-lg text-gray-600 max-w-2xl leading-relaxed">
-          Connect with experienced mentors who can guide your academic path and
-          career aspirations.
-        </p>
-      </div>
-      <!-- Filter Bar -->
-      <div class="flex flex-wrap items-center gap-4 mb-10">
-        <div class="flex-1 min-w-[300px]">
-          <div class="relative">
-            <span
-              class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-ios-gray font-light"
-              >search</span
-            >
-            <input
-              class="w-full glass-card rounded-2xl py-3.5 pl-12 pr-4 text-gray-900 border-none focus:ring-2 focus:ring-ios-blue shadow-sm placeholder:text-ios-gray/60"
-              placeholder="Search by name, specialty, or department..."
-              type="text"
-            />
-          </div>
-        </div>
-        <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
-          <button
-            class="px-6 py-2.5 rounded-full bg-ios-blue text-white font-bold text-sm shadow-lg shadow-ios-blue/20"
-          >
-            All
-          </button>
-          <button
-            class="px-6 py-2.5 rounded-full glass-card text-gray-700 font-semibold text-sm hover:bg-white/60 transition-all border-white/50"
-          >
-            Academic
-          </button>
-          <button
-            class="px-6 py-2.5 rounded-full glass-card text-gray-700 font-semibold text-sm hover:bg-white/60 transition-all border-white/50"
-          >
-            Career
-          </button>
-          <button
-            class="px-6 py-2.5 rounded-full glass-card text-gray-700 font-semibold text-sm hover:bg-white/60 transition-all border-white/50"
-          >
-            Financial
-          </button>
-          <button
-            class="px-6 py-2.5 rounded-full glass-card text-gray-700 font-semibold text-sm hover:bg-white/60 transition-all border-white/50"
-          >
-            Research
-          </button>
-        </div>
-      </div>
-      <!-- Advisor Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <!-- Advisor Card 1 -->
-        <div
-          class="glass-card rounded-3xl p-8 flex flex-col hover:translate-y-[-4px] transition-all duration-300"
-        >
-          <div class="flex items-start justify-between mb-6">
-            <div class="relative">
-              <div
-                class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/50 shadow-sm"
-              >
-                <img
-                  alt="Advisor Portrait"
-                  class="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuD503S5MJtmeDviClO1vBMnQ6N4kQkNEiu4ffC2nVg6qltNDu4xvDwIYq8biOBL8jul-lRRtQzrDLuG7Fe5zQ5JWwtZLhe7GGWhNRshoCjRaVhstRdlWbhnpEjIhGdgiVDbfr5-qXkE9lS8elHzTz6VwMljjRN5xBnElCuaSGBGDculxyYUC6LFw1ZsgV9kyQKQ6x17D0xM9wt36SeXfUb4N4MMwHBqcvaJN22FN_9Do5ZMv3pu2Cgj94paW9wq9tTqJrU14a0_hNw"
-                />
-              </div>
-              <div
-                class="absolute -bottom-1.5 -right-1.5 bg-green-500 w-5 h-5 rounded-full border-4 border-white shadow-sm"
-                title="Online"
-              ></div>
-            </div>
-            <div
-              class="flex items-center gap-1 bg-ios-blue/10 text-ios-blue px-3 py-1 rounded-full text-sm font-bold"
-            >
-              <span
-                class="material-symbols-outlined text-sm leading-none font-bold"
-                >star</span
-              >
-              <span>4.9</span>
-            </div>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-1">
-            Dr. Sarah Jenkins
-          </h3>
-          <p class="text-ios-blue font-semibold text-sm mb-4">
-            Senior Academic Advisor
-          </p>
-          <p class="text-gray-600 text-sm mb-8 leading-relaxed line-clamp-2">
-            Specializing in STEM curriculum planning and international student
-            placement with over 12 years of experience.
-          </p>
-          <div class="flex flex-wrap gap-2 mb-8 mt-auto">
-            <span
-              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
-              >Curriculum</span
-            >
-            <span
-              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
-              >Research</span
-            >
-            <span
-              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
-              >STEM</span
-            >
-          </div>
-          <button
-            class="w-full py-4 bg-ios-blue text-white rounded-2xl font-bold shadow-xl shadow-ios-blue/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            Book Session
-            <span class="material-symbols-outlined text-lg font-light"
-              >calendar_today</span
-            >
-          </button>
-        </div>
-        <!-- Advisor Card 2 -->
-        <div
-          class="glass-card rounded-3xl p-8 flex flex-col hover:translate-y-[-4px] transition-all duration-300"
-        >
-          <div class="flex items-start justify-between mb-6">
-            <div class="relative">
-              <div
-                class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/50 shadow-sm"
-              >
-                <img
-                  alt="Advisor Portrait"
-                  class="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdDkzb1r-831wYI-ZF4u60_Z-gWMVdwK0-F5QJXGQ7oMe1IqYVbv-sac_SuONvI3chU-HnTJYzf7e42r92M5lkzAf73dQZSKk4QLi-HfPChAsnYWQP7sX3NY_v5SCj0SxhSkJu4jbFWWXyVbTcxHaoTAFFEu2y1vgqlwpIeLNg5M4Rdj8WRop3X0qU76Of60hks6gVtNPA8V59U1UISj7AFtUzyxvjYSaDXKyu6ABkRKvZnZXnjaEGuYxEiD9pzjiLPFs9iCZPu5I"
-                />
-              </div>
-              <div
-                class="absolute -bottom-1.5 -right-1.5 bg-gray-400 w-5 h-5 rounded-full border-4 border-white shadow-sm"
-                title="Offline"
-              ></div>
-            </div>
-            <div
-              class="flex items-center gap-1 bg-ios-blue/10 text-ios-blue px-3 py-1 rounded-full text-sm font-bold"
-            >
-              <span
-                class="material-symbols-outlined text-sm leading-none font-bold"
-                >star</span
-              >
-              <span>4.8</span>
-            </div>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-1">Michael Chen</h3>
-          <p class="text-ios-blue font-semibold text-sm mb-4">
-            Career Strategy Lead
-          </p>
-          <p class="text-gray-600 text-sm mb-8 leading-relaxed line-clamp-2">
-            Helping students navigate internship applications and tech industry
-            interview preparation since 2015.
-          </p>
-          <div class="flex flex-wrap gap-2 mb-8 mt-auto">
-            <span
-              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
-              >Tech</span
-            >
-            <span
-              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
-              >Interviews</span
-            >
-            <span
-              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
-              >Networking</span
-            >
-          </div>
-          <button
-            class="w-full py-4 bg-ios-blue text-white rounded-2xl font-bold shadow-xl shadow-ios-blue/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            Book Session
-            <span class="material-symbols-outlined text-lg font-light"
-              >calendar_today</span
-            >
-          </button>
-        </div>
-        <!-- Advisor Card 3 -->
-        <div
-          class="glass-card rounded-3xl p-8 flex flex-col hover:translate-y-[-4px] transition-all duration-300"
-        >
-          <div class="flex items-start justify-between mb-6">
-            <div class="relative">
-              <div
-                class="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/50 shadow-sm"
-              >
-                <img
-                  alt="Advisor Portrait"
-                  class="w-full h-full object-cover"
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuBeJy4A2lWKeY8NoL89eNWNY154uq4egc5d893Ulb-JDIbv7L2wmYOdbZcWMPYX8wbqSNiexuM5JW-dzd_wsTVnRlvEKcJlFAxwCpBCFHFExYU9aU4ML-7I1LZsOyBUm5HtgRzMRBs4x22OBV0o4fzoqdIdkHEOq5rWswqF5r30e7oA14L23tkqDeGcJlTmAI2pC9aEJw8W8UsuN8pByZjozYM5FxQf6yZJNwD3t9srDcojGbZYVwdcV-UX2kq01R9xtZFG4ZVXwBw"
-                />
-              </div>
-              <div
-                class="absolute -bottom-1.5 -right-1.5 bg-green-500 w-5 h-5 rounded-full border-4 border-white shadow-sm"
-                title="Online"
-              ></div>
-            </div>
-            <div
-              class="flex items-center gap-1 bg-ios-blue/10 text-ios-blue px-3 py-1 rounded-full text-sm font-bold"
-            >
-              <span
-                class="material-symbols-outlined text-sm leading-none font-bold"
-                >star</span
-              >
-              <span>5.0</span>
-            </div>
-          </div>
-          <h3 class="text-xl font-bold text-gray-900 mb-1">Elena Rodriguez</h3>
-          <p class="text-ios-blue font-semibold text-sm mb-4">
-            Financial Planning Advisor
-          </p>
-          <p class="text-gray-600 text-sm mb-8 leading-relaxed line-clamp-2">
-            Expert in scholarship applications, FAFSA guidance, and student
-            budget management strategies.
-          </p>
-          <div class="flex flex-wrap gap-2 mb-8 mt-auto">
-            <span
-              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
-              >Finance</span
-            >
-            <span
-              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
-              >Grants</span
-            >
-            <span
-              class="text-[10px] uppercase tracking-wider font-bold px-3 py-1.5 rounded-lg bg-white/40 text-gray-500 border border-white/30"
-              >Scholarships</span
-            >
-          </div>
-          <button
-            class="w-full py-4 bg-ios-blue text-white rounded-2xl font-bold shadow-xl shadow-ios-blue/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
-          >
-            Book Session
-            <span class="material-symbols-outlined text-lg font-light"
-              >calendar_today</span
-            >
-          </button>
-        </div>
-      </div>
-      <!-- Match Assistance Callout (Styled like Priority Action in SCREEN_7) -->
-      <div
-        class="mt-16 glass-card rounded-[40px] p-12 bg-gradient-to-br from-white/60 to-white/20 relative overflow-hidden"
-      >
-        <div
-          class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8"
-        >
-          <div class="text-center md:text-left">
-            <div
-              class="w-16 h-16 bg-ios-blue rounded-3xl flex items-center justify-center text-white shadow-xl shadow-ios-blue/30 mb-6 mx-auto md:mx-0"
-            >
-              <span class="material-symbols-outlined text-3xl font-light"
-                >handshake</span
-              >
-            </div>
-            <h2 class="text-3xl font-bold text-gray-900 mb-3 tracking-tight">
-              Can't find the right match?
-            </h2>
-            <p class="text-gray-600 max-w-lg leading-relaxed">
-              Our concierge team can help pair you with an advisor based on your
-              specific academic goals and needs.
-            </p>
-          </div>
-          <button
-            class="whitespace-nowrap bg-ios-blue text-white px-10 py-5 rounded-2xl font-bold text-lg shadow-2xl shadow-ios-blue/40 hover:scale-[1.02] active:scale-95 transition-all"
-          >
-            Request Match Assistance
-          </button>
-        </div>
-        <!-- Decorative elements inspired by SCREEN_7 -->
-        <div
-          class="absolute -top-10 -right-10 w-40 h-40 bg-blue-400/10 rounded-full blur-3xl"
-        ></div>
-        <div
-          class="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-400/10 rounded-full blur-3xl"
-        ></div>
-      </div>
-    </main>
-    <footer
-      class="max-w-[1400px] mx-auto px-8 py-12 border-t border-white/30 mt-12"
-    >
-      <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-        <p class="text-ios-gray text-sm">
-          © 2024 Academic Excellence Portal. All rights reserved.
-        </p>
-        <div class="flex gap-8">
-          <a
-            class="text-ios-gray text-sm hover:text-ios-blue transition-colors"
-            href="#"
-            >Support</a
-          >
-          <a
-            class="text-ios-gray text-sm hover:text-ios-blue transition-colors"
-            href="#"
-            >Privacy Policy</a
-          >
-          <a
-            class="text-ios-gray text-sm hover:text-ios-blue transition-colors"
-            href="#"
-            >Terms of Service</a
-          >
-        </div>
-      </div>
-    </footer>
-    <script>
-      // Standard system preference handler
-      if (
-        window.matchMedia &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches
-      ) {
-        // Keeping it light for the bone-colored glass pop requested
-        // document.documentElement.classList.add('dark');
-      }
-    </script>
-  </body>
-</html>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- TopNavBar -->
+<nav class="sticky top-0 w-full z-50 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,88,188,0.06)] no-border">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-12">
+<span class="text-2xl font-black text-blue-700 dark:text-blue-400 tracking-tighter font-headline">Lumina Academy</span>
+<div class="hidden md:flex gap-8 items-center">
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors font-manrope font-bold tracking-tight" href="#">Documents</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors font-manrope font-bold tracking-tight" href="#">My Thesis</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors font-manrope font-bold tracking-tight" href="#">Observations</a>
+<a class="text-blue-700 dark:text-blue-400 border-b-2 border-blue-700 dark:border-blue-400 pb-1 font-manrope font-bold tracking-tight" href="#">Services</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300 transition-colors font-manrope font-bold tracking-tight" href="#">Stats</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden lg:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="pl-10 pr-4 py-2 bg-surface-container-low border-none rounded-full w-64 focus:ring-2 focus:ring-primary/20 text-sm" placeholder="Search resources..." type="text"/>
+</div>
+<button class="p-2 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 rounded-lg transition-all active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="p-2 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 rounded-lg transition-all active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">account_circle</span>
+</button>
+</div>
+</div>
+</nav>
+<div class="flex max-w-screen-2xl mx-auto px-8 py-8 gap-8">
+<!-- SideNavBar / Filters -->
+<aside class="hidden lg:flex flex-col w-72 h-fit glass-subtle rounded-r-[24px] p-6 shadow-xl dark:shadow-none space-y-8">
+<div>
+<h2 class="text-lg font-bold text-blue-700 font-headline mb-1">Academic Hub</h2>
+<p class="text-xs text-on-surface-variant font-medium">Manage your mentors</p>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-100 rounded-xl font-bold px-4 py-3 flex items-center gap-3 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">storefront</span>
+<span class="font-inter text-sm font-medium">Marketplace</span>
+</a>
+<a class="text-slate-600 dark:text-slate-400 px-4 py-3 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xl flex items-center gap-3 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">hail</span>
+<span class="font-inter text-sm font-medium">Active Mentors</span>
+</a>
+<a class="text-slate-600 dark:text-slate-400 px-4 py-3 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xl flex items-center gap-3 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">payments</span>
+<span class="font-inter text-sm font-medium">Budget</span>
+</a>
+<a class="text-slate-600 dark:text-slate-400 px-4 py-3 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xl flex items-center gap-3 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">school</span>
+<span class="font-inter text-sm font-medium">Specialty</span>
+</a>
+<a class="text-slate-600 dark:text-slate-400 px-4 py-3 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-xl flex items-center gap-3 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">star</span>
+<span class="font-inter text-sm font-medium">Rating</span>
+</a>
+</nav>
+<div class="pt-6 border-t border-outline-variant/20">
+<button class="w-full bg-primary text-on-primary py-3 rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:scale-102 active:scale-95 transition-all">
+                    Find New Advisor
+                </button>
+</div>
+<div class="mt-auto pt-8 flex flex-col gap-2">
+<a class="text-slate-600 dark:text-slate-400 px-4 py-2 flex items-center gap-3 text-sm font-medium hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">settings</span>
+                    Settings
+                </a>
+<a class="text-slate-600 dark:text-slate-400 px-4 py-2 flex items-center gap-3 text-sm font-medium hover:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined">help</span>
+                    Help
+                </a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 space-y-8">
+<!-- Header Section with Segmented Toggle -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h1 class="text-4xl font-extrabold tracking-tight font-headline text-on-surface mb-2">Your Mentorship</h1>
+<p class="text-on-surface-variant max-w-md">Find and connect with specialized academic advisors to guide your thesis and research projects.</p>
+</div>
+<!-- iOS Style Segmented Toggle -->
+<div class="inline-flex p-1 bg-surface-container-high rounded-2xl w-fit">
+<button class="px-6 py-2 bg-surface-container-lowest rounded-xl shadow-sm text-sm font-bold text-primary transition-all">
+                        Browse Advisors
+                    </button>
+<button class="px-6 py-2 text-sm font-medium text-on-surface-variant hover:text-on-surface transition-all">
+                        My Advisors
+                    </button>
+</div>
+</div>
+<!-- Content Grid: Advisor Marketplace -->
+<div class="space-y-4">
+<!-- Advisor Card 1 -->
+<div class="glass-subtle bg-surface-container-lowest rounded-[18px] p-6 shadow-[0_12px_40px_rgba(0,88,188,0.06)] flex flex-col md:flex-row gap-6 items-center transition-all hover:translate-y-[-4px]">
+<div class="relative flex-shrink-0">
+<img class="w-24 h-24 rounded-2xl object-cover" data-alt="Professional female academic advisor portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAzQ6CTntmG0REJwurTsVLCT9FhMHRzoqxyB377jWQb2tRNzUvrVUWVvo8P9YpORnTrFzenFlW-VXiA-fbcBglemdRB_fQXnfdvU8OoZqlfgLHGw-oeqHgN0pTHIfmAgIzgBjUYHlD9504uTKBtugxwmBxkP1chZ7l2AfK8RyOKxGPNg14xYzvxlLCBJ3CuVZzmDHelh5_z8F7TselVg8GqiK0CjRDYHcXk-U5UKvpklvX0wuV78FnLCYXsSFS1D5Cnvej8CjimV4x3"/>
+<div class="absolute -bottom-2 -right-2 bg-blue-600 text-white p-1 rounded-full border-4 border-white">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<div class="flex-1 text-center md:text-left">
+<div class="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+<h3 class="text-xl font-bold font-headline text-on-surface">Dr. Helena Vance</h3>
+<span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-fixed-variant text-[10px] font-bold uppercase tracking-wider rounded-full">Stanford University</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-4 line-clamp-2">
+                            Specializing in Quantitative Research and Data Analysis for Social Sciences. 15+ years of experience in doctoral committee advisory.
+                        </p>
+<div class="flex flex-wrap justify-center md:justify-start gap-2">
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-semibold rounded-lg">Social Sciences</span>
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-semibold rounded-lg">Quantitative</span>
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-semibold rounded-lg">Python</span>
+</div>
+</div>
+<div class="flex flex-col items-center md:items-end gap-3 w-full md:w-auto md:min-w-[140px] pl-0 md:pl-6 border-t md:border-t-0 md:border-l border-outline-variant/20 pt-4 md:pt-0">
+<div class="text-center md:text-right">
+<span class="text-2xl font-black text-primary font-headline">$85</span>
+<span class="text-xs text-on-surface-variant font-medium">/ hr</span>
+</div>
+<div class="flex items-center gap-1 mb-2">
+<span class="material-symbols-outlined text-yellow-500 text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-sm font-bold text-on-surface">4.9</span>
+<span class="text-xs text-on-surface-variant">(128 reviews)</span>
+</div>
+<button class="w-full bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold text-sm hover:scale-102 active:scale-95 transition-all shadow-md shadow-primary/10">
+                            Link Advisor
+                        </button>
+</div>
+</div>
+<!-- Advisor Card 2 -->
+<div class="glass-subtle bg-surface-container-lowest rounded-[18px] p-6 shadow-[0_12px_40px_rgba(0,88,188,0.06)] flex flex-col md:flex-row gap-6 items-center transition-all hover:translate-y-[-4px]">
+<div class="relative flex-shrink-0">
+<img class="w-24 h-24 rounded-2xl object-cover" data-alt="Friendly male academic mentor with glasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHkxGUskeO7TYXsVQmM5IupJ9y15llR_sJzZCNUk3xOu1BODF642v4fc4WCCo7ey45HJmwt__ofO9rDxcgnaSFfQ9hUP3a-cMqAR3cYHWb9JdG9HCjpIbG1s3DYgbLKviWg5444cJsd0ITzRaC_f24vmYdWmfVzY0dtyUIgt_CvHOXWFXJNt5YWuMxmjk8YEQAyZJu6SxXN_cN1UPxzoAlWPUCIIpq-VPuoC74KO7tnWucos75o0K6h5W-TVKXg6Hpy8DqP6iVDzyD"/>
+<div class="absolute -bottom-2 -right-2 bg-blue-600 text-white p-1 rounded-full border-4 border-white">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<div class="flex-1 text-center md:text-left">
+<div class="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+<h3 class="text-xl font-bold font-headline text-on-surface">Prof. Julian Ricci</h3>
+<span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-fixed-variant text-[10px] font-bold uppercase tracking-wider rounded-full">MIT Technology</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-4 line-clamp-2">
+                            Expert in Machine Learning and AI Ethics. Providing structural guidance for technical theses and experimental design.
+                        </p>
+<div class="flex flex-wrap justify-center md:justify-start gap-2">
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-semibold rounded-lg">Computer Science</span>
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-semibold rounded-lg">AI Ethics</span>
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-semibold rounded-lg">Engineering</span>
+</div>
+</div>
+<div class="flex flex-col items-center md:items-end gap-3 w-full md:w-auto md:min-w-[140px] pl-0 md:pl-6 border-t md:border-t-0 md:border-l border-outline-variant/20 pt-4 md:pt-0">
+<div class="text-center md:text-right">
+<span class="text-2xl font-black text-primary font-headline">$110</span>
+<span class="text-xs text-on-surface-variant font-medium">/ hr</span>
+</div>
+<div class="flex items-center gap-1 mb-2">
+<span class="material-symbols-outlined text-yellow-500 text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-sm font-bold text-on-surface">5.0</span>
+<span class="text-xs text-on-surface-variant">(92 reviews)</span>
+</div>
+<button class="w-full bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold text-sm hover:scale-102 active:scale-95 transition-all shadow-md shadow-primary/10">
+                            Link Advisor
+                        </button>
+</div>
+</div>
+<!-- Advisor Card 3 -->
+<div class="glass-subtle bg-surface-container-lowest rounded-[18px] p-6 shadow-[0_12px_40px_rgba(0,88,188,0.06)] flex flex-col md:flex-row gap-6 items-center transition-all hover:translate-y-[-4px]">
+<div class="relative flex-shrink-0">
+<img class="w-24 h-24 rounded-2xl object-cover" data-alt="Confident female professor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVKsJKXqDQhE0eaoCFzUV0etk3jdDLlWXHyb6fWrgr8TW7c30waNICb4VUD87o9vGiiCon-egvdaSCvgFk081cSmorQCGI1Kap1jEGSekCvuBmt1OBxNMLn6SHz_5qIpvpl1xlv71XNllmr-_p3TtA14f5EMPNwdKaiy5yDcpvQFL6pzD_60mBH07dhDOIMMYu6Cx6L-v-dj7PMzVT0B4P0clpeXrTMLaf_aOC9uBwwZsNEYY3B6eqdegxnW6fZ-bwo-6WjHbCHQxk"/>
+<div class="absolute -bottom-2 -right-2 bg-blue-600 text-white p-1 rounded-full border-4 border-white">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<div class="flex-1 text-center md:text-left">
+<div class="flex flex-col md:flex-row md:items-center gap-2 mb-2">
+<h3 class="text-xl font-bold font-headline text-on-surface">Dr. Sarah Jenkins</h3>
+<span class="inline-block px-3 py-1 bg-secondary-container text-on-secondary-fixed-variant text-[10px] font-bold uppercase tracking-wider rounded-full">Oxford Academy</span>
+</div>
+<p class="text-sm text-on-surface-variant leading-relaxed mb-4 line-clamp-2">
+                            Specialized in Qualitative Ethnography and Historical Research. Supporting students through complex literature reviews and field notes.
+                        </p>
+<div class="flex flex-wrap justify-center md:justify-start gap-2">
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-semibold rounded-lg">History</span>
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-semibold rounded-lg">Qualitative</span>
+<span class="px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed-variant text-xs font-semibold rounded-lg">Anthropology</span>
+</div>
+</div>
+<div class="flex flex-col items-center md:items-end gap-3 w-full md:w-auto md:min-w-[140px] pl-0 md:pl-6 border-t md:border-t-0 md:border-l border-outline-variant/20 pt-4 md:pt-0">
+<div class="text-center md:text-right">
+<span class="text-2xl font-black text-primary font-headline">$75</span>
+<span class="text-xs text-on-surface-variant font-medium">/ hr</span>
+</div>
+<div class="flex items-center gap-1 mb-2">
+<span class="material-symbols-outlined text-yellow-500 text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-sm font-bold text-on-surface">4.8</span>
+<span class="text-xs text-on-surface-variant">(214 reviews)</span>
+</div>
+<button class="w-full bg-primary text-on-primary px-6 py-2.5 rounded-xl font-bold text-sm hover:scale-102 active:scale-95 transition-all shadow-md shadow-primary/10">
+                            Link Advisor
+                        </button>
+</div>
+</div>
+</div>
+<!-- Bento Featured Section -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12">
+<div class="md:col-span-2 glass-subtle bg-blue-700 p-8 rounded-lg text-white flex flex-col justify-center">
+<h4 class="text-2xl font-black font-headline mb-4">Elite Mentorship Program</h4>
+<p class="text-blue-100 mb-6 max-w-md">Access premium advisors from top-tier Ivy League institutions. Focused 1-on-1 sessions for complex thesis requirements.</p>
+<button class="w-fit bg-white text-blue-700 px-8 py-3 rounded-full font-bold text-sm hover:bg-blue-50 transition-colors">
+                        Apply Now
+                    </button>
+</div>
+<div class="glass-subtle bg-surface-container-highest p-8 rounded-lg flex flex-col items-center text-center justify-center">
+<span class="material-symbols-outlined text-blue-700 text-4xl mb-4">verified_user</span>
+<h4 class="text-lg font-bold font-headline text-on-surface mb-2">100% Verified</h4>
+<p class="text-sm text-on-surface-variant">Every mentor undergoes strict background and academic credential checks.</p>
+</div>
+</div>
+</main>
+</div>
+<!-- Mobile Bottom Navigation -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full glass-subtle bg-white/80 border-t border-outline-variant/10 z-50 flex justify-around items-center py-4 px-2">
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-medium">Dashboard</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">storefront</span>
+<span class="text-[10px] font-bold">Advisors</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">description</span>
+<span class="text-[10px] font-medium">Thesis</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-on-surface-variant">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-medium">Settings</span>
+</button>
+</nav>
+</body></html>

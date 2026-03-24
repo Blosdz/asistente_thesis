@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff, Fingerprint, ScanFace } from 'lucide-react';
-import { loginEstudiante } from '../../services/authService';
+import { loginUsuario } from '../../services/authService';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -16,8 +16,15 @@ const LoginPage = () => {
     setError('');
     setIsLoading(true);
     try {
-      await loginEstudiante(email, password);
-      navigate('/student/dashboard');
+      const { role } = await loginUsuario(email, password);
+
+      if (role === 'asesor') {
+        navigate('/advisor/students');
+      } else if (role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/student/dashboard');
+      }
     } catch (err) {
       setError(err.message || 'Login failed. Please try again.');
       setIsLoading(false);

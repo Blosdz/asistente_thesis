@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AcademicAdvisor - Thesis Review</title>
+<!-- Google Fonts: Manrope & Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container-low": "#f2f4f6",
+              "surface-container-highest": "#e0e3e5",
+              "inverse-surface": "#2d3133",
+              "inverse-on-surface": "#eff1f3",
+              "primary-container": "#0070eb",
+              "surface-dim": "#d8dadc",
+              "outline": "#717786",
+              "on-secondary-fixed": "#0b1c30",
+              "on-background": "#191c1e",
+              "surface-tint": "#005bc1",
+              "surface-variant": "#e0e3e5",
+              "on-secondary-fixed-variant": "#38485d",
+              "on-primary": "#ffffff",
+              "on-error-container": "#93000a",
+              "on-tertiary": "#ffffff",
+              "background": "#f7f9fb",
+              "secondary-fixed": "#d3e4fe",
+              "primary": "#0058bc",
+              "secondary-container": "#d0e1fb",
+              "on-secondary-container": "#54647a",
+              "on-tertiary-fixed": "#001e2f",
+              "on-tertiary-container": "#fcfcff",
+              "tertiary-fixed": "#c9e6ff",
+              "on-tertiary-fixed-variant": "#004c6e",
+              "on-surface": "#191c1e",
+              "error-container": "#ffdad6",
+              "surface-container": "#eceef0",
+              "on-error": "#ffffff",
+              "surface-bright": "#f7f9fb",
+              "outline-variant": "#c1c6d7",
+              "tertiary-container": "#007cb1",
+              "surface": "#f7f9fb",
+              "on-surface-variant": "#414755",
+              "tertiary": "#00628d",
+              "secondary": "#505f76",
+              "on-primary-container": "#fefcff",
+              "primary-fixed": "#d8e2ff",
+              "primary-fixed-dim": "#adc6ff",
+              "secondary-fixed-dim": "#b7c8e1",
+              "tertiary-fixed-dim": "#89ceff",
+              "on-primary-fixed-variant": "#004493",
+              "inverse-primary": "#adc6ff",
+              "error": "#ba1a1a",
+              "surface-container-high": "#e6e8ea",
+              "on-primary-fixed": "#001a41",
+              "surface-container-lowest": "#ffffff",
+              "on-secondary": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-effect {
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+      }
+    </style>
+</head>
+<body class="bg-background font-body text-on-surface">
+<!-- TopNavBar (Shared Component) -->
+<nav class="fixed top-0 w-full z-50 flex items-center justify-between px-8 h-20 w-full max-w-none bg-white/70 backdrop-blur-xl shadow-[0_12px_40px_rgba(0,88,188,0.06)]">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-bold tracking-tighter text-blue-700 font-headline">AcademicAdvisor</span>
+<div class="hidden md:flex items-center gap-6 font-headline tracking-tight font-semibold">
+<a class="text-slate-500 hover:text-blue-600 transition-all duration-300" href="#">Dashboard</a>
+<a class="text-blue-700 border-b-2 border-blue-700 pb-1" href="#">Thesis Review</a>
+<a class="text-slate-500 hover:text-blue-600 transition-all duration-300" href="#">Schedule</a>
+<a class="text-slate-500 hover:text-blue-600 transition-all duration-300" href="#">Archive</a>
+</div>
+</div>
+<!-- Student Progress Center Widget -->
+<div class="hidden lg:flex flex-col items-center max-w-xs w-full px-4">
+<div class="flex justify-between w-full mb-1">
+<span class="text-[10px] font-bold uppercase tracking-widest text-secondary">Progreso General</span>
+<span class="text-[10px] font-bold text-primary">72%</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[72%] rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full hover:bg-blue-50/50 transition-all text-slate-600">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-blue-50/50 transition-all text-slate-600">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="h-10 w-10 rounded-full overflow-hidden border-2 border-primary-container/20">
+<img alt="Advisor Profile" class="w-full h-full object-cover" data-alt="professional portrait of an academic advisor in a clean office setting, soft natural lighting, high-end corporate style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAONEO0NaDYGKQBNygwszeEI1lSrrrUjuW1_4yIsO-iw_kdxv-XkhDVRF-Clw9xmFtwdxRtb4z5Ym7gVD_9XpcGhAArlfl0HR2OIVHuwZntA673DBTDyeBF_IAAAg1Xk66uFWHEEbhT0SRv4zzMXuiS2EbkKFvXhEi3LN-aDQCCF7-Gz-lgWRHngfy2S4_epp23xcsAciRuGBkKeZlSEhU_mgzLnQrrhLcmhMbB4Gd2ORNvKa3V5GBacGorH32ehPrjUA4nCynsEwI1"/>
+</div>
+</div>
+</nav>
+<!-- Main Content Layout -->
+<main class="pt-20 h-screen flex overflow-hidden">
+<!-- Left Column: Navigation Sections -->
+<aside class="w-72 bg-slate-50/50 backdrop-blur-lg rounded-r-[24px] mt-4 mb-4 flex flex-col p-6 shadow-xl border-r border-white/20">
+<div class="mb-8">
+<h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Secciones de Tesis</h3>
+<nav class="space-y-2">
+<button class="w-full flex items-center gap-3 px-4 py-3 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200 text-sm font-medium transition-transform duration-200">
+<span class="material-symbols-outlined text-sm" data-icon="article">article</span>
+                        Abstract
+                    </button>
+<button class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1">
+<span class="material-symbols-outlined text-sm" data-icon="menu_book">menu_book</span>
+                        Introducción
+                    </button>
+<button class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1">
+<span class="material-symbols-outlined text-sm" data-icon="database">database</span>
+                        Metodología
+                    </button>
+<button class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1">
+<span class="material-symbols-outlined text-sm" data-icon="insights">insights</span>
+                        Resultados
+                    </button>
+<button class="w-full flex items-center gap-3 px-4 py-3 text-slate-600 hover:bg-slate-200/50 rounded-xl text-sm font-medium transition-all duration-200 hover:translate-x-1">
+<span class="material-symbols-outlined text-sm" data-icon="history_edu">history_edu</span>
+                        Conclusiones
+                    </button>
+</nav>
+</div>
+<div class="mt-auto p-4 bg-white/40 rounded-2xl border border-white/40">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-xs" data-icon="person">person</span>
+</div>
+<div>
+<p class="text-[10px] text-slate-500 font-bold uppercase">Tesista</p>
+<p class="text-sm font-bold text-slate-900">Julian Casablancas</p>
+</div>
+</div>
+<p class="text-[11px] text-slate-500 italic leading-tight">"Neural Networks in Modern Urban Planning"</p>
+</div>
+</aside>
+<!-- Center Column: Document Viewer -->
+<section class="flex-1 flex flex-col p-6 overflow-hidden">
+<!-- Viewer Toolbar -->
+<div class="flex items-center justify-between mb-4 px-4 py-2 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm border border-white/40">
+<div class="flex items-center gap-2">
+<button class="p-2 hover:bg-surface-container rounded-lg transition-colors"><span class="material-symbols-outlined" data-icon="zoom_out">zoom_out</span></button>
+<span class="text-sm font-medium px-2">115%</span>
+<button class="p-2 hover:bg-surface-container rounded-lg transition-colors"><span class="material-symbols-outlined" data-icon="zoom_in">zoom_in</span></button>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1">
+<input class="w-10 text-center border-none bg-surface-container rounded-md text-sm p-1" type="text" value="12"/>
+<span class="text-sm text-slate-500">/ 142</span>
+</div>
+<div class="h-6 w-px bg-slate-200 mx-2"></div>
+<button class="flex items-center gap-2 px-3 py-1.5 hover:bg-surface-container rounded-lg transition-colors text-sm font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="file_download">file_download</span>
+                        Descargar
+                    </button>
+</div>
+</div>
+<!-- PDF Simulation -->
+<div class="flex-1 bg-surface-container overflow-y-auto rounded-3xl p-8 flex justify-center shadow-inner">
+<div class="max-w-4xl w-full bg-white shadow-2xl min-h-[1200px] p-16 rounded-sm relative">
+<header class="border-b border-slate-100 pb-8 mb-10">
+<h1 class="text-3xl font-headline font-extrabold text-slate-900 mb-2">Neural Networks in Modern Urban Planning</h1>
+<p class="text-slate-500 font-medium">Capítulo 1: Abstract &amp; Marco Teórico</p>
+</header>
+<div class="space-y-6 text-slate-800 leading-relaxed text-lg">
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+<p>The integration of neural network architectures into urban density predictive models has shown a 14% increase in resource allocation efficiency. By analyzing spatial data through convolutional layers, municipalities can anticipate infrastructural fatigue before it manifests physically.</p>
+<div class="my-8 h-64 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
+<img alt="Urban Planning Grid" class="w-full h-full object-cover opacity-80" data-alt="abstract top-down view of a modern city grid at night with glowing blue and orange data visualization overlays" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrCqWRjd5LLJDRgAbIZk8tWWZGJ5yJoLgjr7I_4DFFfg9eMWAFGDjO_NC_-mw03M-UrLwXIiwCPzttLkutF06Fxgxmc0yEsP6k7AnnlDuNcvVBP14-EofcPksGqNF4Fpss76lC0Fr-cbk5ACLurOgvAQS5TTkTdkRuQxsN_tla9V76ITpngAyvpY0IpUyb4jI6_seRaWCb2B8FphMEzoGohLesx_iGgkoU186KuRIv4J5o9hjbyQYcWCUg_5U9v1HfsZ1L7Rw7vIPW"/>
+</div>
+<p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+<p>Further research suggests that generative adversarial networks (GANs) could be utilized to simulate "organic" expansion patterns in emerging smart cities, allowing for a more human-centric design approach within technical constraints.</p>
+</div>
+<!-- Selection Highlight Overlay (iOS style) -->
+<div class="absolute top-48 left-16 right-16 h-10 bg-blue-500/10 border-l-4 border-blue-500 pointer-events-none"></div>
+</div>
+</div>
+</section>
+<!-- Right Column: Advisor Suggestions -->
+<aside class="w-80 bg-white/60 backdrop-blur-xl m-4 rounded-3xl p-6 flex flex-col shadow-2xl border border-white/60">
+<h2 class="text-xl font-headline font-bold text-slate-900 mb-6">Sugerencias del Asesor</h2>
+<div class="flex-1 space-y-4 overflow-y-auto mb-6 pr-2">
+<!-- Suggestion Card -->
+<div class="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-error"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-error uppercase bg-error-container/20 px-2 py-0.5 rounded-full">Crítico</span>
+<span class="text-[10px] text-slate-400">Hace 5m</span>
+</div>
+<p class="text-sm text-slate-700 leading-snug">El abstract debe mencionar específicamente los modelos de red neuronal utilizados (CNN vs RNN).</p>
+</div>
+<div class="p-4 bg-white rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
+<div class="absolute top-0 left-0 w-1 h-full bg-tertiary"></div>
+<div class="flex justify-between items-start mb-2">
+<span class="text-[10px] font-bold text-tertiary uppercase bg-tertiary-fixed/30 px-2 py-0.5 rounded-full">Sugerencia</span>
+<span class="text-[10px] text-slate-400">Ayer</span>
+</div>
+<p class="text-sm text-slate-700 leading-snug">Considerar una bibliografía más reciente sobre GANs en urbanismo (2023+).</p>
+</div>
+</div>
+<!-- New Suggestion Form -->
+<div class="mt-auto space-y-4 bg-slate-50/80 p-4 rounded-2xl border border-slate-200">
+<div class="space-y-1">
+<label class="text-[10px] font-bold text-slate-500 uppercase px-1">Nueva Sugerencia</label>
+<textarea class="w-full bg-white border-slate-200 rounded-xl text-sm p-3 focus:ring-2 focus:ring-primary focus:border-transparent transition-all placeholder:text-slate-400" placeholder="Escribe tu comentario aquí..." rows="3"></textarea>
+</div>
+<div class="space-y-1">
+<label class="text-[10px] font-bold text-slate-500 uppercase px-1">Nivel de Prioridad</label>
+<div class="grid grid-cols-3 gap-2">
+<button class="py-2 text-[10px] font-bold rounded-lg border border-slate-200 hover:bg-error/10 hover:border-error hover:text-error transition-all uppercase">Crítico</button>
+<button class="py-2 text-[10px] font-bold rounded-lg bg-white border border-slate-200 hover:bg-tertiary/10 hover:border-tertiary hover:text-tertiary transition-all uppercase">Sugerencia</button>
+<button class="py-2 text-[10px] font-bold rounded-lg bg-white border border-slate-200 hover:bg-primary/10 hover:border-primary hover:text-primary transition-all uppercase">Aprobado</button>
+</div>
+</div>
+<button class="w-full bg-primary text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-200 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="send">send</span>
+                    Publicar Sugerencia
+                </button>
+</div>
+</aside>
+</main>
+<!-- Contextual FAB (Only for specific actions on thesis review) -->
+<button class="fixed bottom-10 right-96 z-40 bg-inverse-surface text-inverse-on-surface h-14 w-14 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-90 transition-all">
+<span class="material-symbols-outlined" data-icon="add_comment">add_comment</span>
+</button>
+</body></html>

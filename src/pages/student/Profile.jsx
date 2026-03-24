@@ -20,6 +20,10 @@ import {
 import { obtenerUniversidades } from '../../services/catalogService';
 import { universities as universitiesList } from '../../data/universities';
 import { clsx } from 'clsx';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select, SelectItem } from '../../components/ui/select';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
@@ -177,43 +181,42 @@ const Profile = () => {
                   Configuración de Perfil
                 </h3>
               </div>
-              <button
+              <Button
                 onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
+                variant={isEditing ? 'primary' : 'secondary'}
                 className={clsx(
-                  'px-5 py-2 rounded-xl text-sm font-bold transition-all',
-                  isEditing
-                    ? 'bg-ios-blue text-white shadow-lg shadow-ios-blue/20 hover:bg-blue-600'
-                    : 'text-ios-blue hover:bg-ios-blue/5',
+                  'px-5 py-2 text-sm font-bold',
+                  isEditing ? 'shadow-lg shadow-ios-blue/20' : 'text-ios-blue',
                 )}
               >
                 {isEditing ? 'Guardar Cambios' : 'Editar Datos'}
-              </button>
+              </Button>
             </div>
 
             {isEditing ? (
               <div className="grid grid-cols-1 gap-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+                    <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
                       Nombres
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       name="nombres"
                       value={formData.nombres}
                       onChange={handleChange}
-                      className="w-full p-3.5 rounded-2xl border border-slate-200 bg-white/50 focus:ring-2 focus:ring-ios-blue/20 focus:border-ios-blue outline-none transition-all"
+                      className="p-3.5 rounded-2xl border border-slate-200 bg-white/50 focus:ring-ios-blue/20"
                       placeholder="Tus nombres"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+                    <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
                       Apellidos
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       name="apellidos"
                       value={formData.apellidos}
                       onChange={handleChange}
-                      className="w-full p-3.5 rounded-2xl border border-slate-200 bg-white/50 focus:ring-2 focus:ring-ios-blue/20 focus:border-ios-blue outline-none transition-all"
+                      className="p-3.5 rounded-2xl border border-slate-200 bg-white/50 focus:ring-ios-blue/20"
                       placeholder="Tus apellidos"
                     />
                   </div>
@@ -221,26 +224,26 @@ const Profile = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+                    <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
                       DNI
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       name="dni"
                       value={formData.dni}
                       onChange={handleChange}
-                      className="w-full p-3.5 rounded-2xl border border-slate-200 bg-white/50 focus:ring-2 focus:ring-ios-blue/20 focus:border-ios-blue outline-none transition-all"
+                      className="p-3.5 rounded-2xl border border-slate-200 bg-white/50 focus:ring-ios-blue/20"
                       placeholder="Número de documento"
                     />
                   </div>
                   <div className="sm:col-span-2 space-y-2">
-                    <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+                    <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
                       Teléfono
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       name="telefono"
                       value={formData.telefono}
                       onChange={handleChange}
-                      className="w-full p-3.5 rounded-2xl border border-slate-200 bg-white/50 focus:ring-2 focus:ring-ios-blue/20 focus:border-ios-blue outline-none transition-all"
+                      className="p-3.5 rounded-2xl border border-slate-200 bg-white/50 focus:ring-ios-blue/20"
                       placeholder="Ej. +51 987 654 321"
                     />
                   </div>
@@ -249,32 +252,32 @@ const Profile = () => {
                 <div className="space-y-4 pt-4 border-t border-slate-200/50">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+                      <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
                         Universidad
-                      </label>
-                      <select
+                      </Label>
+                      <Select
                         name="universidad_id"
                         value={formData.universidad_id}
                         onChange={handleChange}
-                        className="w-full p-3.5 rounded-2xl border border-slate-200 bg-white focus:ring-2 focus:ring-ios-blue/20 focus:border-ios-blue outline-none transition-all appearance-none"
+                        className="p-3.5 rounded-2xl border border-slate-200 bg-white"
                       >
-                        <option value="">Selecciona tu universidad</option>
+                        <SelectItem value="">Selecciona tu universidad</SelectItem>
                         {universidades.map((u) => (
-                          <option key={u.id} value={u.id}>
+                          <SelectItem key={u.id} value={u.id}>
                             {u.nombre}
-                          </option>
+                          </SelectItem>
                         ))}
-                      </select>
+                      </Select>
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+                      <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
                         Carrera
-                      </label>
-                      <input
+                      </Label>
+                      <Input
                         name="carrera"
                         value={formData.carrera}
                         onChange={handleChange}
-                        className="w-full p-3.5 rounded-2xl border border-slate-200 bg-white focus:ring-2 focus:ring-ios-blue/20 focus:border-ios-blue outline-none transition-all"
+                        className="p-3.5 rounded-2xl border border-slate-200 bg-white"
                         placeholder="Ej. Ingeniería de Software"
                       />
                     </div>

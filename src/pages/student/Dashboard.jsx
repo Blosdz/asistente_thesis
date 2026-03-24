@@ -1,4 +1,5 @@
 import { BarChart3, Clock, AlertCircle, CheckCircle2, FileText, UserCheck } from 'lucide-react';
+import { Button } from '../../components/ui/button';
 
 const Dashboard = () => {
   const stats = [
@@ -68,9 +69,12 @@ const Dashboard = () => {
             <p className="text-sm text-gray-500 mt-1">Dr. Alejandro Vargas</p>
             <p className="text-xs text-ios-blue font-medium mt-2">Facultad de Ingeniería</p>
           </div>
-          <button className="w-full py-3 bg-white border border-gray-200 rounded-xl text-sm font-bold hover:bg-gray-50 transition-colors">
+          <Button
+            variant="secondary"
+            className="w-full py-3 text-sm font-bold"
+          >
             Enviar Mensaje
-          </button>
+          </Button>
         </div>
       </div>
     </div>
