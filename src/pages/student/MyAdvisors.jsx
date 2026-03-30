@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ShieldCheck, Users, Search } from 'lucide-react';
 import MisAsesores from './MisAsesores';
 import AdvisorCatalog from './AdvisorCatalog';
 
@@ -21,22 +22,24 @@ export default function MyAdvisors() {
         <div className="inline-flex p-1 bg-slate-100/80 backdrop-blur-sm rounded-2xl w-fit border border-slate-200/60 shadow-inner">
           <button 
             onClick={() => setActiveTab('my-advisors')}
-            className={`px-6 py-2.5 rounded-xl text-sm transition-all duration-300 ${
+            className={`px-6 py-2.5 rounded-xl text-sm transition-all duration-300 flex items-center gap-2 ${
               activeTab === 'my-advisors' 
                 ? 'bg-white shadow-[0_2px_10px_rgba(0,0,0,0.06)] font-bold text-ios-blue' 
                 : 'font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
             }`}
           >
+            <Users size={16} />
             Mis Asesores
           </button>
           <button 
             onClick={() => setActiveTab('catalog')}
-            className={`px-6 py-2.5 rounded-xl text-sm transition-all duration-300 ${
+            className={`px-6 py-2.5 rounded-xl text-sm transition-all duration-300 flex items-center gap-2 ${
               activeTab === 'catalog' 
                 ? 'bg-white shadow-[0_2px_10px_rgba(0,0,0,0.06)] font-bold text-ios-blue' 
                 : 'font-semibold text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
             }`}
           >
+            <Search size={16} />
             Catálogo de Asesores
           </button>
         </div>
@@ -61,9 +64,7 @@ export default function MyAdvisors() {
               </div>
               <div className="bg-slate-50 border border-slate-200 p-8 rounded-3xl flex flex-col items-center text-center justify-center">
                 <div className="w-16 h-16 bg-blue-100 text-ios-blue rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
+                  <ShieldCheck className="w-8 h-8" />
                 </div>
                 <h4 className="text-lg font-bold text-slate-900 mb-2">100% Verificados</h4>
                 <p className="text-sm text-slate-500">

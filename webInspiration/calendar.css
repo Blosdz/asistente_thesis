@@ -1,0 +1,1673 @@
+/* Section - Main Calendar: The Crystalline Grid */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 32px;
+gap: 32px;
+
+position: absolute;
+height: 555px;
+left: 0px;
+right: 421.33px;
+top: 0px;
+
+background: linear-gradient(179.91deg, rgba(255, 255, 255, 0.4) 41.09%, rgba(178, 174, 174, 0.16) 99.93%);
+box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.05);
+backdrop-filter: blur(14.3px);
+/* Note: backdrop-filter has minimal browser support */
+border-radius: 48px;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: space-between;
+align-items: center;
+padding: 0px 0.01px 0px 0px;
+gap: 321.56px;
+
+width: 744.67px;
+height: 44px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 16px;
+
+width: 242.8px;
+height: 32px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Heading 2 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+width: 176px;
+height: 32px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* October 2023 */
+
+width: 176px;
+height: 32px;
+
+font-family: 'Ubuntu';
+font-style: normal;
+font-weight: 700;
+font-size: 24px;
+line-height: 32px;
+/* identical to box height, or 133% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: flex-start;
+padding: 0px;
+gap: 4px;
+
+width: 50.8px;
+height: 28px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+
+/* Button */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 8px;
+
+width: 23.4px;
+height: 28px;
+
+border-radius: 9999px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: flex-start;
+padding: 0px;
+
+width: 7.4px;
+height: 12px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Icon */
+
+width: 7.4px;
+height: 12px;
+
+background: #191C1E;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Button */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 8px;
+
+width: 23.4px;
+height: 28px;
+
+border-radius: 9999px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: center;
+align-items: flex-start;
+padding: 0px;
+
+width: 7.4px;
+height: 12px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Icon */
+
+width: 7.4px;
+height: 12px;
+
+background: #191C1E;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Button */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 10px 24px;
+gap: 8px;
+isolation: isolate;
+
+width: 162.58px;
+height: 44px;
+
+background: #0A47EE;
+border-radius: 9999px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+
+/* Button:shadow */
+
+position: absolute;
+left: 0px;
+right: -0.84px;
+top: 0px;
+bottom: 0px;
+
+background: rgba(255, 255, 255, 0.002);
+box-shadow: 0px 10px 15px -3px rgba(10, 71, 238, 0.2), 0px 4px 6px -4px rgba(10, 71, 238, 0.2);
+border-radius: 9999px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+z-index: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 0px;
+
+width: 8.17px;
+height: 8.17px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+z-index: 1;
+
+
+/* Icon */
+
+width: 8.17px;
+height: 8.17px;
+
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Text */
+
+width: 98.41px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 600;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+text-align: center;
+
+color: #FFFFFF;
+
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+flex-grow: 0;
+z-index: 2;
+
+
+/* Overlay+Border */
+
+box-sizing: border-box;
+
+width: 744.67px;
+height: 413px;
+
+background: linear-gradient(0deg, #FFFFFF, #FFFFFF);
+border: 1px solid rgba(255, 255, 255, 0.1);
+border-radius: 32px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Day Headers */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 16px 0px;
+
+position: absolute;
+height: 48px;
+left: 1px;
+right: 638.43px;
+top: 1px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 33.75px;
+height: 16px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 16px;
+/* identical to box height, or 133% */
+display: flex;
+align-items: center;
+text-align: center;
+letter-spacing: 1.2px;
+text-transform: uppercase;
+
+color: #414755;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 16px 0px;
+
+position: absolute;
+height: 48px;
+left: 107.24px;
+right: 532.19px;
+top: 1px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 25.88px;
+height: 16px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 16px;
+/* identical to box height, or 133% */
+display: flex;
+align-items: center;
+text-align: center;
+letter-spacing: 1.2px;
+text-transform: uppercase;
+
+color: #414755;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 16px 0px;
+
+position: absolute;
+height: 48px;
+left: 213.48px;
+right: 425.95px;
+top: 1px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 31.88px;
+height: 16px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 16px;
+/* identical to box height, or 133% */
+display: flex;
+align-items: center;
+text-align: center;
+letter-spacing: 1.2px;
+text-transform: uppercase;
+
+color: #414755;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 16px 0px;
+
+position: absolute;
+height: 48px;
+left: 319.71px;
+right: 319.71px;
+top: 1px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 27.53px;
+height: 16px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 16px;
+/* identical to box height, or 133% */
+display: flex;
+align-items: center;
+text-align: center;
+letter-spacing: 1.2px;
+text-transform: uppercase;
+
+color: #414755;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 16px 0px;
+
+position: absolute;
+height: 48px;
+left: 425.95px;
+right: 213.48px;
+top: 1px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 21.92px;
+height: 16px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 16px;
+/* identical to box height, or 133% */
+display: flex;
+align-items: center;
+text-align: center;
+letter-spacing: 1.2px;
+text-transform: uppercase;
+
+color: #414755;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 16px 0px;
+
+position: absolute;
+height: 48px;
+left: 532.19px;
+right: 107.24px;
+top: 1px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 25.73px;
+height: 16px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 16px;
+/* identical to box height, or 133% */
+display: flex;
+align-items: center;
+text-align: center;
+letter-spacing: 1.2px;
+text-transform: uppercase;
+
+color: #414755;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 16px 0px;
+
+position: absolute;
+height: 48px;
+left: 638.43px;
+right: 1px;
+top: 1px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 28.88px;
+height: 16px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 16px;
+/* identical to box height, or 133% */
+display: flex;
+align-items: center;
+text-align: center;
+letter-spacing: 1.2px;
+text-transform: uppercase;
+
+color: #414755;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Row 1 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 1px;
+right: 638.43px;
+top: 50px;
+
+background: rgba(255, 255, 255, 0.05);
+opacity: 0.4;
+
+
+/* Text */
+
+width: 19.47px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 107.24px;
+right: 532.19px;
+top: 50px;
+
+background: rgba(255, 255, 255, 0.05);
+opacity: 0.4;
+
+
+/* Text */
+
+width: 19.16px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 213.48px;
+right: 425.95px;
+top: 50px;
+
+background: rgba(255, 255, 255, 0.05);
+opacity: 0.4;
+
+
+/* Text */
+
+width: 18.3px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 319.71px;
+right: 319.71px;
+top: 50px;
+
+background: rgba(255, 255, 255, 0.05);
+opacity: 0.4;
+
+
+/* Text */
+
+width: 19.66px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 425.95px;
+right: 213.48px;
+top: 50px;
+
+background: rgba(255, 255, 255, 0.05);
+opacity: 0.4;
+
+
+/* Text */
+
+width: 19.16px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 532.19px;
+right: 107.24px;
+top: 50px;
+
+background: rgba(255, 255, 255, 0.05);
+opacity: 0.4;
+
+
+/* Text */
+
+width: 21.47px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 638.43px;
+right: 1px;
+top: 50px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 5.94px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Row 2 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 1px;
+right: 638.43px;
+top: 171px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 9.61px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 107.24px;
+right: 532.19px;
+top: 171px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 9.75px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 8px 8px 53px;
+gap: 4px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 213.48px;
+right: 425.95px;
+top: 171px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+width: 89.24px;
+height: 24px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* 4 */
+
+width: 89.24px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Overlay+VerticalBorder */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 8px;
+
+width: 89.24px;
+height: 31px;
+
+background: rgba(10, 71, 238, 0.2);
+border-left: 4px solid #0A47EE;
+border-radius: 16px;
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Text */
+
+width: 67.52px;
+height: 15px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 700;
+font-size: 10px;
+line-height: 15px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #0A47EE;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 319.71px;
+right: 319.71px;
+top: 171px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 9.86px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 532.19px;
+right: 107.24px;
+top: 171px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 8.7px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 638.43px;
+right: 1px;
+top: 171px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 10.06px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Row 3 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 1px;
+right: 638.43px;
+top: 292px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 9.56px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 107.24px;
+right: 532.19px;
+top: 292px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 17.66px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 213.48px;
+right: 425.95px;
+top: 292px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 11.88px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 319.71px;
+right: 319.71px;
+top: 292px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 15.55px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 425.95px;
+right: 213.48px;
+top: 292px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 15.69px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 532.19px;
+right: 107.24px;
+top: 292px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Icon */
+
+width: 14.66px;
+height: 11.92px;
+
+background: #191C1E;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 88.5px;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 638.43px;
+right: 1px;
+top: 292px;
+
+background: rgba(255, 255, 255, 0.05);
+
+
+/* Text */
+
+width: 15.8px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 7.5px 8px 34px;
+gap: 8.5px;
+isolation: isolate;
+
+position: absolute;
+height: 120px;
+min-height: 120px;
+left: 425.95px;
+right: 213.48px;
+top: 171px;
+
+background: rgba(255, 255, 255, 0.1);
+
+
+/* Overlay+Shadow */
+
+position: absolute;
+left: 0px;
+right: 0.01px;
+top: 0px;
+bottom: 0px;
+
+background: rgba(255, 255, 255, 0.002);
+box-shadow: 0px 0px 0px 2px rgba(10, 71, 238, 0.3);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+z-index: 0;
+
+
+/* Text */
+
+width: 9.56px;
+height: 24px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 24px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+z-index: 1;
+
+
+/* Background */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 8px;
+isolation: isolate;
+
+width: 89.24px;
+height: 46px;
+
+background: #6063EE;
+border-radius: 16px;
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+align-self: stretch;
+flex-grow: 0;
+z-index: 2;
+
+
+/* Overlay+Shadow */
+
+position: absolute;
+left: 0px;
+right: 0.01px;
+top: 0px;
+bottom: 0px;
+
+background: rgba(255, 255, 255, 0.002);
+box-shadow: 0px 4px 6px -1px rgba(0, 0, 0, 0.1), 0px 2px 4px -2px rgba(0, 0, 0, 0.1);
+border-radius: 16px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+z-index: 0;
+
+
+/* Text */
+
+width: 66.29px;
+height: 30px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 700;
+font-size: 10px;
+line-height: 15px;
+/* or 150% */
+display: flex;
+align-items: center;
+
+color: #FFFFFF;
+
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+z-index: 1;
+
+
+/* Background */
+
+position: absolute;
+width: 8px;
+height: 8px;
+right: 8.01px;
+top: 8px;
+
+background: #0A47EE;
+border-radius: 9999px;
+
+/* Inside auto layout */
+flex: none;
+order: 3;
+flex-grow: 0;
+z-index: 3;

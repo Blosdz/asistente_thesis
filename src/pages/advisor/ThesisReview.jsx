@@ -18,14 +18,16 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { Select, SelectItem } from '../../components/ui/select';
 import { toast } from 'react-hot-toast';
 
-import { getTesisAsesor, obtenerSugerenciasAsesor } from '../../services/advisorService';
 import {
-  subirDocumentoAGoogleDrive,
-  crearSugerenciaAsesor,
-} from '../../services/thesisService';
+  getTesisAsesor,
+  obtenerSugerenciasAsesor,
+  obtenerDocumentosTesisAsignada,
+  registrarSugerenciaAsesor,
+  actualizarEstadoSugerenciaAsesor,
+} from '../../services/advisorService';
+import { subirDocumentoAGoogleDrive } from '../../services/thesisService';
 
 export default function AdvisorThesisReview() {
   const [thesisList, setThesisList] = useState([]);
@@ -34,6 +36,7 @@ export default function AdvisorThesisReview() {
 
   const [currentVersion, setCurrentVersion] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [suggestionText, setSuggestionText] = useState('');
@@ -91,6 +94,17 @@ export default function AdvisorThesisReview() {
     }
   };
 
+  const loadDocuments = async (tesisId) => {
+    try {
+      const data = await obtenerDocumentosTesisAsignada(tesisId);
+      setDocuments(data || []);
+    } catch (error) {
+      console.error('Error al cargar documentos:', error);
+      toast.error('No se pudieron cargar los documentos de la tesis');
+      setDocuments([]);
+    }
+  };
+
   useEffect(() => {
     fetchTheses();
   }, []);
@@ -98,8 +112,10 @@ export default function AdvisorThesisReview() {
   useEffect(() => {
     if (selectedThesisId) {
       loadSuggestions(selectedThesisId);
+      loadDocuments(selectedThesisId);
     } else {
       setSuggestionsList([]);
+      setDocuments([]);
     }
   }, [selectedThesisId]);
 
@@ -119,7 +135,7 @@ export default function AdvisorThesisReview() {
 
       toast.dismiss(loadingToast);
       toast.success('Documento subido con éxito');
-      await fetchTheses(); // Refresh the theses to get the new document
+      await loadDocuments(selectedThesisId);
     } catch (err) {
       console.error('Upload error:', err);
       toast.error(
@@ -150,7 +166,7 @@ export default function AdvisorThesisReview() {
       
       const suggestedTextWithPriority = `[${suggestionPriority}] ${suggestionText.trim()}`;
 
-      await crearSugerenciaAsesor({
+      await registrarSugerenciaAsesor({
         tesisId,
         documentoTesisId:
           currentVersion?.id || currentVersion?.documento_id || null,
@@ -171,7 +187,11 @@ export default function AdvisorThesisReview() {
 
   const filteredThesis = thesisList.filter(
     (t) =>
-      (t.estudiante_nombre?.toLowerCase() || '').includes(
+      (
+        `${t.estudiante_nombres || ''} ${t.estudiante_apellidos || ''}`
+          .trim()
+          .toLowerCase() || ''
+      ).includes(
         searchTerm.toLowerCase(),
       ) || (t.titulo?.toLowerCase() || '').includes(searchTerm.toLowerCase()),
   );
@@ -181,28 +201,27 @@ export default function AdvisorThesisReview() {
     [thesisList, selectedThesisId],
   );
 
-  const documents = currentThesis?.documentos || [];
+  const nombreEstudianteActual = currentThesis
+    ? `${currentThesis.estudiante_nombres || ''} ${currentThesis.estudiante_apellidos || ''}`.trim()
+    : '';
 
   // Update current version and preview when switching thesis or documents
   useEffect(() => {
-    if (currentThesis) {
-      const docs = currentThesis.documentos || [];
-      if (docs.length > 0) {
-        setCurrentVersion(docs[0]);
-        setPreviewUrl(
-          buildPreviewUrl(
-            docs[0].url_archivo_drive || docs[0].url_google_doc || docs[0].url,
-          ),
-        );
-      } else {
-        setCurrentVersion(null);
-        setPreviewUrl(null);
-      }
+    if (documents.length > 0) {
+      const firstDoc = documents[0];
+      setCurrentVersion(firstDoc);
+      setPreviewUrl(
+        buildPreviewUrl(
+          firstDoc.url_archivo_drive ||
+            firstDoc.url_google_doc ||
+            firstDoc.url,
+        ),
+      );
     } else {
       setCurrentVersion(null);
       setPreviewUrl(null);
     }
-  }, [currentThesis, buildPreviewUrl]);
+  }, [documents, buildPreviewUrl]);
 
   const getStatusColor = (status) => {
     const s = status?.toLowerCase() || '';
@@ -219,6 +238,23 @@ export default function AdvisorThesisReview() {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
     return date.toLocaleDateString();
+  };
+
+  const handleToggleSuggestion = async (sugerenciaId, aplicado) => {
+    try {
+      await actualizarEstadoSugerenciaAsesor(sugerenciaId, aplicado);
+      toast.success(
+        aplicado
+          ? 'Sugerencia marcada como aplicada'
+          : 'Sugerencia marcada como pendiente',
+      );
+      if (selectedThesisId) {
+        await loadSuggestions(selectedThesisId);
+      }
+    } catch (error) {
+      console.error('Error actualizando sugerencia:', error);
+      toast.error('No se pudo actualizar la sugerencia');
+    }
   };
 
   if (loading) {
@@ -270,7 +306,8 @@ export default function AdvisorThesisReview() {
               >
                 <div className="flex justify-between items-start w-full gap-2">
                   <span className="text-sm font-bold text-slate-900 truncate">
-                    {t.estudiante_nombre || 'Estudiante anónimo'}
+                    {`${t.estudiante_nombres || ''} ${t.estudiante_apellidos || ''}`.trim() ||
+                      'Estudiante anónimo'}
                   </span>
                   <span
                     className={`text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap ${getStatusColor(t.estado)}`}
@@ -281,10 +318,10 @@ export default function AdvisorThesisReview() {
                 <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
                   {t.titulo || 'Sin título'}
                 </p>
-                {t.nombre_archivo && (
+                {t.tesis_descripcion && (
                   <p className="text-[10px] text-ios-blue flex items-center gap-1 mt-1 truncate">
                     <FileText className="w-3 h-3 flex-shrink-0" />
-                    {t.nombre_archivo}
+                    {t.tesis_descripcion}
                   </p>
                 )}
               </button>
@@ -317,7 +354,7 @@ export default function AdvisorThesisReview() {
                 <div className="flex items-center gap-4 text-sm text-slate-500 font-medium">
                   <span className="flex items-center gap-1">
                     <User className="w-4 h-4 text-slate-400" />
-                    {currentThesis.estudiante_nombre}
+                    {nombreEstudianteActual || 'Estudiante asignado'}
                   </span>
                   <span className="flex items-center gap-1">
                     <Clock className="w-4 h-4 text-slate-400" />
@@ -329,9 +366,9 @@ export default function AdvisorThesisReview() {
               </div>
 
               <div className="flex gap-2">
-                {currentThesis.url_archivo_drive && (
+                {currentVersion?.url_archivo_drive && (
                   <a
-                    href={currentThesis.url_archivo_drive}
+                    href={currentVersion.url_archivo_drive}
                     target="_blank"
                     rel="noreferrer"
                     className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold shadow-sm transition-all text-xs flex items-center gap-2"
@@ -479,6 +516,29 @@ export default function AdvisorThesisReview() {
                       </span>
                     </div>
                     <p className="text-sm text-slate-700 leading-relaxed break-words">{textWithoutStatus}</p>
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <span
+                        className={`rounded-full px-2 py-1 text-[10px] font-bold ${
+                          sug.aplicado
+                            ? 'bg-emerald-50 text-emerald-700'
+                            : 'bg-amber-50 text-amber-700'
+                        }`}
+                      >
+                        {sug.aplicado ? 'Aplicada' : 'Pendiente'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleToggleSuggestion(
+                            sug.sugerencia_id || sug.id,
+                            !sug.aplicado,
+                          )
+                        }
+                        className="text-[11px] font-bold text-ios-blue hover:underline"
+                      >
+                        {sug.aplicado ? 'Marcar pendiente' : 'Marcar aplicada'}
+                      </button>
+                    </div>
                   </div>
                 );
               })

@@ -6,6 +6,7 @@ import {
   ExternalLink,
   Info,
   Plus,
+  Sparkles,
   X,
 } from 'lucide-react';
 import {
@@ -215,9 +216,29 @@ const MyThesis = () => {
   };
 
   const selectedThesis = thesesList.find((t) => t.id === selectedThesisId);
+  const totalTheses = thesesList.length;
+  const totalDocuments = documents.length;
+  const totalSuggestions = sugerencias.length;
 
   const getSuggestionText = (item) =>
     item?.sugerencia || item?.comentario || item?.observacion || 'Sin detalle';
+
+  const getAdvisorName = (item) =>
+    item?.nombre_asesor || item?.asesor || item?.r_nombre_asesor || 'Asesor';
+
+  const getSuggestionStatus = (item) => {
+    const estado = (item?.estado || item?.estado_sugerencia || item?.r_estado || '')
+      .toString()
+      .toLowerCase();
+
+    if (estado.includes('resuelto') || estado.includes('aprob')) {
+      return { label: 'Resuelto', tone: 'success' };
+    }
+    if (estado.includes('rechaz')) {
+      return { label: 'Rechazado', tone: 'danger' };
+    }
+    return { label: 'Action required', tone: 'warning' };
+  };
 
   if (!loading && thesesList.length === 0) {
     return (
@@ -299,133 +320,270 @@ const MyThesis = () => {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Mis Tesis</h2>
-          <p className="text-sm text-gray-500">
-            Gestiona tus tesis, versiones y previsualizaciones.
-          </p>
-        </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-5 py-3 bg-white/70 backdrop-blur-xl border border-white/80 text-ios-blue rounded-2xl font-bold shadow-sm hover:scale-105 transition-transform active:scale-95"
-          title="Crear Nueva Tesis"
-        >
-          <Plus size={20} />
-          Crear Tesis
-        </button>
-
-        <button
-          onClick={() => setShowSuggestionsModal(true)}
-          disabled={!selectedThesisId}
-          className={`flex items-center gap-2 px-5 py-3 rounded-2xl font-bold shadow-sm transition-transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
-            sugerencias.length > 0
-              ? 'bg-amber-500 text-white hover:scale-105'
-              : 'bg-white/70 backdrop-blur-xl border border-white/80 text-slate-700 hover:scale-105'
-          }`}
-          title="Mis Sugerencias"
-        >
-          Mis Sugerencias
-          <span className="inline-flex min-w-6 h-6 px-2 items-center justify-center rounded-full text-xs font-extrabold bg-white/90 text-amber-600">
-            {sugerencias.length}
-          </span>
-        </button>
-      </div>
-
-      {sugerencias.length > 0 && (
-        <div className="glass-card p-4 border border-amber-200 bg-amber-50/60 text-amber-800 text-sm font-medium">
-          Tienes {sugerencias.length} sugerencia(s) pendiente(s) de revisión.
-        </div>
-      )}
-
-      <div className="glass-card p-6 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wider text-gray-500">
-              <tr>
-                <th className="px-4 py-3">Título</th>
-                <th className="px-4 py-3">Descripción</th>
-                <th className="px-4 py-3">Estado</th>
-                <th className="px-4 py-3">Última actualización</th>
-                <th className="px-4 py-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/50">
-              {thesesList.map((thesis) => (
-                <tr
-                  key={thesis.id}
-                  className="hover:bg-white/60 transition-colors"
-                >
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-2">
-                      <span className="w-10 h-10 bg-ios-blue/10 text-ios-blue rounded-full flex items-center justify-center">
-                        <FileText size={18} />
-                      </span>
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {thesis.titulo || 'Sin título'}
-                        </p>
-                        <p className="text-xs text-gray-400">ID {thesis.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-gray-600 max-w-[280px]">
-                    <p className="line-clamp-2">
-                      {thesis.descripcion || 'Sin descripción registrada.'}
-                    </p>
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-600">
-                      {thesis.estado || 'En progreso'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 text-gray-500">
-                    {formatDate(thesis.updated_at || thesis.created_at)}
-                  </td>
-                  <td className="px-4 py-4 text-right">
-                    <button
-                      onClick={() => {
-                        setSelectedThesisId(thesis.id);
-                        setShowPreviewModal(true);
-                      }}
-                      className="inline-flex items-center gap-2 text-ios-blue font-semibold hover:text-blue-700"
-                    >
-                      Ver detalles
-                      <ExternalLink size={16} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <section className="glass-card p-8 min-h-[520px] flex flex-col">
-        <h3 className="text-lg font-bold mb-6">Previsualización de la tesis</h3>
-        {previewUrl ? (
-          <iframe
-            src={previewUrl}
-            className="w-full flex-1 min-h-[560px] rounded-[24px] border border-gray-200 shadow-inner bg-white"
-            title="Thesis Preview"
-            allow="fullscreen"
-          />
-        ) : (
-          <div className="flex-1 border-2 border-dashed border-gray-200 rounded-[32px] flex flex-col items-center justify-center text-center p-12 bg-gray-50/50">
-            <div className="w-16 h-16 bg-gray-200/50 rounded-full flex items-center justify-center text-gray-400 mb-4">
-              <Info size={32} />
+    <div className="relative w-full px-4 sm:px-6 lg:px-10 py-12 animate-in fade-in duration-700 text-slate-900">
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_right,#dde1ff_0%,#f7f9fb_45%),radial-gradient(circle_at_bottom_left,#e1e0ff_0%,#f7f9fb_45%)]" />
+      <div className="max-w-[1600px] mx-auto flex flex-col gap-8">
+        <header className="flex flex-col gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-blue-500">
+                Mi tesis
+              </p>
+              <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-slate-900">
+                ThesisFlow - Student Workspace
+              </h1>
+              <p className="text-slate-600 max-w-2xl text-sm sm:text-base mt-2">
+                Gestiona tu progreso, versiones y feedback en un solo espacio.
+              </p>
             </div>
-            <h4 className="text-lg font-bold text-gray-700 mb-2">
-              Vista previa no disponible
-            </h4>
-            <p className="text-sm text-gray-500 max-w-sm">
-              Selecciona un documento del historial que contenga enlace a Drive
-              para verlo aquí.
-            </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white/80 border border-white/90 text-blue-600 font-semibold shadow-sm hover:shadow-md hover:-translate-y-0.5 transition"
+                title="Crear Nueva Tesis"
+              >
+                <Plus size={18} />
+                Crear tesis
+              </button>
+              <button
+                onClick={() => setShowSuggestionsModal(true)}
+                disabled={!selectedThesisId}
+                className={`inline-flex items-center gap-2 px-5 py-3 rounded-full font-semibold shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                  totalSuggestions > 0
+                    ? 'bg-amber-500 text-white hover:shadow-md hover:-translate-y-0.5'
+                    : 'bg-white/80 border border-white/90 text-slate-700 hover:shadow-md hover:-translate-y-0.5'
+                }`}
+                title="Mis Sugerencias"
+              >
+                Mis sugerencias
+                <span className="inline-flex min-w-6 h-6 px-2 items-center justify-center rounded-full text-xs font-extrabold bg-white/90 text-amber-600">
+                  {totalSuggestions}
+                </span>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {totalSuggestions > 0 && (
+          <div className="rounded-2xl p-4 border border-amber-200 bg-amber-50/60 text-amber-800 text-sm font-medium">
+            Tienes {totalSuggestions} sugerencia(s) pendiente(s) de revision.
           </div>
         )}
-      </section>
+
+        <div className="grid grid-cols-12 gap-8 items-start">
+          <aside className="col-span-12 lg:col-span-3 space-y-6">
+            <section className="rounded-2xl p-6 border border-white/70 bg-white/35 backdrop-blur-2xl shadow-[0_0_30px_rgba(18,74,240,0.06)]">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Documentos
+                  </p>
+                  <h3 className="text-xl font-bold tracking-tight text-slate-900">Project Files</h3>
+                </div>
+                <button
+                  onClick={() => document.getElementById('thesis-upload')?.click()}
+                  className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"
+                  title="Subir nuevo documento"
+                >
+                  <Upload size={18} />
+                </button>
+              </div>
+              <div className="space-y-2">
+                {documents.slice(0, 6).map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center gap-4 p-3 rounded-xl transition bg-white/40 border border-white/60 hover:border-blue-100"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                      <FileText className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <p className="text-sm font-semibold truncate text-slate-800">
+                        {doc.nombre || doc.nombre_archivo}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        {formatDate(doc.created_at)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {documents.length === 0 && (
+                  <p className="text-xs text-slate-400">Sin archivos cargados.</p>
+                )}
+              </div>
+            </section>
+
+            <section className="rounded-2xl p-6 border border-white/70 bg-white/35 backdrop-blur-2xl shadow-[0_0_30px_rgba(18,74,240,0.06)]">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+                    Feedback del asesor
+                  </p>
+                  <h3 className="text-xl font-bold tracking-tight text-slate-900">
+                    Advisor Feedback
+                  </h3>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-600">
+                  {totalSuggestions} notas
+                </span>
+              </div>
+
+              {loadingSugerencias ? (
+                <p className="text-sm text-slate-500">Cargando sugerencias...</p>
+              ) : totalSuggestions === 0 ? (
+                <div className="border border-dashed border-slate-200 rounded-xl p-4 text-sm text-slate-500 bg-white/50">
+                  No hay sugerencias registradas para esta tesis.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {sugerencias.map((item, idx) => {
+                    const status = getSuggestionStatus(item);
+                    const toneMap = {
+                      success: 'bg-emerald-50 text-emerald-700',
+                      danger: 'bg-rose-50 text-rose-700',
+                      warning: 'bg-amber-50 text-amber-800',
+                    };
+                    const badgeClass = toneMap[status.tone] || toneMap.warning;
+
+                    return (
+                      <article
+                        key={item.id || item.sugerencia_id || `${selectedThesisId}-${idx}`}
+                        className="bg-white/70 border border-white/80 rounded-2xl p-4 hover:border-blue-100 transition"
+                      >
+                        <div className="flex gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                            {getAdvisorName(item).charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="text-sm font-bold text-slate-900 truncate">
+                                  {getAdvisorName(item)}
+                                </p>
+                                <p className="text-[11px] text-slate-500">
+                                  {formatDate(item.creado_en || item.created_at || item.r_creado_en)}
+                                </p>
+                              </div>
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${badgeClass}`}>
+                                {status.label}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <p className="text-sm text-slate-700 leading-relaxed">
+                          {getSuggestionText(item)}
+                        </p>
+                        {(item.nombre_documento || item.documento_tesis_id) && (
+                          <p className="text-[11px] text-slate-500 mt-2">
+                            Documento: {item.nombre_documento || item.documento_tesis_id}
+                          </p>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </aside>
+
+          <section className="col-span-12 lg:col-span-6">
+            <div className="rounded-2xl overflow-hidden border border-white/60 bg-white/30 backdrop-blur-2xl shadow-[0_0_40px_rgba(18,74,240,0.08)] min-h-[870px] flex flex-col">
+              <div className="px-8 py-4 border-b border-slate-200/60 flex justify-between items-center bg-white/40">
+                <div className="flex items-center gap-4">
+                  <div className="bg-blue-50 p-2 rounded-lg">
+                    <FileText className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold">
+                      {selectedThesis?.titulo || 'Tu tesis'}
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      {selectedThesis?.descripcion || 'Seccion principal'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <span>100%</span>
+                </div>
+              </div>
+              <div className="flex-1 bg-slate-50/60 p-8 overflow-y-auto">
+                {previewUrl ? (
+                  <iframe
+                    src={previewUrl}
+                    className="w-full min-h-[700px] rounded-2xl border border-slate-200 bg-white"
+                    title="Thesis Preview"
+                    allow="fullscreen"
+                  />
+                ) : (
+                  <div className="bg-white max-w-2xl mx-auto shadow-2xl p-12 min-h-[600px] text-slate-800 rounded-2xl">
+                    <h2 className="text-2xl font-bold mb-4 text-center">
+                      Vista previa no disponible
+                    </h2>
+                    <p className="text-sm text-slate-500 text-center">
+                      Sube o selecciona un documento para visualizarlo aqui.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+          <aside className="col-span-12 lg:col-span-3 space-y-8">
+            <section className="rounded-2xl p-6 border border-white/60 bg-white/30 backdrop-blur-2xl">
+              <h3 className="text-lg font-bold tracking-tight mb-4">Subir documento</h3>
+              <p className="text-sm text-slate-500 mb-4">
+                Sube la version principal de tu tesis para mantener el historial actualizado.
+              </p>
+              <label
+                className={`flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl font-semibold text-sm text-white shadow-lg transition-all ${
+                  uploading || !selectedThesisId
+                    ? 'bg-slate-300 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-500 to-indigo-400 hover:scale-105 active:scale-95'
+                }`}
+              >
+                <Upload size={18} />
+                {uploading ? 'Subiendo...' : 'Seleccionar archivo'}
+                <input
+                  type="file"
+                  id="thesis-upload"
+                  onChange={handleUpload}
+                  disabled={uploading || !selectedThesisId}
+                  className="hidden"
+                  accept="*/*"
+                />
+              </label>
+            </section>
+
+            <section className="rounded-2xl p-6 border border-white/60 bg-white/30 backdrop-blur-2xl">
+              <h3 className="text-lg font-bold tracking-tight mb-4">Version History</h3>
+              <div className="relative pl-6 space-y-6 before:absolute before:left-[10px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200">
+                {documents.slice(0, 3).map((doc, idx) => (
+                  <div key={doc.id} className="relative">
+                    <div
+                      className={`absolute -left-[18px] top-1 w-3 h-3 rounded-full ${
+                        idx === 0 ? 'bg-blue-500 border-4 border-white' : 'bg-slate-300'
+                      }`}
+                    />
+                    {idx === 0 && (
+                      <p className="text-[10px] font-bold text-blue-500">
+                        CURRENT VERSION
+                      </p>
+                    )}
+                    <p className="text-sm font-medium">
+                      {doc.nombre || doc.nombre_archivo}
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      {formatDate(doc.created_at)}
+                    </p>
+                  </div>
+                ))}
+                {documents.length === 0 && (
+                  <p className="text-xs text-slate-400">Sin versiones todavia.</p>
+                )}
+              </div>
+            </section>
+          </aside>
+        </div>
+      </div>
 
       {/* Modal Creating over active layout */}
       {showCreateModal && thesesList.length > 0 && (

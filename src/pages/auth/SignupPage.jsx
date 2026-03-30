@@ -17,15 +17,25 @@ const SignupPage = () => {
   const [role, setRole] = useState('student'); // 'student' or 'advisor'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [signupSuccess, setSignupSuccess] = useState(false);
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
+    setSignupSuccess(false);
+
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -35,12 +45,10 @@ const SignupPage = () => {
         await registrarAsesor(email, password);
       }
 
-      // Registration successful, redirect to login
-      navigate('/login', {
-        state: { message: 'Check your email to confirm your account' },
-      });
+      setSignupSuccess(true);
     } catch (err) {
       setError(err.message || 'Registration failed. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -78,153 +86,220 @@ const SignupPage = () => {
 
       {/* Signup Card */}
       <div className="relative z-10 liquid-glass w-full max-w-[480px] rounded-3xl p-8 sm:p-10">
-        <div className="mb-10 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">
-            Create Account
-          </h1>
-          <p className="text-slate-500 text-sm">
-            Join the academic platform today
-          </p>
-        </div>
-
-        {/* Role Selector */}
-        <div className="mb-8 p-1.5 bg-slate-100/50 rounded-2xl flex gap-1.5 relative overflow-hidden backdrop-blur-sm border border-white/30">
-          <button
-            onClick={() => setRole('student')}
-            className={clsx(
-              'flex-1 py-3 rounded-xl text-sm font-bold transition-all duration-500 flex items-center justify-center gap-2 z-10',
-              role === 'student'
-                ? 'bg-white text-ios-blue shadow-lg'
-                : 'text-slate-500 hover:text-slate-700',
-            )}
-          >
-            <GraduationCap size={18} />
-            Estudiante
-          </button>
-          <button
-            onClick={() => setRole('advisor')}
-            className={clsx(
-              'flex-1 py-3 rounded-xl text-sm font-bold transition-all duration-500 flex items-center justify-center gap-2 z-10',
-              role === 'advisor'
-                ? 'bg-white text-ios-blue shadow-lg'
-                : 'text-slate-500 hover:text-slate-700',
-            )}
-          >
-            <Briefcase size={18} />
-            Asesor
-          </button>
-
-          {/* Active indicator (animated) */}
-          <div
-            className={clsx(
-              'absolute top-1.5 bottom-1.5 w-[calc(50%-0.5rem)] bg-white rounded-xl shadow-sm transition-all duration-500 ease-in-out z-0',
-              role === 'student' ? 'left-1.5' : 'left-[50%]',
-            )}
-          />
-        </div>
-
-        <form onSubmit={handleSignup} className="space-y-6">
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50/80 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-sm backdrop-blur-sm">
-              {error}
+        {signupSuccess ? (
+          <div className="text-center">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-lg shadow-emerald-200/50">
+              <CheckCircle2 size={36} />
             </div>
-          )}
+            <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">
+              Cuenta creada
+            </h1>
+            <p className="mx-auto max-w-sm text-sm leading-6 text-slate-500">
+              Revisa tu bandeja de correo para validar tu cuenta y completar el
+              acceso a la plataforma.
+            </p>
 
-          {/* Name Input */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-medium text-slate-500 ml-1">
-              Full Name
-            </label>
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-ios-blue transition-colors">
-                <User size={20} />
-              </div>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="block w-full rounded-2xl border-none bg-white/40 py-4 pl-11 pr-4 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-ios-blue/20 transition-all text-sm backdrop-blur-md"
-                placeholder="John Doe"
-                required
-              />
+            <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-4 text-left text-sm text-emerald-800">
+              Hemos enviado un correo de confirmación a <strong>{email}</strong>.
             </div>
-          </div>
 
-          {/* Email Input */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-medium text-slate-500 ml-1">
-              Email Address
-            </label>
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-ios-blue transition-colors">
-                <Mail size={20} />
-              </div>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="block w-full rounded-2xl border-none bg-white/40 py-4 pl-11 pr-4 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-ios-blue/20 transition-all text-sm backdrop-blur-md"
-                placeholder="name@university.edu"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Password Input */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[13px] font-medium text-slate-500 ml-1">
-              Password
-            </label>
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-ios-blue transition-colors">
-                <Lock size={20} />
-              </div>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="block w-full rounded-2xl border-none bg-white/40 py-4 pl-11 pr-12 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-ios-blue/20 transition-all text-sm backdrop-blur-md"
-                placeholder="••••••••"
-                required
-              />
+            <div className="mt-8 flex flex-col gap-3">
+              <Link
+                to="/login"
+                className="w-full rounded-2xl bg-ios-blue py-4 text-center font-bold text-white shadow-xl shadow-ios-blue/30 transition-all hover:bg-ios-blue/90"
+              >
+                Ir al inicio de sesión
+              </Link>
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
+                onClick={() => {
+                  setSignupSuccess(false);
+                  setPassword('');
+                  setConfirmPassword('');
+                }}
+                className="w-full rounded-2xl border border-white/40 bg-white/40 py-4 text-center font-bold text-slate-700 transition-all hover:bg-white/60"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                Registrar otra cuenta
               </button>
             </div>
           </div>
+        ) : (
+          <>
+            <div className="mb-10 text-center">
+              <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">
+                Crea tu acceso académico
+              </h1>
+              <p className="text-sm text-slate-500">
+                Regístrate para comenzar tu experiencia en la plataforma
+              </p>
+            </div>
 
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-ios-blue hover:bg-ios-blue/90 text-white font-bold py-4 rounded-2xl shadow-xl shadow-ios-blue/30 transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <CheckCircle2 size={20} />
-                Create {role === 'student' ? 'Student' : 'Advisor'} Account
-              </>
-            )}
-          </button>
-        </form>
+            <div className="relative mb-8 flex gap-1.5 overflow-hidden rounded-2xl border border-white/30 bg-slate-100/50 p-1.5 backdrop-blur-sm">
+              <button
+                onClick={() => setRole('student')}
+                className={clsx(
+                  'z-10 flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all duration-500',
+                  role === 'student'
+                    ? 'bg-white text-ios-blue shadow-lg'
+                    : 'text-slate-500 hover:text-slate-700',
+                )}
+              >
+                <GraduationCap size={18} />
+                Estudiante
+              </button>
+              <button
+                onClick={() => setRole('advisor')}
+                className={clsx(
+                  'z-10 flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all duration-500',
+                  role === 'advisor'
+                    ? 'bg-white text-ios-blue shadow-lg'
+                    : 'text-slate-500 hover:text-slate-700',
+                )}
+              >
+                <Briefcase size={18} />
+                Asesor
+              </button>
 
-        <div className="mt-10 text-center">
-          <p className="text-sm text-slate-500">
-            Already have an account?{' '}
-            <Link
-              to="/login"
-              className="text-ios-blue font-bold hover:underline"
-            >
-              Sign In
-            </Link>
-          </p>
-        </div>
+              <div
+                className={clsx(
+                  'absolute top-1.5 bottom-1.5 z-0 w-[calc(50%-0.5rem)] rounded-xl bg-white shadow-sm transition-all duration-500 ease-in-out',
+                  role === 'student' ? 'left-1.5' : 'left-[50%]',
+                )}
+              />
+            </div>
+
+            <form onSubmit={handleSignup} className="space-y-6">
+              {error && (
+                <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700 backdrop-blur-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-1.5">
+                <label className="ml-1 text-[13px] font-medium text-slate-500">
+                  Nombre completo
+                </label>
+                <div className="group relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-ios-blue">
+                    <User size={20} />
+                  </div>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="block w-full rounded-2xl border-none bg-white/40 py-4 pl-11 pr-4 text-sm text-slate-900 placeholder:text-slate-400 backdrop-blur-md transition-all focus:ring-2 focus:ring-ios-blue/20"
+                    placeholder="John Doe"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="ml-1 text-[13px] font-medium text-slate-500">
+                  Correo electrónico
+                </label>
+                <div className="group relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-ios-blue">
+                    <Mail size={20} />
+                  </div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="block w-full rounded-2xl border-none bg-white/40 py-4 pl-11 pr-4 text-sm text-slate-900 placeholder:text-slate-400 backdrop-blur-md transition-all focus:ring-2 focus:ring-ios-blue/20"
+                    placeholder="name@university.edu"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="ml-1 text-[13px] font-medium text-slate-500">
+                  Contraseña
+                </label>
+                <div className="group relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-ios-blue">
+                    <Lock size={20} />
+                  </div>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="block w-full rounded-2xl border-none bg-white/40 py-4 pl-11 pr-12 text-sm text-slate-900 placeholder:text-slate-400 backdrop-blur-md transition-all focus:ring-2 focus:ring-ios-blue/20"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 transition-colors hover:text-slate-600"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="ml-1 text-[13px] font-medium text-slate-500">
+                  Confirmar contraseña
+                </label>
+                <div className="group relative">
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-ios-blue">
+                    <Lock size={20} />
+                  </div>
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="block w-full rounded-2xl border-none bg-white/40 py-4 pl-11 pr-12 text-sm text-slate-900 placeholder:text-slate-400 backdrop-blur-md transition-all focus:ring-2 focus:ring-ios-blue/20"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowConfirmPassword(!showConfirmPassword)
+                    }
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 transition-colors hover:text-slate-600"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-ios-blue py-4 font-bold text-white shadow-xl shadow-ios-blue/30 transition-all active:scale-[0.98] hover:bg-ios-blue/90"
+              >
+                {isLoading ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                ) : (
+                  <>
+                    <CheckCircle2 size={20} />
+                    Crear cuenta de {role === 'student' ? 'estudiante' : 'asesor'}
+                  </>
+                )}
+              </button>
+            </form>
+
+            <div className="mt-10 text-center">
+              <p className="text-sm text-slate-500">
+                ¿Ya tienes una cuenta?{' '}
+                <Link
+                  to="/login"
+                  className="font-bold text-ios-blue hover:underline"
+                >
+                  Inicia sesión
+                </Link>
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Footer */}

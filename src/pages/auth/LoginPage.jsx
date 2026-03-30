@@ -65,12 +65,8 @@ const LoginPage = () => {
       {/* Login Card */}
       <div className="relative z-10 glass-card-login w-full max-w-[420px]">
         <div className="mb-8 text-center text-slate-900">
-          <h1 className="text-3xl font-bold tracking-tight mb-2">
-            Welcome Back
-          </h1>
-          <p className="text-slate-500 text-sm">
-            Sign in to continue to your dashboard
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight mb-2">Bienvenido</h1>
+          <p className="text-slate-500 text-sm">Ingresa a tu dashboard</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
@@ -84,7 +80,7 @@ const LoginPage = () => {
           {/* Email Input */}
           <div className="flex flex-col gap-1.5">
             <label className="text-[13px] font-medium text-slate-500 ml-1">
-              Username or Email
+              Email
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-ios-blue transition-colors">
@@ -105,14 +101,14 @@ const LoginPage = () => {
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between items-center ml-1 pr-1">
               <label className="text-[13px] font-medium text-slate-500">
-                Password
+                Contraseña
               </label>
-              <a
+              {/* <a
                 href="#"
                 className="text-[13px] font-medium text-ios-blue hover:opacity-80 transition-opacity"
               >
                 Forgot?
-              </a>
+              </a> */}
             </div>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-ios-blue transition-colors">
@@ -141,35 +137,35 @@ const LoginPage = () => {
             disabled={isLoading}
             className="w-full bg-ios-blue hover:bg-ios-blue/90 text-white font-semibold py-4 rounded-xl shadow-lg shadow-ios-blue/20 transition-all active:scale-[0.98] mt-4 flex items-center justify-center"
           >
-            {isLoading ? 'Signing In...' : 'Sign In'}
+            {isLoading ? 'Entrando...' : 'Iniciar sesión'}
           </button>
         </form>
 
         <div className="mt-8 flex flex-col gap-4 text-center">
-          <div className="flex items-center gap-4 text-slate-300">
+          {/* <div className="flex items-center gap-4 text-slate-300">
             <div className="h-px w-full bg-current"></div>
             <span className="text-xs uppercase tracking-widest font-semibold text-slate-400">
               or
             </span>
             <div className="h-px w-full bg-current"></div>
-          </div>
+          </div> */}
 
-          <div className="flex justify-center gap-6">
+          {/* <div className="flex justify-center gap-6">
             <button className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-100/50 text-slate-600 hover:bg-slate-200/50 transition-all">
               <ScanFace size={24} />
             </button>
             <button className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-100/50 text-slate-600 hover:bg-slate-200/50 transition-all">
               <Fingerprint size={24} />
-            </button>
-          </div>
+            </button> 
+          </div>*/}
 
           <p className="text-sm text-slate-500">
-            Don't have an account?{' '}
+            Registrate{' '}
             <Link
               to="/signup"
               className="text-ios-blue font-semibold hover:underline"
             >
-              Sign up
+              Crear Cuenta
             </Link>
           </p>
         </div>

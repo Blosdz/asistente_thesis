@@ -1,13 +1,17 @@
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
 import StudentLayout from './layouts/StudentLayout';
 import Dashboard from './pages/student/Dashboard';
+import PlanesPage from './pages/PlanesPage';
 import AdditionalDocuments from './pages/student/AdditionalDocuments';
 import MyThesisWorkspace from './pages/student/MyThesisWorkspace';
-import Observations from './pages/student/Observations';
+import DataStatistics from './pages/student/DataStatistics';
+import Citas from './pages/student/Citas';
 import Services from './pages/student/Services';
+import Payments from './pages/student/Payments';
 import AdvisorCatalog from './pages/student/AdvisorCatalog';
 import ScheduleSession from './pages/student/ScheduleSession';
 import Profile from './pages/student/Profile';
@@ -18,6 +22,7 @@ import AdvisorCalendar from './pages/advisor/Calendar';
 import AdvisorThesisReview from './pages/advisor/ThesisReview';
 import AdvisorStudentDetail from './pages/advisor/StudentDetail';
 import AdminDashboard from './pages/admin/Dashboard';
+import Advisors from './pages/student/Advisors';
 import { isAuthenticated } from './services/authService';
 
 const ProtectedRoute = ({ children }) => {
@@ -73,15 +78,16 @@ const AppRoutes = () => {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />
         <Route path="documents" element={<AdditionalDocuments />} />
-  <Route path="my-thesis" element={<MyThesisWorkspace />} />
-        <Route path="observations" element={<Observations />} />
+        <Route path="my-thesis" element={<MyThesisWorkspace />} />
+        <Route path="citas" element={<Citas />} />
+        {/* mostramos aqu ilas asesorias */}
+        <Route path="asesorias" element={<Advisors />} />
+        <Route path="planes" element={<PlanesPage />} />
+        <Route path="payments" element={<Payments />} />
         <Route path="services" element={<Services />} />
         <Route path="services/advisors" element={<AdvisorCatalog />} />
         <Route path="services/book" element={<ScheduleSession />} />
-        <Route
-          path="statistics"
-          element={<Navigate to="/student/dashboard" replace />}
-        />
+        <Route path="statistics" element={<DataStatistics />} />
       </Route>
 
       <Route

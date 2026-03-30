@@ -1,0 +1,751 @@
+/* Center Column: Document Preview → Section */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+position: absolute;
+height: 1297px;
+min-height: 870px;
+left: 312px;
+right: 312px;
+top: 0px;
+
+background: linear-gradient(180deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.15) 44.71%, rgba(153, 153, 153, 0.1455) 100%);
+box-shadow: 0px 0px 40px rgba(18, 74, 240, 0.08);
+backdrop-filter: blur(25px);
+/* Note: backdrop-filter has minimal browser support */
+border-radius: 10px;
+
+
+/* Preview Header */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+justify-content: space-between;
+align-items: center;
+padding: 16px 32px;
+gap: 29.93px;
+
+width: 590px;
+height: 78px;
+
+background: linear-gradient(183.73deg, rgba(255, 255, 255, 0.736) 3.05%, rgba(218, 218, 218, 0.184) 96.95%);
+backdrop-filter: blur(25px);
+/* Note: backdrop-filter has minimal browser support */
+border-radius: 10px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 16px;
+
+width: 275.08px;
+height: 44px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Overlay */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 8px;
+
+width: 38px;
+height: 37px;
+
+background: rgba(10, 71, 238, 0.1);
+border-radius: 32px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Icon */
+
+width: 22px;
+height: 21px;
+
+background: #0A47EE;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+width: 221.08px;
+height: 44px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+
+/* Heading 2 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+width: 221.08px;
+height: 28px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Neural Topography */
+
+width: 163.63px;
+height: 28px;
+
+font-family: 'Ubuntu';
+font-style: normal;
+font-weight: 700;
+font-size: 18px;
+line-height: 28px;
+/* identical to box height, or 156% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+width: 221.08px;
+height: 16px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Text */
+
+width: 221.08px;
+height: 16px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 16px;
+/* identical to box height, or 133% */
+display: flex;
+align-items: center;
+
+color: #717786;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: row;
+align-items: center;
+padding: 0px;
+gap: 8px;
+
+width: 186.94px;
+height: 34px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+
+/* Button */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 8px;
+
+width: 34px;
+height: 34px;
+
+border-radius: 9999px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Icon */
+
+width: 18px;
+height: 18px;
+
+background: #717786;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px 8px;
+
+width: 49.94px;
+height: 16px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+flex-grow: 0;
+
+
+/* Text */
+
+width: 33.94px;
+height: 16px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 500;
+font-size: 12px;
+line-height: 16px;
+/* identical to box height, or 133% */
+display: flex;
+align-items: center;
+
+color: #191C1E;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Button */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 8px;
+
+width: 34px;
+height: 34px;
+
+border-radius: 9999px;
+
+/* Inside auto layout */
+flex: none;
+order: 2;
+flex-grow: 0;
+
+
+/* Icon */
+
+width: 18px;
+height: 18px;
+
+background: #717786;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Margin */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px 8px;
+
+width: 17px;
+height: 24px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 3;
+flex-grow: 0;
+
+
+/* Vertical Divider */
+
+width: 1px;
+height: 24px;
+
+background: rgba(193, 198, 215, 0.2);
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Button */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 8px;
+
+width: 20px;
+height: 32px;
+
+border-radius: 9999px;
+
+/* Inside auto layout */
+flex: none;
+order: 4;
+flex-grow: 0;
+
+
+/* Icon */
+
+width: 4px;
+height: 16px;
+
+background: #717786;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Paper Content Pane */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 48px;
+
+width: 590px;
+height: 1217px;
+
+background: rgba(242, 244, 246, 0.5);
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Background */
+
+width: 494px;
+max-width: 672px;
+height: 1121px;
+min-height: 1000px;
+
+background: #FFFFFF;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Overlay+Shadow */
+
+position: absolute;
+left: 0px;
+right: 0px;
+top: 0px;
+bottom: 0px;
+
+background: rgba(255, 255, 255, 0.002);
+box-shadow: 0px 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+
+/* Heading 1 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 0px;
+
+position: absolute;
+height: 144px;
+left: 64px;
+right: 64px;
+top: 64px;
+
+
+
+/* Neural Topography and Spatial Representation in the Human Prefrontal Cortex */
+
+width: 362.67px;
+height: 144px;
+
+font-family: 'Ubuntu';
+font-style: normal;
+font-weight: 700;
+font-size: 30px;
+line-height: 36px;
+/* or 120% */
+display: flex;
+align-items: center;
+text-align: center;
+
+color: #1E293B;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+position: absolute;
+height: 69px;
+left: 64px;
+right: 64px;
+top: 239.25px;
+
+
+
+/* Text */
+
+width: 345.95px;
+height: 69px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 14px;
+line-height: 23px;
+/* or 162% */
+display: flex;
+align-items: center;
+
+color: #64748B;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Horizontal Divider */
+
+position: absolute;
+height: 1px;
+left: 64px;
+right: 64px;
+top: 332.25px;
+
+background: #F1F5F9;
+
+
+/* Heading 2 */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+position: absolute;
+height: 28px;
+left: 64px;
+right: 64px;
+top: 365.25px;
+
+
+
+/* Text */
+
+width: 293.73px;
+height: 28px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 700;
+font-size: 20px;
+line-height: 28px;
+/* identical to box height, or 140% */
+display: flex;
+align-items: center;
+
+color: #1E293B;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+position: absolute;
+height: 182px;
+left: 64px;
+right: 64px;
+top: 409.25px;
+
+
+
+/* Text */
+
+width: 359.73px;
+height: 182px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 26px;
+/* or 162% */
+display: flex;
+align-items: center;
+
+color: #1E293B;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Background+Border */
+
+box-sizing: border-box;
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 32px;
+gap: 16px;
+
+position: absolute;
+height: 265.75px;
+left: 64px;
+right: 64px;
+top: 631.25px;
+
+background: #F8FAFC;
+border: 1px solid #F1F5F9;
+border-radius: 32px;
+
+
+/* Background */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: flex-start;
+padding: 0px;
+
+width: 300px;
+height: 168.75px;
+
+background: #E2E8F0;
+border-radius: 6px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* AB6AXuCQ60YCGQ7JyiVPjbwzu5g-cCL28AdyQmKlcyDNE0IhWGVvwro56PT_urrsyYm-nWjOrQfg250YGrViRn2X8lh0exwuhVQGDzIu-6ccwvL3sxxhrYZ_7i7XcyYK0KA4Z0cSXi81w6CnWdHBShEauxa69bxqM2_5zqXrRJuClJWP0a7zryLYq0tkyc4skWfRxYaAep7iGD-GMR-4i89RSJeMaqkwS1Gydi3xm8IynQo77sgPMRIonRbaZq2MeuRpi10UVnh5JUGDGZUh */
+
+width: 300px;
+height: 168.75px;
+
+background: linear-gradient(0deg, #FFFFFF, #FFFFFF), url(.png);
+background-blend-mode: saturation, normal;
+opacity: 0.8;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: center;
+padding: 0px;
+
+width: 300px;
+height: 15px;
+
+
+/* Inside auto layout */
+flex: none;
+order: 1;
+align-self: stretch;
+flex-grow: 0;
+
+
+/* Text */
+
+width: 283.75px;
+height: 15px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 10px;
+line-height: 15px;
+/* identical to box height, or 150% */
+display: flex;
+align-items: center;
+text-align: center;
+
+color: #94A3B8;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+
+
+/* Container */
+
+/* Auto layout */
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+padding: 0px;
+
+position: absolute;
+height: 104px;
+left: 64px;
+right: 64px;
+top: 937px;
+
+
+
+/* Text */
+
+width: 363.81px;
+height: 104px;
+
+font-family: 'Plus Jakarta Sans';
+font-style: normal;
+font-weight: 400;
+font-size: 16px;
+line-height: 26px;
+/* or 162% */
+display: flex;
+align-items: center;
+
+color: #1E293B;
+
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;

@@ -1,22 +1,26 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import {
-  FileText,
-  Upload,
-  Info,
-  Plus,
-  X,
-  Sparkles,
-  MessageSquare,
-  ClipboardList,
-} from 'lucide-react';
+import { FileText, Upload, Plus, X, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/button';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from '../../components/ui/card';
 import { Select, SelectItem } from '../../components/ui/select';
+import Modal from '../../components/ui/modal';
 import {
   obtenerMisTesis,
   crearMiTesis,
   obtenerDocumentosMiTesis,
   subirDocumentoAGoogleDrive,
+  obtenerSugerenciasMiTesis,
 } from '../../services/thesisService';
+import {
+  asignarMiTesisAAsesor,
+  obtenerMisAsesores,
+  obtenerMisTesisConAsesores,
+} from '../../services/advisorService';
 import { toast } from 'react-hot-toast';
 
 const MyThesisWorkspace = () => {
@@ -27,6 +31,13 @@ const MyThesisWorkspace = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+
+  const [sugerencias, setSugerencias] = useState([]);
+  const [loadingSugerencias, setLoadingSugerencias] = useState(false);
+  const [misAsesores, setMisAsesores] = useState([]);
+  const [tesisConAsesores, setTesisConAsesores] = useState([]);
+  const [asesorAsignadoId, setAsesorAsignadoId] = useState('');
+  const [assigningAdvisor, setAssigningAdvisor] = useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newThesisTitle, setNewThesisTitle] = useState('');
@@ -60,7 +71,10 @@ const MyThesisWorkspace = () => {
       setThesesList(theses || []);
 
       if (theses && theses.length > 0) {
-        if (!selectedThesisId || !theses.find((t) => t.id === selectedThesisId)) {
+        if (
+          !selectedThesisId ||
+          !theses.find((t) => t.id === selectedThesisId)
+        ) {
           setSelectedThesisId(theses[0].id);
         }
       } else {
@@ -74,32 +88,53 @@ const MyThesisWorkspace = () => {
     }
   };
 
-  const fetchDocuments = useCallback(async (thesisId) => {
+  const fetchMisAsesores = useCallback(async () => {
     try {
-      setLoading(true);
-      const docs = await obtenerDocumentosMiTesis(thesisId);
-      setDocuments(docs || []);
+      const [asesores, asignaciones] = await Promise.all([
+        obtenerMisAsesores(),
+        obtenerMisTesisConAsesores(),
+      ]);
 
-      if (docs && docs.length > 0) {
-        const latestInfo = docs[0];
-        setCurrentVersion(latestInfo);
-
-        const previewSource = latestInfo.url_google_doc || latestInfo.url_archivo_drive;
-        setPreviewUrl(buildPreviewUrl(previewSource));
-      } else {
-        setCurrentVersion(null);
-        setPreviewUrl(null);
-      }
+      setMisAsesores(asesores || []);
+      setTesisConAsesores(asignaciones || []);
     } catch (err) {
-      console.error('Error fetching documents:', err);
-      toast.error('No se pudieron cargar los documentos.');
-    } finally {
-      setLoading(false);
+      console.error('Error fetching advisors:', err);
+      setMisAsesores([]);
+      setTesisConAsesores([]);
     }
-  }, [buildPreviewUrl]);
+  }, []);
+
+  const fetchDocuments = useCallback(
+    async (thesisId) => {
+      try {
+        setLoading(true);
+        const docs = await obtenerDocumentosMiTesis(thesisId);
+        setDocuments(docs || []);
+
+        if (docs && docs.length > 0) {
+          const latestInfo = docs[0];
+          setCurrentVersion(latestInfo);
+
+          const previewSource =
+            latestInfo.url_google_doc || latestInfo.url_archivo_drive;
+          setPreviewUrl(buildPreviewUrl(previewSource));
+        } else {
+          setCurrentVersion(null);
+          setPreviewUrl(null);
+        }
+      } catch (err) {
+        console.error('Error fetching documents:', err);
+        toast.error('No se pudieron cargar los documentos.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [buildPreviewUrl],
+  );
 
   useEffect(() => {
     fetchTheses();
+    fetchMisAsesores();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -113,8 +148,30 @@ const MyThesisWorkspace = () => {
     }
   }, [selectedThesisId, fetchDocuments]);
 
-  const handleCreateThesis = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    const loadSugerencias = async () => {
+      if (!selectedThesisId) {
+        setSugerencias([]);
+        return;
+      }
+
+      try {
+        setLoadingSugerencias(true);
+        const data = await obtenerSugerenciasMiTesis(selectedThesisId);
+        setSugerencias(data || []);
+      } catch (err) {
+        console.error('Error fetching suggestions:', err);
+        toast.error('No se pudieron cargar las sugerencias.');
+        setSugerencias([]);
+      } finally {
+        setLoadingSugerencias(false);
+      }
+    };
+
+    loadSugerencias();
+  }, [selectedThesisId]);
+
+  const handleCreateThesis = async () => {
     if (!newThesisTitle.trim()) return toast.error('El título es requerido');
 
     try {
@@ -161,10 +218,37 @@ const MyThesisWorkspace = () => {
       fetchDocuments(selectedThesisId);
     } catch (err) {
       console.error('Upload error:', err);
-      toast.error(err.message || 'Error al subir el documento. Inténtalo de nuevo.');
+      toast.error(
+        err.message || 'Error al subir el documento. Inténtalo de nuevo.',
+      );
     } finally {
       setUploading(false);
       e.target.value = null;
+    }
+  };
+
+  const handleAsignarAsesor = async () => {
+    if (!selectedThesisId) {
+      toast.error('Selecciona una tesis primero');
+      return;
+    }
+
+    if (!asesorAsignadoId) {
+      toast.error('Selecciona un asesor');
+      return;
+    }
+
+    try {
+      setAssigningAdvisor(true);
+      await asignarMiTesisAAsesor(selectedThesisId, asesorAsignadoId, 'principal');
+      toast.success('Permiso de tesis otorgado al asesor');
+      setAsesorAsignadoId('');
+      await fetchMisAsesores();
+    } catch (err) {
+      console.error('Error asignando tesis al asesor:', err);
+      toast.error(err.message || 'No se pudo asignar la tesis al asesor');
+    } finally {
+      setAssigningAdvisor(false);
     }
   };
 
@@ -172,6 +256,45 @@ const MyThesisWorkspace = () => {
     () => thesesList.find((t) => t.id === selectedThesisId),
     [thesesList, selectedThesisId],
   );
+
+  const asesoresDeTesis = useMemo(
+    () =>
+      tesisConAsesores.filter((item) => item.tesis_id === selectedThesisId),
+    [tesisConAsesores, selectedThesisId],
+  );
+
+  const asesoresDisponiblesParaAsignar = useMemo(
+    () =>
+      misAsesores.filter(
+        (asesor) =>
+          !asesoresDeTesis.some(
+            (asignado) => asignado.asesor_id === asesor.asesor_id,
+          ),
+      ),
+    [misAsesores, asesoresDeTesis],
+  );
+
+  const seleccionarVersion = useCallback(
+    (doc) => {
+      setCurrentVersion(doc);
+      const previewSource = doc?.url_google_doc || doc?.url_archivo_drive;
+      setPreviewUrl(buildPreviewUrl(previewSource));
+    },
+    [buildPreviewUrl],
+  );
+
+  const getSuggestionText = (item) =>
+    item?.sugerencia ||
+    item?.comentario ||
+    item?.observacion ||
+    item?.r_sugerencia ||
+    'Sin detalle';
+
+  const getAdvisorName = (item) =>
+    item?.nombre_asesor || item?.asesor || item?.r_nombre_asesor || 'Asesor';
+
+  const getSuggestionDate = (item) =>
+    item?.creado_en || item?.created_at || item?.r_creado_en;
 
   const formatDate = (value) => {
     if (!value) return '—';
@@ -183,15 +306,16 @@ const MyThesisWorkspace = () => {
   if (!loading && thesesList.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in duration-700">
-        <div className="glass-card max-w-lg w-full p-12 text-center">
-          <div className="w-20 h-20 bg-ios-blue/10 rounded-full flex items-center justify-center mx-auto mb-6 text-ios-blue">
+        <Card className="max-w-lg w-full p-12 text-center">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-ios-blue">
             <FileText size={40} />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             Aún no tienes una tesis
           </h2>
           <p className="text-gray-500 mb-8">
-            Para comenzar a gestionar tus documentos y versiones, crea tu primera tesis.
+            Para comenzar a gestionar tus documentos y versiones, crea tu
+            primera tesis.
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -200,350 +324,396 @@ const MyThesisWorkspace = () => {
             <Plus size={20} />
             Crear Nueva Tesis
           </button>
-        </div>
+        </Card>
 
-        {showCreateModal && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-md">
-            <div className="glass-card p-8 max-w-md w-full relative animate-in zoom-in-95 duration-200">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-white/20 rounded-full transition-colors"
-                title="Cerrar"
-              >
-                <X size={24} />
-              </button>
-              <h3 className="text-2xl font-bold mb-6 text-gray-900 pr-8">
-                Crear Nueva Tesis
-              </h3>
-              <form onSubmit={handleCreateThesis} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Título de la Tesis
-                  </label>
-                  <input
-                    type="text"
-                    value={newThesisTitle}
-                    onChange={(e) => setNewThesisTitle(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/80 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ios-blue outline-none transition-all"
-                    placeholder="Ej: Análisis del impacto..."
-                    required
-                    autoFocus
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">
-                    Descripción (Opcional)
-                  </label>
-                  <textarea
-                    value={newThesisDesc}
-                    onChange={(e) => setNewThesisDesc(e.target.value)}
-                    className="w-full px-4 py-3 bg-white/80 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ios-blue outline-none transition-all resize-none"
-                    placeholder="Breve descripción de la investigación"
-                    rows="3"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={creating}
-                  className="w-full py-3 bg-ios-blue text-white rounded-xl font-bold shadow-lg shadow-ios-blue/20 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {creating ? 'Creando...' : 'Crear Tesis'}
-                </button>
-              </form>
+        <Modal
+          open={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          title="Crear Nueva Tesis"
+          subtitle="Configura el título y una breve descripción para comenzar."
+          primaryAction={{
+            label: creating ? 'Creando...' : 'Crear tesis',
+            onClick: handleCreateThesis,
+          }}
+          secondaryAction={{
+            label: 'Cancelar',
+            onClick: () => setShowCreateModal(false),
+          }}
+        >
+          <div className="space-y-4 text-left">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Título de la tesis
+              </label>
+              <input
+                type="text"
+                value={newThesisTitle}
+                onChange={(e) => setNewThesisTitle(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                placeholder="Ej: Análisis del impacto..."
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Descripción
+              </label>
+              <textarea
+                value={newThesisDesc}
+                onChange={(e) => setNewThesisDesc(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100 resize-none"
+                placeholder="Breve descripción de la investigación"
+                rows="4"
+              />
             </div>
           </div>
-        )}
+        </Modal>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Workspace de Tesis</h2>
-          <p className="text-sm text-gray-500">
-            Vista inspirada en Editorial Scholar para revisar y gestionar tu tesis.
-          </p>
+    <div className="relative w-full px-4 sm:px-6 lg:px-10 animate-in fade-in duration-700 text-slate-900">
+      <div className="max-w-[1600px] mx-auto flex flex-col gap-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="w-full md:max-w-md">
+            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Tesis activa
+            </label>
+            <Select
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
+              value={selectedThesisId}
+              onChange={(e) => setSelectedThesisId(e.target.value)}
+            >
+              {thesesList.map((thesis) => (
+                <SelectItem key={thesis.id} value={thesis.id}>
+                  {thesis.titulo || 'Sin título'}
+                </SelectItem>
+              ))}
+            </Select>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              onClick={() => setShowCreateModal(true)}
+              className="gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
+              title="Crear Nueva Tesis"
+            >
+              <Plus size={18} />
+              Crear tesis
+            </Button>
+          </div>
         </div>
-        <Button
-          variant="secondary"
-          onClick={() => setShowCreateModal(true)}
-          className="gap-2 text-ios-blue bg-white/70 border-white/80"
-          title="Crear Nueva Tesis"
-        >
-          <Plus size={20} />
-          Crear Tesis
-        </Button>
-      </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[280px_minmax(0,1fr)_360px] 2xl:grid-cols-[300px_minmax(0,1fr)_400px] gap-6">
-        <aside className="glass-card p-4 flex flex-col gap-4 max-h-[calc(100vh-220px)] min-h-[520px]">
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="w-full gap-2"
-          >
-            <Plus size={18} />
-            Nueva Tesis
-          </Button>
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-            <h3 className="text-[11px] font-bold uppercase tracking-widest text-gray-400 px-2">
-              Manuscritos
-            </h3>
-            {thesesList.map((thesis) => {
-              const isActive = thesis.id === selectedThesisId;
-              return (
-                <button
-                  key={thesis.id}
-                  onClick={() => setSelectedThesisId(thesis.id)}
-                  className={`w-full text-left rounded-xl p-3 transition-all border ${
-                    isActive
-                      ? 'bg-white text-ios-blue border-ios-blue/20 shadow-sm'
-                      : 'bg-white/60 text-gray-700 border-transparent hover:bg-white'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className={`w-9 h-9 rounded-full flex items-center justify-center ${
-                        isActive ? 'bg-ios-blue/10 text-ios-blue' : 'bg-gray-100 text-gray-400'
-                      }`}
+        <div className="grid grid-cols-12 gap-8 items-start">
+          <aside className="col-span-12 lg:col-span-3 space-y-8">
+            <Card className="p-6">
+              <div className="mb-4 flex items-start justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Permisos
+                  </p>
+                  <h3 className="font-headline text-xl font-bold tracking-tight">
+                    Asesores con acceso
+                  </h3>
+                </div>
+                <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-600">
+                  {asesoresDeTesis.length} activos
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {asesoresDeTesis.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                    Esta tesis aún no tiene asesores asignados.
+                  </div>
+                ) : (
+                  asesoresDeTesis.map((item) => (
+                    <div
+                      key={item.asesor_tesis_id || `${item.tesis_id}-${item.asesor_id}`}
+                      className="rounded-2xl border border-white/80 bg-white/70 p-4"
                     >
-                      <FileText size={16} />
-                    </span>
-                    <div className="flex-1 overflow-hidden">
-                      <p className="text-sm font-bold truncate">
-                        {thesis.titulo || 'Sin título'}
+                      <p className="text-sm font-bold text-slate-900">
+                        {item.asesor_nombre || 'Asesor'}
                       </p>
-                      <p className="text-[10px] text-gray-400 mt-1">
-                        Actualizado {formatDate(thesis.updated_at || thesis.created_at)}
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                        Rol: {item.rol || 'principal'}
                       </p>
                     </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </aside>
-
-  <main className="glass-card p-8 flex flex-col gap-6 min-h-[620px]">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-ios-blue font-bold">
-                {selectedThesis?.codigo || 'Capítulo activo'}
-              </p>
-              <h1 className="text-2xl font-extrabold text-gray-900">
-                {selectedThesis?.titulo || 'Selecciona una tesis'}
-              </h1>
-              <p className="text-sm text-gray-500 max-w-xl">
-                {selectedThesis?.descripcion || 'Selecciona una tesis para ver los detalles y documentos.'}
-              </p>
-            </div>
-            {/* <label
-              className={`bg-ios-blue text-white px-5 py-3 rounded-2xl font-bold shadow-lg shadow-ios-blue/20 flex items-center gap-2 hover:scale-105 transition-transform active:scale-95 cursor-pointer ${
-                uploading ? 'opacity-50 pointer-events-none' : ''
-              }`}
-            >
-              <Upload size={18} />
-              {uploading ? 'Subiendo...' : 'Subir archivo'}
-              <input
-                type="file"
-                accept=""
-                onChange={handleUpload}
-                disabled={uploading}
-                className="hidden"
-              />
-            </label> */}
-          </div>
-
-          <div className="flex-1 flex flex-col">
-            {previewUrl ? (
-              <iframe
-                src={previewUrl}
-                className="w-full flex-1 min-h-[620px] rounded-[24px] border border-gray-200 shadow-inner bg-white"
-                title="Document Preview"
-                allow="fullscreen"
-              />
-            ) : (
-              <div className="flex-1 border-2 border-dashed border-gray-200 rounded-[32px] flex flex-col items-center justify-center text-center p-12 bg-gray-50/50">
-                <div className="w-16 h-16 bg-gray-200/50 rounded-full flex items-center justify-center text-gray-400 mb-4">
-                  <Info size={32} />
-                </div>
-                <h4 className="text-lg font-bold text-gray-700 mb-2">
-                  Vista previa no disponible
-                </h4>
-                <p className="text-sm text-gray-500 max-w-sm">
-                  Selecciona un documento del historial que contenga enlace a Drive para verlo aquí.
-                </p>
+                  ))
+                )}
               </div>
-            )}
-          </div>
 
-          {documents.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Elegir documento</span>
+              <div className="mt-5 space-y-3">
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  Dar permiso a un asesor
+                </label>
                 <Select
-                  value={currentVersion?.id || documents[0].id}
-                  onChange={(e) => {
-                    const doc = documents.find((d) => d.id === e.target.value);
-                    if (doc) {
-                      setCurrentVersion(doc);
-                      const previewSource = doc.url_google_doc || doc.url_archivo_drive;
-                      setPreviewUrl(buildPreviewUrl(previewSource));
-                    }
-                  }}
-                  className="py-2 px-3 text-sm font-semibold"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
+                  value={asesorAsignadoId}
+                  onChange={(e) => setAsesorAsignadoId(e.target.value)}
                 >
-                  {documents.map((doc) => (
-                    <SelectItem key={doc.id} value={doc.id}>
-                      {doc.nombre || doc.nombre_archivo}
+                  <SelectItem value="">Selecciona un asesor</SelectItem>
+                  {asesoresDisponiblesParaAsignar.map((asesor) => (
+                    <SelectItem
+                      key={asesor.asesor_id || asesor.relacion_id}
+                      value={asesor.asesor_id}
+                    >
+                      {asesor.nombre_mostrar || 'Asesor'}
                     </SelectItem>
                   ))}
                 </Select>
+
+                <Button
+                  onClick={handleAsignarAsesor}
+                  disabled={
+                    assigningAdvisor ||
+                    !selectedThesisId ||
+                    !asesorAsignadoId
+                  }
+                  className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-white hover:bg-blue-700"
+                >
+                  {assigningAdvisor ? 'Otorgando permiso...' : 'Dar permiso'}
+                </Button>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Advisor Feedback
+                  </p>
+                  <h3 className="font-headline text-xl font-bold tracking-tight">
+                    Notas del asesor
+                  </h3>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-600">
+                  {sugerencias.length} notas
+                </span>
               </div>
 
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                {documents.map((doc) => (
+              {loadingSugerencias ? (
+                <p className="text-sm text-slate-500">
+                  Cargando sugerencias...
+                </p>
+              ) : sugerencias.length === 0 ? (
+                <div className="border border-dashed border-slate-200 rounded-xl p-4 text-sm text-slate-500">
+                  No hay sugerencias registradas para esta tesis.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {sugerencias.map((item, idx) => (
+                    <article
+                      key={
+                        item.id ||
+                        item.sugerencia_id ||
+                        `${selectedThesisId}-${idx}`
+                      }
+                      className="bg-white/70 border border-white/80 rounded-2xl p-4 hover:border-blue-100 transition"
+                    >
+                      <div className="flex gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                          {getAdvisorName(item).charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-900 truncate">
+                            {getAdvisorName(item)}
+                          </p>
+                          <p className="text-[11px] text-slate-500">
+                            {formatDate(getSuggestionDate(item))}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        {getSuggestionText(item)}
+                      </p>
+                      {(item.nombre_documento || item.documento_tesis_id) && (
+                        <p className="text-[11px] text-slate-500 mt-2">
+                          Documento:{' '}
+                          {item.nombre_documento || item.documento_tesis_id}
+                        </p>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            <Card className="p-6">
+              <h3 className="font-headline text-xl font-bold tracking-tight mb-4">
+                Version History
+              </h3>
+              <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200">
+                {documents.slice(0, 4).map((doc, idx) => (
                   <button
                     key={doc.id}
-                    onClick={() => {
-                      setCurrentVersion(doc);
-                      const previewSource = doc.url_google_doc || doc.url_archivo_drive;
-                      setPreviewUrl(buildPreviewUrl(previewSource));
-                    }}
-                    className={`min-w-[220px] p-4 rounded-2xl border text-left transition-all shrink-0 ${
+                    type="button"
+                    onClick={() => seleccionarVersion(doc)}
+                    className={`relative w-full rounded-2xl p-3 text-left transition ${
                       currentVersion?.id === doc.id
-                        ? 'bg-ios-blue/5 border-ios-blue/20'
-                        : 'bg-white/70 border-white/80 hover:bg-white'
+                        ? 'bg-blue-50 border border-blue-200'
+                        : 'hover:bg-slate-50'
                     }`}
                   >
-                    <p className="text-xs font-semibold text-gray-500">Documento</p>
-                    <p className="text-sm font-bold text-gray-800 truncate">{doc.nombre || doc.nombre_archivo}</p>
-                    <p className="text-[10px] text-gray-400 mt-2">
-                      {formatDate(doc.created_at)} {doc.tipo || doc.tipo_documento ? `· ${doc.tipo || doc.tipo_documento}` : ''}
+                    <div
+                      className={`absolute -left-[20px] top-1 w-3 h-3 rounded-full ${
+                        currentVersion?.id === doc.id
+                          ? 'bg-blue-600 border-4 border-white'
+                          : idx === 0
+                            ? 'bg-blue-400 border-4 border-white'
+                            : 'bg-slate-300'
+                      }`}
+                    />
+                    {currentVersion?.id === doc.id ? (
+                      <p className="text-[10px] font-bold text-blue-600">
+                        VERSIÓN SELECCIONADA
+                      </p>
+                    ) : idx === 0 ? (
+                      <p className="text-[10px] font-bold text-blue-600">
+                        CURRENT VERSION
+                      </p>
+                    ) : null}
+                    <p className="text-sm font-medium">
+                      {doc.nombre || doc.nombre_archivo}
+                    </p>
+                    <p className="text-[10px] text-slate-500">
+                      {formatDate(doc.created_at || doc.creado_en)}
                     </p>
                   </button>
                 ))}
+                {documents.length === 0 && (
+                  <p className="text-xs text-slate-400">
+                    Sin versiones disponibles.
+                  </p>
+                )}
               </div>
-            </div>
-          )}
-        </main>
+            </Card>
+          </aside>
 
-  <aside className="glass-card p-6 flex flex-col gap-6 max-h-[calc(100vh-220px)] min-h-[520px]">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-9 h-9 rounded-full bg-ios-blue/10 flex items-center justify-center text-ios-blue">
-                <Sparkles size={18} />
-              </span>
-              <div>
-                <p className="text-sm font-bold">Editorial Assistant</p>
-                <p className="text-[10px] text-gray-400 uppercase tracking-widest">Activo</p>
+          <section className="col-span-12 lg:col-span-6">
+            <Card className="overflow-hidden flex flex-col min-h-[870px] shadow-[0_0_40px_rgba(18,74,240,0.08)]">
+              <div className="px-8 py-4 border-b border-slate-200/40 flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-lg">
+                    <FileText className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="font-headline text-lg font-bold">
+                      {selectedThesis?.titulo || 'Selecciona una tesis'}
+                    </h2>
+                    <p className="text-xs text-slate-500">
+                      {selectedThesis?.descripcion ||
+                        'Elige una tesis para ver la vista previa'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-slate-500">
+                  <span>100%</span>
+                </div>
               </div>
-            </div>
-            <span className="w-2 h-2 rounded-full bg-green-500"></span>
-          </div>
 
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-            <div className="bg-white/80 p-4 rounded-2xl shadow-sm">
-              <p className="text-sm text-gray-700">
-                He revisado tu capítulo actual. ¿Deseas un resumen ejecutivo o sugerencias de citas?
-              </p>
-              <p className="text-[10px] text-gray-400 mt-3">10:42 AM</p>
-            </div>
-            <div className="bg-ios-blue text-white p-4 rounded-2xl shadow-sm">
-              <p className="text-sm">Resume la teoría principal y señala vacíos en el marco teórico.</p>
-              <p className="text-[10px] text-white/70 mt-3">10:45 AM</p>
-            </div>
-            <div className="bg-white/80 p-4 rounded-2xl shadow-sm space-y-2">
-              <p className="text-sm font-bold text-gray-800">Resumen rápido:</p>
-              <p className="text-sm text-gray-600">
-                La tesis propone un modelo híbrido que reduce la entropía del entrenamiento al combinar kernels cuánticos con capas clásicas.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <span className="px-2 py-1 bg-ios-blue/10 text-ios-blue text-[10px] font-bold rounded-full">
-                  Concepto: Decoherencia
-                </span>
-                <span className="px-2 py-1 bg-ios-blue/10 text-ios-blue text-[10px] font-bold rounded-full">
-                  Gap: Sterling (2024)
-                </span>
+              <div className="flex-1 bg-slate-50/70 p-12 overflow-y-auto">
+                {previewUrl ? (
+                  <iframe
+                    src={previewUrl}
+                    className="w-full min-h-[1000px] rounded-2xl border border-slate-200"
+                    title="Thesis Preview"
+                    allow="fullscreen"
+                  />
+                ) : (
+                  <div className="max-w-2xl mx-auto shadow-2xl p-16 min-h-[1000px] text-slate-800">
+                    <h2 className="text-3xl font-bold mb-8 text-center">
+                      Vista previa no disponible
+                    </h2>
+                    <p className="text-sm text-slate-500 text-center max-w-lg mx-auto">
+                      Selecciona o sube un documento para visualizarlo aquí.
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
-          </div>
+            </Card>
+          </section>
 
-          <div className="flex flex-wrap gap-2">
-            <button className="flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold bg-white/80 hover:bg-white transition-colors">
-              <ClipboardList size={14} className="text-ios-blue" />
-              Resumir
-            </button>
-            <button className="flex items-center gap-2 px-3 py-2 rounded-full text-xs font-semibold bg-white/80 hover:bg-white transition-colors">
-              <MessageSquare size={14} className="text-ios-blue" />
-              Citas
-            </button>
-          </div>
-
-          <div className="relative">
-            <textarea
-              className="w-full bg-white/80 border border-white/80 rounded-xl p-3 text-sm focus:ring-2 focus:ring-ios-blue/20 resize-none h-24"
-              placeholder="Pregunta al asistente..."
-            />
-            <button className="absolute bottom-3 right-3 p-2 bg-ios-blue text-white rounded-lg hover:scale-105 transition-transform">
-              <Sparkles size={16} />
-            </button>
-          </div>
-        </aside>
+          <aside className="col-span-12 lg:col-span-3">
+            <Card className="flex flex-col h-[400px] overflow-hidden">
+              <div className="p-4 border-b border-slate-200/40 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center">
+                  <Sparkles size={16} className="text-white" />
+                </div>
+                <h3 className="font-headline text-sm font-bold">Academic AI</h3>
+              </div>
+              <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+                <div className="p-3 rounded-lg rounded-tl-none">
+                  <p className="text-xs">
+                    ¿Quieres un resumen ejecutivo o sugerencias de citas para tu
+                    capítulo activo?
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg rounded-tr-none ml-auto max-w-[80%] border border-blue-100">
+                  <p className="text-xs text-slate-800">
+                    Dame citas de 2024-2025.
+                  </p>
+                </div>
+              </div>
+              <div className="p-4">
+                <div className="relative">
+                  <input
+                    className="w-full border-0 rounded-full py-2 px-4 pr-10 text-xs focus:ring-2 focus:ring-blue-400 placeholder:text-slate-400"
+                    placeholder="Ask AI Research Assistant..."
+                    type="text"
+                  />
+                  <button className="absolute right-2 top-1.5 text-blue-600">
+                    <Sparkles size={16} />
+                  </button>
+                </div>
+              </div>
+            </Card>
+          </aside>
+        </div>
       </div>
 
-      {showCreateModal && thesesList.length > 0 && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-md">
-          <div className="glass-card p-8 max-w-md w-full relative animate-in zoom-in-95 duration-200">
-            <button
-              onClick={() => setShowCreateModal(false)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-white/20 rounded-full transition-colors"
-              title="Cerrar"
-            >
-              <X size={24} />
-            </button>
-            <h3 className="text-2xl font-bold mb-6 text-gray-900 pr-8">
-              Crear Nueva Tesis
-            </h3>
-            <form onSubmit={handleCreateThesis} className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Título de la Tesis
-                </label>
-                <input
-                  type="text"
-                  value={newThesisTitle}
-                  onChange={(e) => setNewThesisTitle(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/80 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ios-blue outline-none transition-all"
-                  placeholder="Ej: Análisis del impacto..."
-                  required
-                  autoFocus
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Descripción (Opcional)
-                </label>
-                <textarea
-                  value={newThesisDesc}
-                  onChange={(e) => setNewThesisDesc(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/80 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ios-blue outline-none transition-all resize-none"
-                  placeholder="Breve descripción de la investigación"
-                  rows="3"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={creating}
-                className="w-full py-3 bg-ios-blue text-white rounded-xl font-bold shadow-lg shadow-ios-blue/20 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {creating ? 'Creando...' : 'Crear Tesis'}
-              </button>
-            </form>
+      <Modal
+        open={showCreateModal && thesesList.length > 0}
+        onClose={() => setShowCreateModal(false)}
+        title="Crear Nueva Tesis"
+        subtitle="Configura el título y una breve descripción para comenzar."
+        primaryAction={{
+          label: creating ? 'Creando...' : 'Crear tesis',
+          onClick: handleCreateThesis,
+        }}
+        secondaryAction={{
+          label: 'Cancelar',
+          onClick: () => setShowCreateModal(false),
+        }}
+      >
+        <div className="space-y-4 text-left">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Título de la tesis
+            </label>
+            <input
+              type="text"
+              value={newThesisTitle}
+              onChange={(e) => setNewThesisTitle(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+              placeholder="Ej: Análisis del impacto..."
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Descripción
+            </label>
+            <textarea
+              value={newThesisDesc}
+              onChange={(e) => setNewThesisDesc(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100 resize-none"
+              placeholder="Breve descripción de la investigación"
+              rows="4"
+            />
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 };

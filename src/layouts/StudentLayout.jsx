@@ -1,15 +1,14 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LogOut,
   User as UserIcon,
-  MessageSquare,
+  CreditCard,
   FileText,
   BarChart3,
   Settings,
-  HelpCircle,
-  Phone,
+  Bell,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getCurrentUser, logout } from '../services/authService';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -20,7 +19,11 @@ function cn(...inputs) {
 
 const StudentLayout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -30,6 +33,8 @@ const StudentLayout = () => {
       } catch (error) {
         console.error('Failed to fetch user:', error);
         navigate('/login');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -45,11 +50,20 @@ const StudentLayout = () => {
     }
   };
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const navItems = [
     {
-      label: 'Documentos',
-      path: '/student/documents',
-      icon: <FileText size={18} />,
+      label: 'Dashboard',
+      path: '/student/dashboard',
     },
     {
       label: 'Mi Tesis',
@@ -57,141 +71,149 @@ const StudentLayout = () => {
       icon: <FileText size={18} />,
     },
     {
-      label: 'Observaciones',
-      path: '/student/observations',
-      icon: <MessageSquare size={18} />,
+      label: 'Documentos',
+      path: '/student/documents',
+      icon: <FileText size={18} />,
     },
     {
-      label: 'Servicios',
+      label: 'Asesorías',
+      // path: '/student/citas',
+      path: '/student/asesorias',
+      // icon: <Calendar size={18} />,
+    },
+    // {
+    //   label: 'Planes',
+    //   path: '/student/planes',
+    //   icon: <BarChart3 size={18} />,
+    // },
+    {
+      label: 'Presustentación',
       path: '/student/services',
       icon: <Settings size={18} />,
     },
     {
+      label: 'Pagos',
+      path: '/student/payments',
+      icon: <CreditCard size={18} />,
+    },
+    {
       label: 'Estadística',
-      path: '/student/dashboard',
+      path: '/student/statistics',
       icon: <BarChart3 size={18} />,
     },
   ];
 
-  return (
-    <div className="relative min-h-screen font-sans text-gray-900 overflow-hidden bg-ios-bg">
-      {/* Animated Blur Background (Replicated Lights) */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div
-          className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full opacity-50 mix-blend-multiply filter blur-[100px]"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(173, 216, 230, 0.8) 0%, transparent 70%)',
-            animation: 'pastel-move-1 30s infinite alternate ease-in-out',
-          }}
-        ></div>
-        <div
-          className="absolute top-[40%] right-[-10%] w-[60vw] h-[60vw] rounded-full opacity-50 mix-blend-multiply filter blur-[100px]"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(221, 160, 221, 0.8) 0%, transparent 70%)',
-            animation:
-              'pastel-move-2 25s infinite alternate-reverse ease-in-out',
-          }}
-        ></div>
-        <div
-          className="absolute bottom-[-20%] left-[10%] w-[55vw] h-[55vw] rounded-full opacity-50 mix-blend-multiply filter blur-[100px]"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(255, 182, 193, 0.7) 0%, transparent 70%)',
-            animation: 'pastel-move-1 35s infinite alternate ease-in-out',
-          }}
-        ></div>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <header className="fixed top-0 w-full z-50 rounded-none bg-white/85 backdrop-blur-[22px] border-b border-white/60 shadow-[0_0_30px_rgba(0,0,0,0.06)]">
+          <div className="flex items-center justify-between px-8 h-20 w-full animate-pulse">
+            <div className="h-6 w-32 bg-slate-200 rounded-full" />
+            <div className="h-10 w-80 bg-slate-200 rounded-full" />
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-slate-200" />
+              <div className="w-8 h-8 rounded-full bg-slate-200" />
+              <div className="w-10 h-10 rounded-full bg-slate-200" />
+            </div>
+          </div>
+        </header>
+        <main className="pt-24 px-8 space-y-6 animate-pulse">
+          <div className="h-10 w-56 bg-slate-200 rounded" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="h-48 bg-slate-200 rounded-2xl" />
+            <div className="h-48 bg-slate-200 rounded-2xl" />
+          </div>
+          <div className="h-64 bg-slate-200 rounded-2xl" />
+        </main>
       </div>
+    );
+  }
 
+  return (
+    <div className="relative min-h-screen font-sans text-gray-900 overflow-hidden">
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
-        <header className="sticky top-0 z-50 glass-card border-b border-gray-200/50 px-8 py-4 rounded-none">
-          <div className="max-w-[1400px] mx-auto flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              {/* Profile Info */}
-              <NavLink
-                to="/student/profile"
-                className="flex items-center gap-4 hover:opacity-80 transition-opacity"
-              >
-                <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-xl uppercase">
-                  {user?.email?.[0] || 'S'}
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold">
-                    {user?.email || 'Student'}
-                  </h1>
-                  <p className="text-sm text-ios-gray">Tesis de Grado</p>
-                </div>
-              </NavLink>
+        <header className="fixed top-0 w-full z-50 rounded-none bg-white/85 backdrop-blur-[22px] border-b border-white/60 shadow-[0_0_30px_rgba(0,0,0,0.06)]">
+          <div className="flex items-center justify-between px-8 h-20 w-full">
+            <div className="text-2xl font-bold tracking-tighter text-slate-900 dark:text-white heading-ubuntu">
+              {/* ThesisFlow */}
+            </div>
 
-              {/* Main Navigation - Liquid Glass */}
-              <nav className="hidden lg:flex items-center liquid-glass-dark liquid-nav-container gap-1">
+            <div className="hidden md:flex bg-[#f4f1eb] rounded-full px-2 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.08)] border border-white/70">
+              <nav className="relative flex gap-2">
                 {navItems.map((item) => (
                   <NavLink
                     key={item.path}
                     to={item.path}
                     className={({ isActive }) =>
                       cn(
-                        'liquid-nav-item',
-                        isActive ? 'active' : 'text-gray-300 hover:text-white',
+                        'top-nav-link px-4 py-1.5 rounded-full text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1eb]',
+                        isActive
+                          ? 'bg-slate-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.24)]'
+                          : 'text-black hover:bg-white/70 hover:text-black',
                       )
                     }
                   >
-                    {item.icon}
                     {item.label}
                   </NavLink>
                 ))}
               </nav>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <button className="hidden sm:flex px-4 py-2 bg-white/80 border border-gray-200 text-gray-900 rounded-lg text-sm font-bold items-center gap-2 hover:bg-white transition-colors">
-                  <Phone size={16} className="text-green-500" />
-                  Soporte
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-red-500/10 text-red-600 border border-red-200 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-red-500 hover:text-white transition-all"
-                >
-                  <LogOut size={16} />
-                  Salir
-                </button>
-              </div>
             </div>
 
-            {/* Status Bar */}
-            <div className="flex flex-wrap items-center justify-between text-xs text-ios-gray border-t border-gray-100/50 pt-3">
-              <div className="flex gap-6">
-                <span>
-                  Estado: <strong className="text-gray-900">Borrador</strong>
-                </span>
-                <span>
-                  Checklist:{' '}
-                  <strong className="text-gray-900">
-                    1 pend · 0 prog · 1 list
-                  </strong>
-                </span>
-              </div>
-              <div className="flex items-center gap-4">
-                <span>Avance</span>
-                <div className="w-48 h-2 bg-gray-200/50 rounded-full overflow-hidden border border-gray-300/20">
-                  <div
-                    className="bg-ios-blue h-full shadow-[0_0_8px_rgba(0,122,255,0.4)]"
-                    style={{ width: '45%' }}
-                  ></div>
+            <div className="flex items-center gap-4 relative" ref={menuRef}>
+              <button
+                className="p-2 hover:bg-white/10 rounded-full text-slate-800"
+                aria-label="Notifications"
+              >
+                {' '}
+                <Bell size={18} />{' '}
+              </button>
+              <button
+                className="p-2 hover:bg-white/10 rounded-full text-slate-800"
+                aria-label="Settings"
+              >
+                <Settings size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="w-10 h-10 rounded-full border border-outline-variant/30 bg-white flex items-center justify-center text-slate-900 shadow-sm hover:shadow-md transition-shadow"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+              >
+                <UserIcon size={18} />
+              </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 top-12 w-44 rounded-xl bg-white shadow-xl border border-slate-100 py-2 text-sm">
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2"
+                    onClick={() => {
+                      navigate('/student/profile');
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <UserIcon size={16} />
+                    Profile
+                  </button>
+                  <button
+                    className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-red-600"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      handleLogout();
+                    }}
+                  >
+                    <LogOut size={16} />
+                    Exit
+                  </button>
                 </div>
-                <span className="font-bold text-gray-900">45%</span>
-                <button className="bg-ios-blue text-white px-5 py-1 rounded-full font-bold shadow-lg shadow-ios-blue/20 hover:scale-105 transition-transform active:scale-95">
-                  Verificar
-                </button>
-              </div>
+              )}
             </div>
           </div>
         </header>
 
         {/* Main Content Area */}
-        <main className="w-full px-4 sm:px-8 flex-1">
+        <main className="w-full px-4 sm:px-8 flex-1 pt-24">
           <Outlet />
         </main>
       </div>

@@ -1,148 +1,39 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  FileText,
-  Upload,
+  ClipboardList,
+  Database,
   ExternalLink,
-  File,
-  FileSpreadsheet,
-  FileArchive,
-  Image,
-  Presentation,
+  FileText,
+  Sparkles,
+  Upload,
 } from 'lucide-react';
 import { Select, SelectItem } from '../../components/ui/select';
+import { Card } from '../../components/ui/card';
 import {
+  obtenerDocumentosComplementarios,
   obtenerMisTesis,
   subirDocumentoAGoogleDrive,
-  obtenerDocumentosMiTesis,
 } from '../../services/thesisService';
 import { toast } from 'react-hot-toast';
+
+const docTypes = [
+  { value: 'reglamento', label: 'Reglamento', icon: FileText },
+  { value: 'instrumento', label: 'Instrumento', icon: ClipboardList },
+  { value: 'rubrica', label: 'Rúbrica', icon: Sparkles },
+  { value: 'criterios', label: 'Criterios', icon: ClipboardList },
+  { value: 'formatoAPA', label: 'Formato APA', icon: FileText },
+  { value: 'vancouver', label: 'Vancouver', icon: FileText },
+  { value: 'fuente', label: 'Fuente', icon: Database },
+];
 
 const AdditionalDocuments = () => {
   const [thesesList, setThesesList] = useState([]);
   const [selectedThesisId, setSelectedThesisId] = useState('');
-
   const [documents, setDocuments] = useState([]);
-  const [thesisPreviewUrl, setThesisPreviewUrl] = useState(null);
-  const [thesisPreviewLoading, setThesisPreviewLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-
-  const [docType, setDocType] = useState('reglamento');
-
-  const docTypes = [
-    { value: 'reglamento', label: 'Reglamento' },
-    { value: 'instrumento', label: 'Instrumentos' },
-    { value: 'rubrica', label: 'Rúbrica' },
-    { value: 'criterios', label: 'Criterios' },
-    { value: 'formatoAPA', label: 'Formato APA' },
-    { value: 'Vancouver', label: 'Vancouver' },
-    { value: 'fuente', label: 'Fuentes / Referencias' },
-  ];
-
-  const getFileExtension = (doc) => {
-    const name = (doc?.nombre || '').toLowerCase();
-    const parts = name.split('.');
-    if (parts.length > 1) return parts.pop();
-
-    const mime = (doc?.tipo || '').toLowerCase();
-    if (mime.includes('pdf')) return 'pdf';
-    if (mime.includes('word')) return 'doc';
-    if (mime.includes('sheet') || mime.includes('excel')) return 'xls';
-    if (mime.includes('presentation') || mime.includes('powerpoint'))
-      return 'ppt';
-    if (mime.includes('image')) return 'img';
-    if (mime.includes('zip') || mime.includes('rar') || mime.includes('7z'))
-      return 'zip';
-    return 'file';
-  };
-
-  const getDocumentTypeLabel = (doc) => {
-    const ext = getFileExtension(doc);
-    const labels = {
-      pdf: 'PDF',
-      doc: 'Word',
-      docx: 'Word',
-      xls: 'Excel',
-      xlsx: 'Excel',
-      csv: 'CSV',
-      ppt: 'PowerPoint',
-      pptx: 'PowerPoint',
-      txt: 'Texto',
-      img: 'Imagen',
-      jpg: 'Imagen',
-      jpeg: 'Imagen',
-      png: 'Imagen',
-      zip: 'Comprimido',
-      rar: 'Comprimido',
-      '7z': 'Comprimido',
-    };
-    return labels[ext] || (doc?.tipo ? String(doc.tipo) : 'Archivo');
-  };
-
-  const getDocumentIcon = (doc) => {
-    const ext = getFileExtension(doc);
-
-    if (ext === 'pdf') {
-      return (
-        <FileText className="w-7 h-7 text-red-500" strokeWidth={2.2} />
-      );
-    }
-
-    if (['doc', 'docx'].includes(ext)) {
-      return (
-        <FileText className="w-7 h-7 text-blue-600" strokeWidth={2.2} />
-      );
-    }
-
-    if (['xls', 'xlsx', 'csv'].includes(ext)) {
-      return (
-        <FileSpreadsheet
-          className="w-7 h-7 text-emerald-600"
-          strokeWidth={2.2}
-        />
-      );
-    }
-
-    if (['ppt', 'pptx'].includes(ext)) {
-      return (
-        <Presentation className="w-7 h-7 text-orange-500" strokeWidth={2.2} />
-      );
-    }
-
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'img'].includes(ext)) {
-      return <Image className="w-7 h-7 text-purple-500" strokeWidth={2.2} />;
-    }
-
-    if (['zip', 'rar', '7z'].includes(ext)) {
-      return (
-        <FileArchive className="w-7 h-7 text-amber-600" strokeWidth={2.2} />
-      );
-    }
-
-    return <File className="w-7 h-7 text-slate-500" strokeWidth={2.2} />;
-  };
-
-  const buildPreviewUrl = (url) => {
-    if (!url) return null;
-
-    const lowerUrl = url.toLowerCase();
-    if (lowerUrl.endsWith('.doc') || lowerUrl.endsWith('.docx')) {
-      return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(
-        url,
-      )}`;
-    }
-
-    const driveUcMatch = url.match(/drive\.google\.com\/uc\?id=([^&]+)/);
-    if (driveUcMatch) {
-      return `https://drive.google.com/file/d/${driveUcMatch[1]}/preview`;
-    }
-
-    if (url.includes('/view')) {
-      return url.replace('/view', '/preview');
-    }
-
-    return url;
-  };
+  const [docType, setDocType] = useState(docTypes[0].value);
+  const [activeFilter, setActiveFilter] = useState('todos');
 
   const fetchTheses = useCallback(async () => {
     try {
@@ -151,10 +42,7 @@ const AdditionalDocuments = () => {
       setThesesList(theses || []);
 
       if (theses && theses.length > 0) {
-        if (
-          !selectedThesisId ||
-          !theses.find((t) => t.id === selectedThesisId)
-        ) {
+        if (!selectedThesisId || !theses.find((t) => t.id === selectedThesisId)) {
           setSelectedThesisId(theses[0].id);
         }
       } else {
@@ -171,42 +59,13 @@ const AdditionalDocuments = () => {
   const fetchDocuments = useCallback(async (thesisId) => {
     try {
       setLoading(true);
-      const docs = await obtenerDocumentosMiTesis(thesisId);
+      const docs = await obtenerDocumentosComplementarios(thesisId);
       setDocuments(docs || []);
     } catch (err) {
       console.error('Error fetching documents:', err);
       toast.error('No se pudieron cargar los documentos.');
     } finally {
       setLoading(false);
-    }
-  }, []);
-
-  const fetchThesisPreview = useCallback(async (thesisId) => {
-    if (!thesisId) {
-      setThesisPreviewUrl(null);
-      return;
-    }
-
-    try {
-      setThesisPreviewLoading(true);
-      const docs = await obtenerDocumentosMiTesis(thesisId);
-      if (docs && docs.length > 0) {
-        const latest = docs[0];
-        const previewSource =
-          latest.url_google_doc || latest.url_archivo_drive;
-        if (previewSource) {
-          setThesisPreviewUrl(buildPreviewUrl(previewSource));
-        } else {
-          setThesisPreviewUrl(null);
-        }
-      } else {
-        setThesisPreviewUrl(null);
-      }
-    } catch (err) {
-      console.error('Error fetching thesis preview:', err);
-      setThesisPreviewUrl(null);
-    } finally {
-      setThesisPreviewLoading(false);
     }
   }, []);
 
@@ -217,12 +76,10 @@ const AdditionalDocuments = () => {
   useEffect(() => {
     if (selectedThesisId) {
       fetchDocuments(selectedThesisId);
-      fetchThesisPreview(selectedThesisId);
     } else {
       setDocuments([]);
-      setThesisPreviewUrl(null);
     }
-  }, [selectedThesisId, fetchDocuments, fetchThesisPreview]);
+  }, [selectedThesisId, fetchDocuments]);
 
   const handleUpload = async (e) => {
     const file = e.target.files[0];
@@ -248,7 +105,6 @@ const AdditionalDocuments = () => {
       });
       await fetchDocuments(selectedThesisId);
 
-      // Reset the file input
       e.target.value = null;
     } catch (err) {
       console.error('Upload error:', err);
@@ -258,129 +114,203 @@ const AdditionalDocuments = () => {
     }
   };
 
-  return (
-    <div className="w-full flex-1 flex flex-col py-10 px-0 sm:px-2 animate-fade-in relative z-10 text-slate-900 h-full">
-      <div className="w-full flex flex-col gap-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
-              Documentos de Apoyo
-            </h1>
-            <p className="text-slate-600 mt-2 max-w-xl text-sm leading-relaxed">
-              Sube tu reglamento, tus fuentes, tu información, referencias e
-              instrumentos.
-            </p>
-          </div>
+  const docTypeCounts = useMemo(() => {
+    const counts = docTypes.reduce((acc, type) => {
+      acc[type.value] = 0;
+      return acc;
+    }, {});
 
-        </div>
+    documents.forEach((doc) => {
+      const key = doc.tipo || doc.tipo_documento || '';
+      if (counts[key] !== undefined) {
+        counts[key] += 1;
+      }
+    });
+
+    return counts;
+  }, [documents]);
+
+  const filteredDocuments = useMemo(() => {
+    if (activeFilter === 'todos') return documents;
+    return documents.filter(
+      (doc) => (doc.tipo || doc.tipo_documento || '') === activeFilter,
+    );
+  }, [documents, activeFilter]);
+
+  const getDocumentTypeLabel = useCallback((doc) => {
+    const key = doc.tipo || doc.tipo_documento;
+    const match = docTypes.find((type) => type.value === key);
+    return match ? match.label : 'Documento';
+  }, []);
+
+  const getDocumentName = (doc) =>
+    doc.nombre || doc.nombre_archivo || 'Documento sin nombre';
+
+  const getDocumentIcon = useCallback((doc) => {
+    const fileName = getDocumentName(doc);
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    const iconClass = 'w-5 h-5 text-slate-600';
+
+    if (['csv', 'xls', 'xlsx'].includes(ext)) {
+      return <Database className={iconClass} />;
+    }
+
+    if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+      return <Sparkles className={iconClass} />;
+    }
+
+    return <FileText className={iconClass} />;
+  }, []);
+
+  const processingProgress = useMemo(() => {
+    if (!documents.length) return 0;
+    return Math.min(100, 40 + documents.length * 12);
+  }, [documents.length]);
+
+  return (
+    <div className="relative w-full flex-1 px-4 sm:px-6 lg:px-10 py-12 animate-fade-in text-slate-900">
+      <div className="max-w-7xl mx-auto flex flex-col gap-8">
 
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-ios-blue border-t-transparent shadow-md"></div>
+          <div className="flex justify-center items-center py-24">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-300 border-t-transparent shadow-lg shadow-blue-200/40"></div>
           </div>
         ) : (
-          <div className="flex flex-col gap-8">
-            <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_420px] gap-8">
-              <div className="glass-card rounded-3xl p-6 shadow-lg border border-white/60 flex flex-col gap-6 h-[650px]">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  {thesesList.length > 0 && (
-                    <div className="flex items-center justify-between w-full">
-                      <span className="text-sm font-semibold text-slate-600">
-                        Tesis actual:
-                      </span>
-                      <Select
-                        className="py-2 pl-4 pr-10 text-sm font-bold text-ios-blue"
-                        value={selectedThesisId}
-                        onChange={(e) => setSelectedThesisId(e.target.value)}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <aside className="lg:col-span-4 flex flex-col gap-6">
+              <Card className="p-6">
+                <h3 className="text-xs font-bold uppercase tracking-[0.35em] text-blue-500 mb-4">
+                  Thesis Selection
+                </h3>
+                {thesesList.length > 0 ? (
+                  <div className="flex flex-col gap-3">
+                    <span className="text-xs font-semibold text-slate-500">
+                      Proyecto activo
+                    </span>
+                    <Select
+                      className="py-3 pl-4 pr-10 text-sm font-semibold text-slate-900 border border-slate-200 rounded-2xl shadow-sm"
+                      value={selectedThesisId}
+                      onChange={(e) => setSelectedThesisId(e.target.value)}
+                    >
+                      {thesesList.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.titulo || 'Sin título'}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">
+                    No tienes tesis registradas aun.
+                  </p>
+                )}
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="text-xs font-bold uppercase tracking-[0.35em] text-blue-500 mb-6">
+                  Helper Document Categories
+                </h3>
+                <div className="flex flex-col gap-3">
+                  {docTypes.map((type) => {
+                    const Icon = type.icon;
+                    const isActive = activeFilter === type.value;
+
+                    return (
+                      <button
+                        key={type.value}
+                        type="button"
+                        onClick={() => setActiveFilter(type.value)}
+                        className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
+                          isActive
+                            ? 'border-blue-200 text-slate-900 shadow-lg shadow-blue-100/60'
+                            : 'border-transparent text-slate-500 hover:text-slate-800'
+                        }`}
                       >
-                        {thesesList.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.titulo || 'Sin título'}
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
+                              isActive
+                                ? 'border-blue-100 text-blue-500'
+                                : 'border-slate-200 text-slate-400'
+                            }`}
+                          >
+                            <Icon className="w-5 h-5" />
+                          </span>
+                          <span className="text-sm font-semibold">
+                            {type.label}
+                          </span>
+                        </div>
+                        <span
+                          className={`text-xs font-bold px-2 py-1 rounded-full ${
+                            isActive
+                              ? 'text-blue-600'
+                              : 'text-slate-500'
+                          }`}
+                        >
+                          {docTypeCounts[type.value] || 0}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveFilter('todos')}
+                  className={`mt-4 w-full rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    activeFilter === 'todos'
+                      ? 'border-blue-200 text-slate-900 shadow-lg shadow-blue-100/60'
+                      : 'border-slate-200 text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Ver todas las categorías
+                </button>
+              </Card>
+
+              <Card className="p-6">
+                <div className="flex items-start gap-4">
+                  <span className="w-10 h-10 rounded-2xl flex items-center justify-center text-blue-500 shadow-sm">
+                    <Sparkles className="w-5 h-5" />
+                  </span>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    <span className="text-blue-600 font-semibold block mb-1">
+                      Tip de organizacion
+                    </span>
+                    Mantener tus referencias ordenadas acelera el proceso de revision
+                    y sintesis al final de cada iteracion.
+                  </p>
+                </div>
+              </Card>
+            </aside>
+
+            <article className="lg:col-span-8 flex flex-col gap-8">
+              <Card className="p-10">
+                <div className="group relative mb-12">
+                  <div className="relative border-2 border-dashed border-slate-200 rounded-3xl p-12 sm:p-14 flex flex-col items-center justify-center text-center">
+                    <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 border border-blue-100 group-hover:scale-105 transition-transform duration-500">
+                      <Upload className="w-9 h-9 text-blue-500" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">
+                      Suelta para comenzar la carga
+                    </h3>
+                    <p className="text-slate-500 text-sm mb-6">
+                      Sube reglamentos, instrumentos, rúbricas y demás documentos de apoyo.
+                    </p>
+                    <div className="w-full max-w-sm mb-6 text-left">
+                      <label className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500 block mb-2">
+                        Tipo de documento
+                      </label>
+                      <Select
+                        className="py-3 pl-4 pr-10 text-sm font-semibold text-slate-900 border border-slate-200 rounded-2xl shadow-sm w-full"
+                        value={docType}
+                        onChange={(e) => setDocType(e.target.value)}
+                      >
+                        {docTypes.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
                           </SelectItem>
                         ))}
                       </Select>
                     </div>
-                  )}
-                </div>
-
-                {/* quitamos vista previa aqui solo mostramos los files como [icon] document_name */}
-                <div className="glass-card rounded-3xl p-5 shadow-inner border border-white/70 flex-1">
-                  {documents.length === 0 ? (
-                    <div className="h-full min-h-[220px] flex items-center justify-center text-slate-500 text-sm">
-                      Aún no has subido documentos para esta tesis.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4">
-                      {documents.map((doc) => {
-                        const fileName = doc.nombre || 'Documento sin nombre';
-                        const fileUrl = doc.url_google_doc || doc.url_archivo_drive;
-
-                        return (
-                          <div
-                            key={doc.id}
-                            className="rounded-2xl border border-slate-200/80 bg-white/90 p-4 shadow-sm hover:shadow-md transition-all flex flex-col gap-3"
-                          >
-                            <div className="flex items-start gap-3 min-w-0">
-                              <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                                {getDocumentIcon(doc)}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold text-slate-800 leading-tight line-clamp-2 break-words">
-                                  {fileName}
-                                </p>
-                                <p className="text-xs text-slate-500 mt-1">
-                                  {getDocumentTypeLabel(doc)}
-                                </p>
-                              </div>
-                            </div>
-
-                            {fileUrl ? (
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center justify-center gap-1 text-xs font-semibold text-ios-blue hover:text-blue-700 rounded-lg border border-blue-200 bg-blue-50/70 px-3 py-2 mt-auto"
-                              >
-                                Abrir
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </a>
-                            ) : (
-                              <span className="text-xs text-slate-400 mt-auto">Sin URL</span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="glass-card rounded-3xl p-8 shadow-xl relative overflow-hidden flex flex-col items-center justify-center min-h-[360px] text-center border border-white/50 xl:sticky xl:top-24">
-                <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-6 shadow-inner">
-                  <Upload className="w-10 h-10 text-ios-blue" />
-                </div>
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">
-                  Subir nuevo documento
-                </h3>
-                <p className="text-slate-600 mb-8 max-w-sm text-sm">
-                  Selecciona el tipo de documento que deseas subir y adjunta el
-                  archivo.
-                </p>
-
-                <div className="flex flex-col items-center gap-4 w-full">
-                  <Select
-                    className="py-3 px-6 text-sm font-bold text-slate-800 w-full"
-                    value={docType}
-                    onChange={(e) => setDocType(e.target.value)}
-                  >
-                    {docTypes.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </Select>
-
-                  <div className="relative w-full">
                     <input
                       type="file"
                       id="file-upload"
@@ -391,18 +321,107 @@ const AdditionalDocuments = () => {
                     />
                     <label
                       htmlFor="file-upload"
-                      className={`inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-bold text-sm text-white shadow-lg transition-all w-full cursor-pointer ${
+                      className={`inline-flex items-center justify-center gap-2 px-10 py-3 rounded-full font-semibold text-sm text-white shadow-lg transition-all duration-300 cursor-pointer ${
                         uploading || !selectedThesisId
-                          ? 'bg-slate-400 cursor-not-allowed'
-                          : 'bg-ios-blue hover:bg-blue-600 hover:scale-[1.02] shadow-blue-500/30'
+                          ? 'bg-slate-300 cursor-not-allowed'
+                          : 'bg-gradient-to-br from-blue-500 to-indigo-500 hover:scale-105 active:scale-95'
                       }`}
                     >
-                      {uploading ? 'Subiendo...' : 'Seleccionar Archivo'}
+                      {uploading ? 'Subiendo...' : 'Seleccionar archivos'}
                     </label>
                   </div>
                 </div>
-              </div>
-            </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-lg font-bold text-slate-900">
+                      Documentos subidos
+                    </h3>
+                    <span className="text-xs font-bold text-blue-600 px-3 py-1 rounded-full uppercase tracking-tight border border-blue-100">
+                      {activeFilter === 'todos'
+                        ? `Total: ${documents.length} archivos`
+                        : `${getDocumentTypeLabel({ tipo: activeFilter })}: ${filteredDocuments.length}`}
+                    </span>
+                  </div>
+
+                  {filteredDocuments.length === 0 ? (
+                    <div className="min-h-[200px] flex items-center justify-center text-slate-500 text-sm border border-dashed border-slate-200 rounded-2xl">
+                      {activeFilter === 'todos'
+                        ? 'Aún no has subido documentos para esta tesis.'
+                        : 'No hay documentos en esta categoría todavía.'}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      {filteredDocuments.map((doc) => {
+                        const fileName = getDocumentName(doc);
+                        const fileUrl = doc.url_google_doc || doc.url_archivo_drive;
+
+                        return (
+                          <div
+                            key={doc.id}
+                            className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 hover:border-blue-200 transition-colors"
+                          >
+                            <div className="flex items-center gap-4 min-w-0">
+                              <div className="w-12 h-12 rounded-2xl flex items-center justify-center border border-slate-100 shrink-0">
+                                {getDocumentIcon(doc)}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold text-slate-900 truncate">
+                                  {fileName}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {getDocumentTypeLabel(doc)}
+                                </p>
+                              </div>
+                            </div>
+                            {fileUrl ? (
+                              <a
+                                href={fileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center justify-center gap-1 text-xs font-semibold text-slate-700 rounded-full border border-slate-200 px-3 py-2 hover:border-blue-200 hover:text-blue-600 transition-colors"
+                              >
+                                Abrir
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            ) : (
+                              <span className="text-xs text-slate-400">Sin URL</span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </Card>
+
+              <Card className="p-8 flex flex-col md:flex-row items-center gap-8">
+                <div className="flex-1">
+                  <span className="text-xs font-bold text-blue-500 uppercase tracking-[0.3em] mb-2 block">
+                    Synthesizing Status
+                  </span>
+                  <h2 className="text-5xl font-bold tracking-tight text-slate-900">
+                    {processingProgress}%
+                  </h2>
+                  <p className="text-slate-600 mt-2 text-sm">
+                    El asistente analiza temas clave segun los ultimos documentos.
+                  </p>
+                </div>
+                <div className="w-full md:w-1/3 h-24 rounded-2xl border border-slate-200 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                    <Sparkles className="w-12 h-12 text-blue-500" />
+                  </div>
+                  <div className="relative flex flex-col items-center">
+                    <span className="text-xs font-bold text-slate-800">
+                      {Math.max(documents.length * 8, 0)} insights
+                    </span>
+                    <span className="text-[10px] text-blue-500 font-bold uppercase tracking-tight mt-1">
+                      Hoy
+                    </span>
+                  </div>
+                </div>
+              </Card>
+            </article>
           </div>
         )}
       </div>

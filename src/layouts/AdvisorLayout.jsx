@@ -6,11 +6,12 @@ import {
   User as UserIcon,
   LogOut,
   Settings,
-  Phone,
+  Bell,
   KeyRound,
   Copy,
+  RefreshCw,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getCurrentUser, logout } from '../services/authService';
 import {
   generarCodigoAsesor,
@@ -29,6 +30,9 @@ const AdvisorLayout = () => {
   const [user, setUser] = useState(null);
   const [codigoPublico, setCodigoPublico] = useState(null);
   const [codigoLoading, setCodigoLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -38,6 +42,8 @@ const AdvisorLayout = () => {
       } catch (error) {
         console.error('Failed to fetch user:', error);
         navigate('/login');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -55,6 +61,17 @@ const AdvisorLayout = () => {
     };
 
     fetchCodigo();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleLogout = async () => {
@@ -81,25 +98,12 @@ const AdvisorLayout = () => {
       setCodigoLoading(true);
       const nuevoCodigo = await generarCodigoAsesor();
       setCodigoPublico(nuevoCodigo);
+      toast.success('Código público actualizado.');
     } catch (error) {
       console.error('Error generando código público:', error);
-      alert('No se pudo generar el código. Intenta nuevamente.');
+      toast.error('No se pudo generar el código.');
     } finally {
       setCodigoLoading(false);
-    }
-  };
-
-  const handleCopyCodigo = async () => {
-    if (!codigoTexto) return;
-
-    try {
-      await navigator.clipboard.writeText(codigoTexto);
-      toast.success('Copiado con éxito', {
-        className: 'animate-in slide-in-from-bottom-4 duration-300',
-      });
-    } catch (error) {
-      console.error('Error copying code:', error);
-      alert('No se pudo copiar el código.');
     }
   };
 
@@ -107,6 +111,18 @@ const AdvisorLayout = () => {
   const codigoExpira = codigoPublico?.r_expira_en
     ? new Date(codigoPublico.r_expira_en).toLocaleDateString()
     : null;
+
+  const handleCopyCodigo = async () => {
+    if (!codigoTexto) return;
+
+    try {
+      await navigator.clipboard.writeText(codigoTexto);
+      toast.success('Código copiado.');
+    } catch (error) {
+      console.error('Error copying code:', error);
+      toast.error('No se pudo copiar el código.');
+    }
+  };
 
   const navItems = [
     {
@@ -126,142 +142,162 @@ const AdvisorLayout = () => {
     },
   ];
 
-  return (
-    <div className="relative min-h-screen font-sans text-gray-900 overflow-hidden bg-ios-bg">
-      {/* Animated Blur Background (Replicated Lights) */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div
-          className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full opacity-50 mix-blend-multiply filter blur-[100px]"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(144, 238, 144, 0.8) 0%, transparent 70%)',
-            animation: 'pastel-move-1 30s infinite alternate ease-in-out',
-          }}
-        ></div>
-        <div
-          className="absolute top-[40%] right-[-10%] w-[60vw] h-[60vw] rounded-full opacity-50 mix-blend-multiply filter blur-[100px]"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(176, 196, 222, 0.8) 0%, transparent 70%)',
-            animation:
-              'pastel-move-2 25s infinite alternate-reverse ease-in-out',
-          }}
-        ></div>
-        <div
-          className="absolute bottom-[-20%] left-[10%] w-[55vw] h-[55vw] rounded-full opacity-50 mix-blend-multiply filter blur-[100px]"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(230, 230, 250, 0.7) 0%, transparent 70%)',
-            animation: 'pastel-move-1 35s infinite alternate ease-in-out',
-          }}
-        ></div>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <header className="fixed top-0 z-50 h-20 w-full rounded-none border-b border-white/60 bg-white/85 shadow-[0_0_30px_rgba(0,0,0,0.06)] backdrop-blur-[22px]">
+          <div className="flex h-20 w-full items-center justify-between px-8 animate-pulse">
+            <div className="h-6 w-40 rounded-full bg-slate-200" />
+            <div className="h-10 w-72 rounded-full bg-slate-200" />
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-slate-200" />
+              <div className="h-8 w-8 rounded-full bg-slate-200" />
+              <div className="h-10 w-10 rounded-full bg-slate-200" />
+            </div>
+          </div>
+        </header>
+        <main className="space-y-6 px-8 pt-24 animate-pulse">
+          <div className="h-10 w-56 rounded bg-slate-200" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="h-48 rounded-2xl bg-slate-200" />
+            <div className="h-48 rounded-2xl bg-slate-200" />
+          </div>
+          <div className="h-64 rounded-2xl bg-slate-200" />
+        </main>
       </div>
+    );
+  }
 
-      <div className="relative z-10 flex flex-col min-h-screen">
-        {/* Header */}
-        <header className="sticky top-0 z-50 glass-card border-b border-gray-200/50 px-8 py-4 rounded-none">
-          <div className="max-w-[1400px] mx-auto flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              {/* Profile Info */}
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-blue-800 flex items-center justify-center text-white font-bold text-xl uppercase shadow-md">
-                  {user?.email?.[0] || 'A'}
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-slate-800">
-                    {user?.email || 'Advisor'}
-                  </h1>
-                  <p className="text-sm text-ios-blue font-medium">Panel de Asesor</p>
-                  <div className="mt-2 hidden md:flex items-center gap-2 text-xs font-semibold text-slate-600">
-                    <KeyRound size={14} className="text-ios-blue" />
-                    <span>
-                      {codigoTexto ? `Código: ${codigoTexto}` : 'Sin código'}
-                    </span>
-                      {codigoTexto && (
-                        <button
-                          onClick={handleCopyCodigo}
-                          className="ml-1 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-slate-100 text-slate-600 text-[11px] font-bold hover:bg-slate-200 transition-colors"
-                          title="Copiar código"
-                        >
-                          <Copy size={12} />
-                          Copiar
-                        </button>
-                      )}
-                    <button
-                      onClick={handleGenerateCodigo}
-                      className="ml-2 px-2.5 py-1 rounded-md bg-ios-blue text-white text-[11px] font-bold hover:bg-blue-600 transition-colors"
-                    >
-                      {codigoTexto ? 'Regenerar' : 'Generar'}
-                    </button>
-                    {codigoExpira && (
-                      <span className="ml-2 text-[11px] text-slate-400">
-                        Expira: {codigoExpira}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
+  return (
+    <div className="relative min-h-screen overflow-hidden font-sans text-gray-900">
+      <div className="relative z-10 flex min-h-screen flex-col">
+        <header className="fixed top-0 z-50 w-full rounded-none border-b border-white/60 bg-white/85 shadow-[0_0_30px_rgba(0,0,0,0.06)] backdrop-blur-[22px]">
+          <div className="flex h-20 w-full items-center justify-between px-8">
+            <div className="min-w-0">
+              <p className="truncate text-lg font-bold tracking-tight text-slate-900">
+                {user?.email || 'Advisor'}
+              </p>
+              <p className="text-sm font-medium text-slate-500">
+                Panel de asesor
+              </p>
+            </div>
 
-              {/* Main Navigation - Liquid Glass */}
-              <nav className="hidden lg:flex items-center liquid-glass-dark liquid-nav-container gap-1">
+            <div className="hidden md:flex rounded-full border border-white/70 bg-[#f4f1eb] px-2 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.08)]">
+              <nav className="relative flex gap-2">
                 {navItems.map((item) => (
                   <NavLink
                     key={item.path}
                     to={item.path}
                     className={({ isActive }) =>
                       cn(
-                        'liquid-nav-item',
-                        isActive ? 'active' : 'text-gray-300 hover:text-white',
+                        'top-nav-link px-4 py-1.5 rounded-full text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1eb]',
+                        isActive
+                          ? 'bg-slate-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.24)]'
+                          : 'text-black hover:bg-white/70 hover:text-black',
                       )
                     }
                   >
-                    {item.icon}
                     {item.label}
                   </NavLink>
                 ))}
               </nav>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                <button className="hidden sm:flex px-4 py-2 bg-white/80 border border-gray-200 text-gray-900 rounded-lg text-sm font-bold items-center gap-2 hover:bg-white transition-colors">
-                  <Phone size={16} className="text-green-500" />
-                  Soporte
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-red-500/10 text-red-600 border border-red-200 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-red-500 hover:text-white transition-all"
-                >
-                  <LogOut size={16} />
-                  Salir
-                </button>
-              </div>
             </div>
-            
-            {/* Mobile Nav */}
-            <nav className="flex lg:hidden overflow-x-auto hide-scrollbar gap-2 pb-2">
-              {navItems.map((item) => (
-                <NavLink
-                  key={item.path}
-                  to={item.path}
-                  className={({ isActive }) =>
-                    cn(
-                      'px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-colors',
-                      isActive
-                        ? 'bg-ios-blue text-white shadow-md'
-                        : 'bg-white/50 text-gray-600 hover:bg-white',
-                    )
-                  }
-                >
-                  {item.icon}
-                  {item.label}
-                </NavLink>
-              ))}
-            </nav>
+
+            <div className="relative flex items-center gap-4" ref={menuRef}>
+              <button
+                className="rounded-full p-2 text-slate-800 hover:bg-white/10"
+                aria-label="Notifications"
+              >
+                <Bell size={18} />
+              </button>
+              <button
+                className="rounded-full p-2 text-slate-800 hover:bg-white/10"
+                aria-label="Settings"
+              >
+                <Settings size={18} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setMenuOpen((v) => !v)}
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-outline-variant/30 bg-white text-slate-900 shadow-sm transition-shadow hover:shadow-md"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+              >
+                <UserIcon size={18} />
+              </button>
+
+              {menuOpen && (
+                <div className="absolute right-0 top-12 z-20 w-72 rounded-2xl border border-slate-100 bg-white p-3 text-sm shadow-xl">
+                  <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                          Código público
+                        </p>
+                        <p className="mt-1 text-base font-bold text-slate-900">
+                          {codigoTexto || 'Sin código'}
+                        </p>
+                        {codigoExpira && (
+                          <p className="mt-1 text-xs text-slate-500">
+                            Expira: {codigoExpira}
+                          </p>
+                        )}
+                      </div>
+                      <KeyRound className="mt-0.5 h-4 w-4 text-blue-600" />
+                    </div>
+
+                    <div className="mt-3 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCopyCodigo}
+                        disabled={!codigoTexto}
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <Copy size={14} />
+                        Copiar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleGenerateCodigo}
+                        disabled={codigoLoading}
+                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        <RefreshCw size={14} className={codigoLoading ? 'animate-spin' : ''} />
+                        {codigoTexto ? 'Regenerar' : 'Generar'}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 border-t border-slate-100 pt-2">
+                    <button
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left hover:bg-slate-50"
+                      onClick={() => {
+                        navigate('/advisor/profile');
+                        setMenuOpen(false);
+                      }}
+                    >
+                      <UserIcon size={16} />
+                      Perfil
+                    </button>
+                    <button
+                      className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-red-600 hover:bg-slate-50"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        handleLogout();
+                      }}
+                    >
+                      <LogOut size={16} />
+                      Salir
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
+
         </header>
 
-        {/* Main Content */}
-        <main className="flex-1 max-w-[1400px] mx-auto w-full p-4 sm:p-8 flex flex-col">
+        <main className="w-full flex-1 px-4 pt-24 sm:px-8">
           <Outlet />
         </main>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Search, Star, Calendar, Handshake } from 'lucide-react';
+import { ArrowLeft, Search, Calendar, Handshake, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Button } from '../../components/ui/button';
@@ -190,11 +190,6 @@ export default function AdvisorCatalog({ isComponent = false }) {
                   </div>
                   <div className="w-full md:w-auto flex flex-col items-center md:items-end gap-3 min-w-[180px]">
                     <div className="text-center md:text-right">
-                      <div className="flex items-center justify-center md:justify-end gap-1 text-amber-500 mb-1">
-                        <Star className="w-4 h-4 fill-current" />
-                        <span className="text-lg font-black text-slate-900">4.9</span>
-                        <span className="text-xs text-slate-400 font-medium">(128)</span>
-                      </div>
                       <div className="text-2xl font-black text-slate-900">
                         $85<span className="text-sm font-medium text-slate-400">/hr</span>
                       </div>
@@ -202,15 +197,17 @@ export default function AdvisorCatalog({ isComponent = false }) {
                     <div className="flex flex-col gap-2 w-full">
                       <Button
                         onClick={() => handleConnect(advisor.slug)}
-                        className="w-full py-3 bg-blue-600 text-white shadow-md hover:shadow-lg transition-all active:scale-95"
+                        className="w-full py-3 bg-blue-600 text-white shadow-md hover:shadow-lg transition-all active:scale-95 inline-flex items-center justify-center gap-2"
                       >
+                        <Handshake className="w-4 h-4" />
                         Vincular asesor
                       </Button>
                       <Button
                         variant="secondary"
-                        className="w-full py-3 text-slate-700"
+                        className="w-full py-3 text-slate-700 inline-flex items-center justify-center gap-2"
                       >
                         Ver perfil
+                        <ArrowRight className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
