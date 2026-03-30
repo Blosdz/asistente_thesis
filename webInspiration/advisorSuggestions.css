@@ -1,0 +1,18 @@
+/* Selected/Expanded Feedback Card:shadow */
+
+position: absolute;
+left: 0px;
+right: 0px;
+top: 0px;
+bottom: 0.9px;
+
+background: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(236, 235, 235, 0.1) 100%);
+backdrop-filter: blur(25px);
+/* Note: backdrop-filter has minimal browser support */
+border-radius: 10px;
+
+/* Inside auto layout */
+flex: none;
+order: 0;
+flex-grow: 0;
+z-index: 0;
