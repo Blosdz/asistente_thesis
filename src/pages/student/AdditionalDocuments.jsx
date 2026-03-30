@@ -10,17 +10,20 @@ import {
 import { Select, SelectItem } from '../../components/ui/select';
 import { Card } from '../../components/ui/card';
 import {
-  obtenerDocumentosMiTesis,
+  obtenerDocumentosComplementarios,
   obtenerMisTesis,
   subirDocumentoAGoogleDrive,
 } from '../../services/thesisService';
 import { toast } from 'react-hot-toast';
 
 const docTypes = [
-  { value: 'referencias', label: 'Referencias', icon: FileText },
-  { value: 'datasets', label: 'Datasets', icon: Database },
-  { value: 'metodologia', label: 'Activos metodologicos', icon: ClipboardList },
-  { value: 'borradores', label: 'Borradores', icon: Sparkles },
+  { value: 'reglamento', label: 'Reglamento', icon: FileText },
+  { value: 'instrumento', label: 'Instrumento', icon: ClipboardList },
+  { value: 'rubrica', label: 'Rúbrica', icon: Sparkles },
+  { value: 'criterios', label: 'Criterios', icon: ClipboardList },
+  { value: 'formatoAPA', label: 'Formato APA', icon: FileText },
+  { value: 'vancouver', label: 'Vancouver', icon: FileText },
+  { value: 'fuente', label: 'Fuente', icon: Database },
 ];
 
 const AdditionalDocuments = () => {
@@ -30,6 +33,7 @@ const AdditionalDocuments = () => {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [docType, setDocType] = useState(docTypes[0].value);
+  const [activeFilter, setActiveFilter] = useState('todos');
 
   const fetchTheses = useCallback(async () => {
     try {
@@ -55,7 +59,7 @@ const AdditionalDocuments = () => {
   const fetchDocuments = useCallback(async (thesisId) => {
     try {
       setLoading(true);
-      const docs = await obtenerDocumentosMiTesis(thesisId);
+      const docs = await obtenerDocumentosComplementarios(thesisId);
       setDocuments(docs || []);
     } catch (err) {
       console.error('Error fetching documents:', err);
@@ -125,6 +129,13 @@ const AdditionalDocuments = () => {
 
     return counts;
   }, [documents]);
+
+  const filteredDocuments = useMemo(() => {
+    if (activeFilter === 'todos') return documents;
+    return documents.filter(
+      (doc) => (doc.tipo || doc.tipo_documento || '') === activeFilter,
+    );
+  }, [documents, activeFilter]);
 
   const getDocumentTypeLabel = useCallback((doc) => {
     const key = doc.tipo || doc.tipo_documento;
@@ -202,13 +213,13 @@ const AdditionalDocuments = () => {
                 <div className="flex flex-col gap-3">
                   {docTypes.map((type) => {
                     const Icon = type.icon;
-                    const isActive = docType === type.value;
+                    const isActive = activeFilter === type.value;
 
                     return (
                       <button
                         key={type.value}
                         type="button"
-                        onClick={() => setDocType(type.value)}
+                        onClick={() => setActiveFilter(type.value)}
                         className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
                           isActive
                             ? 'border-blue-200 text-slate-900 shadow-lg shadow-blue-100/60'
@@ -242,6 +253,17 @@ const AdditionalDocuments = () => {
                     );
                   })}
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveFilter('todos')}
+                  className={`mt-4 w-full rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
+                    activeFilter === 'todos'
+                      ? 'border-blue-200 text-slate-900 shadow-lg shadow-blue-100/60'
+                      : 'border-slate-200 text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  Ver todas las categorías
+                </button>
               </Card>
 
               <Card className="p-6">
@@ -271,8 +293,24 @@ const AdditionalDocuments = () => {
                       Suelta para comenzar la carga
                     </h3>
                     <p className="text-slate-500 text-sm mb-6">
-                      Varios formatos disponibles, organiza por categoria en segundos.
+                      Sube reglamentos, instrumentos, rúbricas y demás documentos de apoyo.
                     </p>
+                    <div className="w-full max-w-sm mb-6 text-left">
+                      <label className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500 block mb-2">
+                        Tipo de documento
+                      </label>
+                      <Select
+                        className="py-3 pl-4 pr-10 text-sm font-semibold text-slate-900 border border-slate-200 rounded-2xl shadow-sm w-full"
+                        value={docType}
+                        onChange={(e) => setDocType(e.target.value)}
+                      >
+                        {docTypes.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {type.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
                     <input
                       type="file"
                       id="file-upload"
@@ -300,17 +338,21 @@ const AdditionalDocuments = () => {
                       Documentos subidos
                     </h3>
                     <span className="text-xs font-bold text-blue-600 px-3 py-1 rounded-full uppercase tracking-tight border border-blue-100">
-                      Cola: {documents.length} archivos
+                      {activeFilter === 'todos'
+                        ? `Total: ${documents.length} archivos`
+                        : `${getDocumentTypeLabel({ tipo: activeFilter })}: ${filteredDocuments.length}`}
                     </span>
                   </div>
 
-                  {documents.length === 0 ? (
+                  {filteredDocuments.length === 0 ? (
                     <div className="min-h-[200px] flex items-center justify-center text-slate-500 text-sm border border-dashed border-slate-200 rounded-2xl">
-                      Aun no has subido documentos para esta tesis.
+                      {activeFilter === 'todos'
+                        ? 'Aún no has subido documentos para esta tesis.'
+                        : 'No hay documentos en esta categoría todavía.'}
                     </div>
                   ) : (
                     <div className="flex flex-col gap-3">
-                      {documents.map((doc) => {
+                      {filteredDocuments.map((doc) => {
                         const fileName = getDocumentName(doc);
                         const fileUrl = doc.url_google_doc || doc.url_archivo_drive;
 

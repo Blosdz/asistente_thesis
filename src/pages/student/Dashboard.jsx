@@ -1,87 +1,342 @@
-import { BarChart3, Clock, AlertCircle, CheckCircle2, FileText, UserCheck } from 'lucide-react';
-import { Button } from '../../components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  ArrowRight,
+  BarChart3,
+  CalendarClock,
+  CheckCircle2,
+  Clock3,
+  CreditCard,
+  ExternalLink,
+  FileText,
+  Sparkles,
+} from 'lucide-react';
+import { Card } from '../../components/ui/card';
+import { obtenerResumenDashboardEstudiante } from '../../services/dashboardService';
+import { toast } from 'react-hot-toast';
 
-const Dashboard = () => {
-  const stats = [
-    { label: 'Progreso de Tesis', value: '45%', icon: <BarChart3 className="text-ios-blue" />, color: 'bg-ios-blue/10' },
-    { label: 'Observaciones Pendientes', value: '3', icon: <AlertCircle className="text-amber-500" />, color: 'bg-amber-500/10' },
-    { label: 'Versiones de Documento', value: '4', icon: <FileText className="text-purple-500" />, color: 'bg-purple-500/10' },
-    { label: 'Solicitudes Activas', value: '1', icon: <Clock className="text-ios-gray" />, color: 'bg-ios-gray/10' },
-  ];
+const formatterFecha = new Intl.DateTimeFormat('es-PE', {
+  weekday: 'long',
+  day: '2-digit',
+  month: 'long',
+  hour: 'numeric',
+  minute: '2-digit',
+});
 
-  const activities = [
-    { title: 'Nueva observación recibida', time: 'Hace 2 horas', type: 'observation' },
-    { title: 'Documento v4 subido con éxito', time: 'Ayer, 10:30 AM', type: 'upload' },
-    { title: 'Solicitud de asesor aceptada', time: '15 Mar, 2024', type: 'service' },
-  ];
+const formatterDia = new Intl.DateTimeFormat('es-PE', {
+  day: '2-digit',
+  month: 'short',
+});
+
+const formatterHora = new Intl.DateTimeFormat('es-PE', {
+  hour: 'numeric',
+  minute: '2-digit',
+});
+
+const milestones = [
+  {
+    title: 'Propuesta',
+    state: 'Aprobada',
+    icon: CheckCircle2,
+    tone: 'text-emerald-600 bg-emerald-50',
+  },
+  {
+    title: 'Marco teórico',
+    state: 'En revisión',
+    icon: FileText,
+    tone: 'text-blue-600 bg-blue-50',
+  },
+  {
+    title: 'Próxima cita',
+    state: 'Agenda actualizada',
+    icon: CalendarClock,
+    tone: 'text-violet-600 bg-violet-50',
+  },
+];
+
+const resumenInicial = {
+  cantidad_citas_proximas: 0,
+  pagos_pendientes: 0,
+  tesis_id: null,
+  tesis_titulo: null,
+  documentos_recientes: 0,
+  proxima_reunion_id: null,
+  proxima_reunion_inicio: null,
+  proxima_reunion_fin: null,
+  proxima_reunion_estado: null,
+  proxima_reunion_enlace: null,
+  proximo_asesor_id: null,
+  proximo_asesor_nombre: null,
+};
+
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [resumen, setResumen] = useState(resumenInicial);
+
+  useEffect(() => {
+    const cargarResumen = async () => {
+      try {
+        setLoading(true);
+        const data = await obtenerResumenDashboardEstudiante();
+        setResumen({ ...resumenInicial, ...(data ?? {}) });
+      } catch (error) {
+        console.error('Error cargando dashboard:', error);
+        toast.error('No se pudo cargar el dashboard.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarResumen();
+  }, []);
+
+  const stats = useMemo(
+    () => [
+      {
+        label: 'Avance general',
+        value: resumen.tesis_titulo ? 'Activo' : 'Sin tesis',
+        note: resumen.tesis_titulo ?? 'Crea o selecciona tu tesis',
+        icon: BarChart3,
+        tone: 'text-blue-600 bg-blue-50 border-blue-100',
+      },
+      {
+        label: 'Documentos',
+        value: String(resumen.documentos_recientes ?? 0).padStart(2, '0'),
+        note: 'Archivos registrados',
+        icon: FileText,
+        tone: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+      },
+      {
+        label: 'Pagos pendientes',
+        value: String(resumen.pagos_pendientes ?? 0).padStart(2, '0'),
+        note: 'En revisión o por subir',
+        icon: CreditCard,
+        tone: 'text-amber-600 bg-amber-50 border-amber-100',
+      },
+      {
+        label: 'Próximas citas',
+        value: String(resumen.cantidad_citas_proximas ?? 0).padStart(2, '0'),
+        note: resumen.proxima_reunion_inicio
+          ? formatterDia.format(new Date(resumen.proxima_reunion_inicio))
+          : 'Sin reuniones próximas',
+        icon: CalendarClock,
+        tone: 'text-violet-600 bg-violet-50 border-violet-100',
+      },
+    ],
+    [resumen],
+  );
+
+  const proximaReunionTexto = resumen.proxima_reunion_inicio
+    ? formatterFecha.format(new Date(resumen.proxima_reunion_inicio))
+    : 'Aún no tienes una cita agendada';
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold text-gray-900">Estadística y Resumen</h2>
-        <p className="text-gray-500">Un resumen de tu actividad y progreso actual.</p>
-      </div>
+    <div className="relative w-full px-4 py-12 text-slate-900 sm:px-6 lg:px-10">
+      <div className="mx-auto flex max-w-7xl flex-col gap-10">
+        <header className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+          <div className="space-y-2">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-600">
+              Dashboard
+            </p>
+            <h1 className="font-['Ubuntu'] text-4xl font-bold tracking-tighter text-slate-900 md:text-5xl">
+              Tu espacio de seguimiento académico
+            </h1>
+            <p className="max-w-2xl text-sm leading-7 text-slate-500 md:text-base">
+              Consulta el estado de tu tesis, pagos y próximas reuniones desde
+              una sola vista.
+            </p>
+          </div>
+        </header>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, i) => (
-          <Card key={i} className="flex flex-col gap-4 hover:scale-[1.02] transition-transform">
-            <div className={`w-12 h-12 rounded-2xl ${stat.color} flex items-center justify-center`}>
-              {stat.icon}
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-500">{stat.label}</p>
-              <h3 className="text-2xl font-bold text-gray-900">{stat.value}</h3>
-            </div>
-          </Card>
-        ))}
-      </div>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+          <section className="space-y-8 lg:col-span-8">
+            <Card className="relative overflow-hidden rounded-[32px] border border-white/70 bg-gradient-to-br from-white via-slate-50 to-blue-50 p-10 shadow-[0_24px_60px_rgba(18,74,240,0.08)]">
+              <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Timeline / Recent Activity */}
-        <Card className="lg:col-span-2 space-y-6">
-          <CardHeader className="mb-0">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock size={20} className="text-ios-blue" />
-              Actividad Reciente
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {activities.map((activity, i) => (
-              <div key={i} className="flex items-start gap-4 p-4 rounded-2xl hover:bg-white/50 transition-colors">
-                <div className="mt-1">
-                  {activity.type === 'observation' ? <AlertCircle size={16} className="text-amber-500" /> : <CheckCircle2 size={16} className="text-green-500" />}
+              <div className="relative z-10">
+                <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+                  <div className="max-w-2xl">
+                    <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-600">
+                      Tesis activa
+                    </p>
+                    <h2 className="mt-2 font-['Ubuntu'] text-3xl font-bold tracking-tight text-slate-900">
+                      {resumen.tesis_titulo ?? 'Selecciona o crea una tesis'}
+                    </h2>
+                    <p className="mt-3 text-sm leading-7 text-slate-500">
+                      {resumen.tesis_titulo
+                        ? 'Tu espacio principal ya está listo para seguir subiendo versiones, revisar sugerencias y mantener ordenado tu avance.'
+                        : 'Aún no se detecta una tesis activa. Puedes ir a tu espacio de tesis para crearla o elegirla.'}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/student/my-thesis')}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-[0_16px_30px_rgba(37,99,235,0.26)] hover:bg-blue-700"
+                  >
+                    Abrir mi tesis
+                    <ArrowRight className="h-4 w-4" />
+                  </button>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-gray-900">{activity.title}</p>
-                  <p className="text-xs text-gray-500">{activity.time}</p>
+
+                <div className="mt-8 grid gap-4 md:grid-cols-3">
+                  {milestones.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={item.title}
+                        className="rounded-2xl border border-white/70 bg-white/70 p-5"
+                      >
+                        <div
+                          className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${item.tone}`}
+                        >
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <p className="text-sm font-bold text-slate-900">
+                          {item.title}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {item.title === 'Próxima cita'
+                            ? (resumen.proxima_reunion_estado ?? item.state)
+                            : item.state}
+                        </p>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+            </Card>
 
-        {/* Assigned Advisor */}
-        <Card className="flex flex-col items-center text-center gap-6 justify-center">
-          <div className="w-20 h-20 rounded-full bg-ios-blue/10 flex items-center justify-center text-ios-blue">
-            <UserCheck size={40} />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold">Asesor Asignado</h3>
-            <p className="text-sm text-gray-500 mt-1">Dr. Alejandro Vargas</p>
-            <p className="text-xs text-ios-blue font-medium mt-2">Facultad de Ingeniería</p>
-          </div>
-          <Button
-            variant="secondary"
-            className="w-full py-3 text-sm font-bold"
-          >
-            Enviar Mensaje
-          </Button>
-        </Card>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+              {stats.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Card
+                    key={item.label}
+                    className="rounded-[28px] border border-white/80 bg-white/75 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.05)]"
+                  >
+                    <div
+                      className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${item.tone}`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <p className="mt-5 text-sm font-semibold text-slate-500">
+                      {item.label}
+                    </p>
+                    <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">
+                      {loading ? '--' : item.value}
+                    </p>
+                    <p className="mt-2 text-sm text-slate-500">{item.note}</p>
+                  </Card>
+                );
+              })}
+            </div>
+          </section>
+
+          <aside className="space-y-8 lg:col-span-4">
+            <Card className="rounded-[32px] border border-white/70 bg-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                    Citas
+                  </p>
+                  <h3 className="mt-3 text-xl font-bold text-slate-900">
+                    {loading
+                      ? 'Cargando agenda...'
+                      : resumen.cantidad_citas_proximas > 0
+                        ? `${resumen.cantidad_citas_proximas} próxima(s)`
+                        : 'Sin citas próximas'}
+                  </h3>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                  <CalendarClock className="h-6 w-6" />
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-slate-500">
+                {proximaReunionTexto}
+              </p>
+
+              {resumen.proximo_asesor_nombre && (
+                <p className="mt-2 text-sm font-semibold text-slate-700">
+                  {resumen.proximo_asesor_nombre}
+                </p>
+              )}
+
+              <div className="mt-6 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => navigate('/student/citas')}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                >
+                  Ver calendario de citas
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+
+                {resumen.proxima_reunion_enlace && (
+                  <a
+                    href={resumen.proxima_reunion_enlace}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Abrir Google Meet
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
+              </div>
+            </Card>
+
+            <Card className="rounded-[32px] border border-white/70 bg-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                <Sparkles className="h-4 w-4 text-blue-600" />
+                Resumen rápido
+              </p>
+              <div className="mt-5 space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <p className="text-sm font-bold text-slate-900">
+                    Pagos por revisar
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {loading
+                      ? 'Cargando...'
+                      : `${resumen.pagos_pendientes ?? 0} pago(s) aún requieren seguimiento.`}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <p className="text-sm font-bold text-slate-900">
+                    Documentos recientes
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {loading
+                      ? 'Cargando...'
+                      : `${resumen.documentos_recientes ?? 0} documento(s) vinculados a tu tesis activa.`}
+                  </p>
+                </div>
+                {resumen.proxima_reunion_inicio && (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                    <p className="text-sm font-bold text-slate-900">
+                      Hora estimada
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {formatterHora.format(
+                        new Date(resumen.proxima_reunion_inicio),
+                      )}{' '}
+                      -{' '}
+                      {resumen.proxima_reunion_fin
+                        ? formatterHora.format(
+                            new Date(resumen.proxima_reunion_fin),
+                          )
+                        : '--'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </Card>
+          </aside>
+        </div>
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}

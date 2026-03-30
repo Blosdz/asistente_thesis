@@ -2,13 +2,10 @@ import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LogOut,
   User as UserIcon,
-  Calendar,
   CreditCard,
   FileText,
   BarChart3,
   Settings,
-  HelpCircle,
-  Phone,
   Bell,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -26,9 +23,6 @@ const StudentLayout = () => {
   const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, height: 0, opacity: 0, scale: 1 });
-  const navContainerRef = useRef(null);
-  const navItemRefs = useRef({});
   const menuRef = useRef(null);
 
   useEffect(() => {
@@ -66,34 +60,10 @@ const StudentLayout = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    const activeItem = navItemRefs.current[location.pathname];
-    const container = navContainerRef.current;
-    if (!activeItem || !container) {
-      setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
-      return;
-    }
-
-    const containerRect = container.getBoundingClientRect();
-    const itemRect = activeItem.getBoundingClientRect();
-    const left = itemRect.left - containerRect.left;
-    setIndicatorStyle((prev) => ({ ...prev, opacity: 1, scale: 0.5 }));
-    requestAnimationFrame(() => {
-      setIndicatorStyle({
-        left,
-        width: itemRect.width,
-        height: itemRect.height,
-        opacity: 1,
-        scale: 1,
-      });
-    });
-  }, [location.pathname]);
-
   const navItems = [
     {
-      label: 'Documentos',
-      path: '/student/documents',
-      icon: <FileText size={18} />,
+      label: 'Dashboard',
+      path: '/student/dashboard',
     },
     {
       label: 'Mi Tesis',
@@ -101,15 +71,21 @@ const StudentLayout = () => {
       icon: <FileText size={18} />,
     },
     {
-      label: 'Asesorías',
-      path: '/student/citas',
-      icon: <Calendar size={18} />,
+      label: 'Documentos',
+      path: '/student/documents',
+      icon: <FileText size={18} />,
     },
     {
-      label: 'Planes',
-      path: '/student/planes',
-      icon: <BarChart3 size={18} />,
+      label: 'Asesorías',
+      // path: '/student/citas',
+      path: '/student/asesorias',
+      // icon: <Calendar size={18} />,
     },
+    // {
+    //   label: 'Planes',
+    //   path: '/student/planes',
+    //   icon: <BarChart3 size={18} />,
+    // },
     {
       label: 'Presustentación',
       path: '/student/services',
@@ -122,7 +98,7 @@ const StudentLayout = () => {
     },
     {
       label: 'Estadística',
-      path: '/student/dashboard',
+      path: '/student/statistics',
       icon: <BarChart3 size={18} />,
     },
   ];
@@ -159,36 +135,22 @@ const StudentLayout = () => {
         {/* Header */}
         <header className="fixed top-0 w-full z-50 rounded-none bg-white/85 backdrop-blur-[22px] border-b border-white/60 shadow-[0_0_30px_rgba(0,0,0,0.06)]">
           <div className="flex items-center justify-between px-8 h-20 w-full">
-            <div className="text-2xl font-bold tracking-tighter text-slate-900 dark:text-white heading-ubuntu">ThesisFlow</div>
+            <div className="text-2xl font-bold tracking-tighter text-slate-900 dark:text-white heading-ubuntu">
+              {/* ThesisFlow */}
+            </div>
 
             <div className="hidden md:flex bg-[#f4f1eb] rounded-full px-2 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.08)] border border-white/70">
-              <nav
-                ref={navContainerRef}
-                className="relative flex gap-2"
-              >
-                {indicatorStyle.opacity > 0 && (
-                  <span
-                    className="nav-indicator"
-                    style={{
-                      width: indicatorStyle.width,
-                      height: indicatorStyle.height,
-                      transform: `translateX(${indicatorStyle.left}px) scale(${indicatorStyle.scale})`
-                    }}
-                  />
-                )}
-                {navItems.map((item, idx) => (
+              <nav className="relative flex gap-2">
+                {navItems.map((item) => (
                   <NavLink
                     key={item.path}
                     to={item.path}
-                    ref={(el) => {
-                      if (el) navItemRefs.current[item.path] = el;
-                    }}
                     className={({ isActive }) =>
                       cn(
-                        'top-nav-link px-4 py-1.5 rounded-full text-sm font-semibold transition-colors',
+                        'top-nav-link px-4 py-1.5 rounded-full text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1eb]',
                         isActive
-                          ? 'text-white'
-                          : 'text-black hover:text-black',
+                          ? 'bg-slate-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.24)]'
+                          : 'text-black hover:bg-white/70 hover:text-black',
                       )
                     }
                   >
@@ -199,8 +161,17 @@ const StudentLayout = () => {
             </div>
 
             <div className="flex items-center gap-4 relative" ref={menuRef}>
-              <button className="p-2 hover:bg-white/10 rounded-full text-slate-800" aria-label="Notifications"> <Bell size={18} /> </button>
-              <button className="p-2 hover:bg-white/10 rounded-full text-slate-800" aria-label="Settings">
+              <button
+                className="p-2 hover:bg-white/10 rounded-full text-slate-800"
+                aria-label="Notifications"
+              >
+                {' '}
+                <Bell size={18} />{' '}
+              </button>
+              <button
+                className="p-2 hover:bg-white/10 rounded-full text-slate-800"
+                aria-label="Settings"
+              >
                 <Settings size={18} />
               </button>
               <button

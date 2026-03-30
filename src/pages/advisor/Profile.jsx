@@ -46,6 +46,15 @@ const AdvisorProfile = () => {
     telefono: '',
   });
 
+  const tienePerfilAsesor = (perfilData) =>
+    Boolean(
+      perfilData?.tiene_informacion ||
+        perfilData?.asesor_id ||
+        perfilData?.nombre_mostrar ||
+        perfilData?.email_publico ||
+        perfilData?.slug,
+    );
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -59,7 +68,7 @@ const AdvisorProfile = () => {
         setUser(currentUser);
         setUniversidades(unis && unis.length > 0 ? unis : universitiesList);
 
-        if (perfilData?.tiene_informacion) {
+        if (tienePerfilAsesor(perfilData)) {
           setPerfil(perfilData);
           setFormData({
             nombre_mostrar: perfilData.nombre_mostrar || '',

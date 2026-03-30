@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { X, ShieldCheck } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { X } from 'lucide-react';
 
 const sizeMap = {
   sm: 'text-sm',
@@ -35,6 +36,17 @@ const Modal = ({
 }) => {
   const overlayRef = useRef(null);
   const closeBtnRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -44,30 +56,28 @@ const Modal = ({
     }
     const onKey = (e) => {
       if (e.key === 'Escape') {
-        onClose?.();
+        onCloseRef.current?.();
       }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  }, [open]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   const descClass = sizeMap[descriptionSize] || sizeMap.md;
-
-  return (
+  const modalContent = (
     <div
       ref={overlayRef}
-      className="fixed inset-0 w-full h-full flex items-center justify-center p-0 z-[9999]"
+      className="fixed inset-0 z-[9999] flex h-full w-full items-center justify-center p-4 sm:p-6"
       onClick={(e) => {
         if (e.target === overlayRef.current) {
           onClose?.();
         }
       }}
     >
-      {/* Blur overlay, transparent background */}
-      <div className="absolute inset-0 backdrop-blur-[8px] pointer-events-none" style={{ background: 'transparent' }} />
-      <div className="relative w-full max-w-xl rounded-2xl bg-white border border-slate-200 shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-300 z-10">
+      <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-[8px]" />
+      <div className="relative z-10 w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg animate-in fade-in zoom-in-95 duration-300">
         <button
           ref={closeBtnRef}
           onClick={onClose}
@@ -111,6 +121,8 @@ const Modal = ({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default Modal;

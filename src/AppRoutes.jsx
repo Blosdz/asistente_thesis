@@ -8,6 +8,7 @@ import Dashboard from './pages/student/Dashboard';
 import PlanesPage from './pages/PlanesPage';
 import AdditionalDocuments from './pages/student/AdditionalDocuments';
 import MyThesisWorkspace from './pages/student/MyThesisWorkspace';
+import DataStatistics from './pages/student/DataStatistics';
 import Citas from './pages/student/Citas';
 import Services from './pages/student/Services';
 import Payments from './pages/student/Payments';
@@ -21,6 +22,7 @@ import AdvisorCalendar from './pages/advisor/Calendar';
 import AdvisorThesisReview from './pages/advisor/ThesisReview';
 import AdvisorStudentDetail from './pages/advisor/StudentDetail';
 import AdminDashboard from './pages/admin/Dashboard';
+import Advisors from './pages/student/Advisors';
 import { isAuthenticated } from './services/authService';
 
 const ProtectedRoute = ({ children }) => {
@@ -78,15 +80,14 @@ const AppRoutes = () => {
         <Route path="documents" element={<AdditionalDocuments />} />
         <Route path="my-thesis" element={<MyThesisWorkspace />} />
         <Route path="citas" element={<Citas />} />
+        {/* mostramos aqu ilas asesorias */}
+        <Route path="asesorias" element={<Advisors />} />
         <Route path="planes" element={<PlanesPage />} />
         <Route path="payments" element={<Payments />} />
         <Route path="services" element={<Services />} />
         <Route path="services/advisors" element={<AdvisorCatalog />} />
         <Route path="services/book" element={<ScheduleSession />} />
-        <Route
-          path="statistics"
-          element={<Navigate to="/student/dashboard" replace />}
-        />
+        <Route path="statistics" element={<DataStatistics />} />
       </Route>
 
       <Route

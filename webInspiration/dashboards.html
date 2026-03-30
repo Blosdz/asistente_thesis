@@ -1,0 +1,476 @@
+<!doctype html>
+
+<html class="light" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>ThesisFlow | Student Dashboard</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;family=Ubuntu:wght@400;500;700&amp;display=swap"
+      rel="stylesheet"
+    />
+    <!-- Material Symbols -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              'on-tertiary-fixed': '#001354',
+              'surface-container-low': '#f2f4f6',
+              secondary: '#4648d4',
+              outline: '#717786',
+              'on-background': '#191c1e',
+              'on-error': '#ffffff',
+              primary: '#0a47ee',
+              'on-primary': '#ffffff',
+              'on-secondary-fixed': '#07006c',
+              'on-primary-fixed-variant': '#0035be',
+              'surface-tint': '#124af0',
+              'on-tertiary-fixed-variant': '#334282',
+              'on-secondary': '#ffffff',
+              'secondary-fixed': '#e1e0ff',
+              'surface-dim': '#d8dadc',
+              'surface-container-high': '#e6e8ea',
+              'primary-container': '#3e65ff',
+              'on-error-container': '#93000a',
+              'on-primary-container': '#fffbff',
+              'primary-fixed': '#dde1ff',
+              tertiary: '#495899',
+              'on-surface-variant': '#414755',
+              'error-container': '#ffdad6',
+              'inverse-on-surface': '#eff1f3',
+              'primary-fixed-dim': '#b8c3ff',
+              'on-primary-fixed': '#001356',
+              'on-tertiary': '#ffffff',
+              'on-secondary-container': '#fffbff',
+              'on-surface': '#191c1e',
+              'tertiary-fixed-dim': '#b8c4ff',
+              'surface-container-highest': '#e0e3e5',
+              'on-tertiary-container': '#fffbff',
+              surface: '#f7f9fb',
+              error: '#ba1a1a',
+              'tertiary-fixed': '#dde1ff',
+              'surface-bright': '#f7f9fb',
+              'secondary-container': '#6063ee',
+              'tertiary-container': '#6271b4',
+              'surface-variant': '#e0e3e5',
+              'secondary-fixed-dim': '#c0c1ff',
+              'surface-container-lowest': '#ffffff',
+              'on-secondary-fixed-variant': '#2f2ebe',
+              'inverse-primary': '#b8c3ff',
+              'surface-container': '#eceef0',
+              'outline-variant': '#c1c6d7',
+              background: '#f7f9fb',
+              'inverse-surface': '#2d3133',
+            },
+            fontFamily: {
+              headline: ['Plus Jakarta Sans'],
+              body: ['Plus Jakarta Sans'],
+              label: ['Plus Jakarta Sans'],
+            },
+            borderRadius: {
+              DEFAULT: '1rem',
+              lg: '2rem',
+              xl: '3rem',
+              full: '9999px',
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      .glass-card {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(25px);
+        border: 1px solid rgba(193, 198, 215, 0.2);
+      }
+      .material-symbols-outlined {
+        font-variation-settings:
+          'FILL' 0,
+          'wght' 400,
+          'GRAD' 0,
+          'opsz' 24;
+      }
+      .text-glow {
+        text-shadow: 0 0 20px rgba(10, 71, 238, 0.1);
+      }
+    </style>
+  </head>
+  <body class="bg-background font-body text-on-background min-h-screen">
+    <!-- TopNavBar Implementation from JSON -->
+    <nav
+      class="fixed top-0 w-full z-50 bg-white/15 backdrop-blur-2xl border-b border-white/20 shadow-[0_0_40px_rgba(0,122,255,0.08)] flex justify-between items-center px-8 h-16 transition-all duration-300"
+    >
+      <div class="flex items-center gap-2">
+        <span
+          class="font-['Ubuntu'] text-xl font-bold tracking-tighter text-slate-900"
+          >ThesisFlow</span
+        >
+      </div>
+      <div
+        class="hidden md:flex items-center gap-6 font-['Plus_Jakarta_Sans'] text-sm tracking-tight"
+      >
+        <a
+          class="bg-slate-900 text-white px-4 py-1.5 rounded-full font-semibold transition-all duration-200 ease-out active:scale-95"
+          href="#"
+          >Dashboard</a
+        >
+        <a
+          class="text-slate-600 hover:text-slate-900 transition-colors"
+          href="#"
+          >My Thesis</a
+        >
+        <a
+          class="text-slate-600 hover:text-slate-900 transition-colors"
+          href="#"
+          >Meetings</a
+        >
+        <a
+          class="text-slate-600 hover:text-slate-900 transition-colors"
+          href="#"
+          >Services</a
+        >
+        <a
+          class="text-slate-600 hover:text-slate-900 transition-colors"
+          href="#"
+          >Payments</a
+        >
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="text-slate-600 hover:text-primary transition-colors">
+          <span class="material-symbols-outlined">notifications</span>
+        </button>
+        <div
+          class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30"
+        >
+          <img
+            alt="User Profile Avatar"
+            class="w-full h-full object-cover"
+            data-alt="Close-up portrait of a young professional male with a friendly expression against a clean office background"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFJ1aj5SCP3M3gyBWmnLiTYbkxZzUStVai2bK6k9pcMPJPH7N7vBgiPn2HpnFtzfUNV3kfbAI6RvLWiFuCSnqtdQ3nfB6KtRBQc8A6A6HMMne-L2LNBifhJ8WXPEKaxqmQ9JF-E9jRNEDXYqC_1WuvTqh7aQG-Ig-NiGMHIhl0mC5cblAF-tax4Gy3iaAwqtgbrYeSeouA66W8u_qhhgcv2v0QM1I4dpMgTSIC_1h3BgICCVep-Y2THtZIeagauJpIkGYFJHyjcCMH"
+          />
+        </div>
+      </div>
+    </nav>
+    <!-- Main Content Canvas -->
+    <main class="pt-24 pb-12 px-6 max-w-7xl mx-auto space-y-10">
+      <!-- Hero Section: Dynamic Greeting & Health Score -->
+      <header
+        class="flex flex-col md:flex-row md:items-end justify-between gap-6"
+      >
+        <div class="space-y-2">
+          <p class="text-primary font-semibold tracking-wide text-sm uppercase">
+            Welcome back
+          </p>
+          <h1
+            class="font-['Ubuntu'] text-5xl font-bold tracking-tighter text-on-surface"
+          >
+            Good Morning, Alex
+          </h1>
+          <p class="text-on-surface-variant max-w-md">
+            Your thesis "Neural Architectures in LLMs" is currently in the
+            refinement phase. You're ahead of schedule.
+          </p>
+        </div>
+        <!-- Weather-Glass Widget: Academic Health -->
+        <div
+          class="glass-card p-8 rounded-xl flex flex-col items-center justify-center min-w-[240px] shadow-sm"
+        >
+          <span
+            class="text-primary font-extrabold text-6xl font-['Ubuntu'] tracking-tighter"
+            >94%</span
+          >
+          <span
+            class="text-on-surface-variant font-medium text-sm mt-2 uppercase tracking-widest"
+            >Academic Health</span
+          >
+        </div>
+      </header>
+      <!-- Centered Layout: Bento Grid Style -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Central Focus: Thesis Progress Card (8 Columns) -->
+        <section class="lg:col-span-8 space-y-8">
+          <div class="glass-card p-10 rounded-xl relative overflow-hidden">
+            <!-- Atmospheric Gradient Background for Card -->
+            <div
+              class="absolute -top-24 -right-24 w-64 h-64 bg-primary/5 rounded-full blur-[80px]"
+            ></div>
+            <div
+              class="relative z-10 flex flex-col md:flex-row justify-between items-start gap-8"
+            >
+              <div class="space-y-6 flex-1">
+                <div class="space-y-1">
+                  <h2 class="text-2xl font-bold font-['Ubuntu'] tracking-tight">
+                    Main Dissertation Phase
+                  </h2>
+                  <p class="text-on-surface-variant">
+                    Methodology &amp; Initial Data Synthesis
+                  </p>
+                </div>
+                <!-- Progress Visual -->
+                <div class="space-y-3">
+                  <div class="flex justify-between items-end">
+                    <span class="text-4xl font-extrabold text-on-surface"
+                      >68%
+                      <span class="text-lg font-medium text-on-surface-variant"
+                        >Complete</span
+                      ></span
+                    >
+                    <span class="text-primary font-semibold"
+                      >12 days until next review</span
+                    >
+                  </div>
+                  <div
+                    class="h-3 w-full bg-surface-container-high rounded-full overflow-hidden"
+                  >
+                    <div
+                      class="h-full bg-gradient-to-r from-primary to-primary-container w-[68%] rounded-full"
+                    ></div>
+                  </div>
+                </div>
+                <!-- Milestones -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+                  <div
+                    class="bg-surface-container-low/40 p-4 rounded-md border border-outline-variant/10"
+                  >
+                    <span class="material-symbols-outlined text-primary mb-2"
+                      >check_circle</span
+                    >
+                    <p class="text-sm font-bold">Proposal</p>
+                    <p class="text-xs text-on-surface-variant">
+                      Approved June 14
+                    </p>
+                  </div>
+                  <div
+                    class="bg-surface-container-low/40 p-4 rounded-md border border-outline-variant/10"
+                  >
+                    <span class="material-symbols-outlined text-primary mb-2"
+                      >edit_note</span
+                    >
+                    <p class="text-sm font-bold">Literature Review</p>
+                    <p class="text-xs text-on-surface-variant">
+                      Final Revision
+                    </p>
+                  </div>
+                  <div
+                    class="bg-surface-container-low/40 p-4 rounded-md border border-outline-variant/10"
+                  >
+                    <span class="material-symbols-outlined text-outline mb-2"
+                      >pending</span
+                    >
+                    <p class="text-sm font-bold">Empirical Data</p>
+                    <p class="text-xs text-on-surface-variant">In Progress</p>
+                  </div>
+                </div>
+                <button
+                  class="bg-gradient-to-r from-primary to-primary-container text-white px-8 py-4 rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-[1.02] transition-transform"
+                >
+                  <span>Continue Writing</span>
+                  <span class="material-symbols-outlined text-sm"
+                    >arrow_forward</span
+                  >
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Recent Activity Feed -->
+          <div class="space-y-4">
+            <h3 class="text-xl font-bold px-2">Recent Activity</h3>
+            <div class="space-y-2">
+              <!-- Activity Item 1 -->
+              <div
+                class="glass-card px-6 py-4 rounded-lg flex items-center justify-between group cursor-pointer hover:backdrop-blur-3xl transition-all"
+              >
+                <div class="flex items-center gap-4">
+                  <div
+                    class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"
+                  >
+                    <span class="material-symbols-outlined text-primary text-xl"
+                      >comment</span
+                    >
+                  </div>
+                  <div>
+                    <p class="font-semibold text-sm">
+                      Dr. Sarah Jenkins left a comment
+                    </p>
+                    <p class="text-xs text-on-surface-variant">
+                      Section 3.2: Methodology Validation
+                    </p>
+                  </div>
+                </div>
+                <span class="text-xs text-outline font-medium">2h ago</span>
+              </div>
+              <!-- Activity Item 2 -->
+              <div
+                class="glass-card px-6 py-4 rounded-lg flex items-center justify-between group cursor-pointer hover:backdrop-blur-3xl transition-all"
+              >
+                <div class="flex items-center gap-4">
+                  <div
+                    class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center"
+                  >
+                    <span
+                      class="material-symbols-outlined text-secondary text-xl"
+                      >upload_file</span
+                    >
+                  </div>
+                  <div>
+                    <p class="font-semibold text-sm">
+                      New Bibliography source added
+                    </p>
+                    <p class="text-xs text-on-surface-variant">
+                      Attention Is All You Need (Vaswani et al.)
+                    </p>
+                  </div>
+                </div>
+                <span class="text-xs text-outline font-medium">5h ago</span>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- Sidebar Content: Meetings & Quick Links (4 Columns) -->
+        <aside class="lg:col-span-4 space-y-8">
+          <!-- Upcoming Meetings -->
+          <div class="glass-card p-6 rounded-xl space-y-6">
+            <div class="flex justify-between items-center">
+              <h3 class="text-lg font-bold">Meetings</h3>
+              <button class="text-xs font-bold text-primary">View All</button>
+            </div>
+            <div class="space-y-4">
+              <!-- Meeting Card 1 -->
+              <div
+                class="bg-surface-container-high/20 p-4 rounded-lg border border-outline-variant/10 space-y-3"
+              >
+                <div class="flex justify-between items-start">
+                  <div
+                    class="bg-primary/20 text-primary-fixed-dim text-[10px] font-extrabold px-2 py-1 rounded uppercase tracking-tighter"
+                  >
+                    In 45 Mins
+                  </div>
+                  <span class="material-symbols-outlined text-outline text-sm"
+                    >more_vert</span
+                  >
+                </div>
+                <div>
+                  <h4 class="font-bold text-sm">Weekly Supervision</h4>
+                  <p class="text-xs text-on-surface-variant">
+                    with Dr. Sarah Jenkins
+                  </p>
+                </div>
+                <div
+                  class="flex items-center gap-2 text-xs font-medium text-primary"
+                >
+                  <span class="material-symbols-outlined text-sm"
+                    >videocam</span
+                  >
+                  <span>Zoom Meeting</span>
+                </div>
+              </div>
+              <!-- Meeting Card 2 -->
+              <div
+                class="bg-surface-container-high/10 p-4 rounded-lg border border-outline-variant/5 opacity-80"
+              >
+                <div>
+                  <h4 class="font-bold text-sm">Peer Review Group</h4>
+                  <p class="text-xs text-on-surface-variant">
+                    Thursday, 14:00 • Hall B
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Quick Links: Visual Grid -->
+          <div class="space-y-4">
+            <h3 class="text-lg font-bold px-2">Quick Links</h3>
+            <div class="grid grid-cols-2 gap-3">
+              <a
+                class="glass-card p-4 rounded-lg flex flex-col items-center gap-2 hover:bg-white/30 transition-all"
+                href="#"
+              >
+                <span class="material-symbols-outlined text-primary"
+                  >library_books</span
+                >
+                <span class="text-[11px] font-bold uppercase tracking-wider"
+                  >Library</span
+                >
+              </a>
+              <a
+                class="glass-card p-4 rounded-lg flex flex-col items-center gap-2 hover:bg-white/30 transition-all"
+                href="#"
+              >
+                <span class="material-symbols-outlined text-primary"
+                  >auto_stories</span
+                >
+                <span class="text-[11px] font-bold uppercase tracking-wider"
+                  >Guidelines</span
+                >
+              </a>
+              <a
+                class="glass-card p-4 rounded-lg flex flex-col items-center gap-2 hover:bg-white/30 transition-all"
+                href="#"
+              >
+                <span class="material-symbols-outlined text-primary"
+                  >analytics</span
+                >
+                <span class="text-[11px] font-bold uppercase tracking-wider"
+                  >Analytics</span
+                >
+              </a>
+              <a
+                class="glass-card p-4 rounded-lg flex flex-col items-center gap-2 hover:bg-white/30 transition-all"
+                href="#"
+              >
+                <span class="material-symbols-outlined text-primary"
+                  >payments</span
+                >
+                <span class="text-[11px] font-bold uppercase tracking-wider"
+                  >Grants</span
+                >
+              </a>
+            </div>
+          </div>
+          <!-- Motivational Widget -->
+          <div
+            class="relative rounded-xl overflow-hidden h-40 group cursor-pointer"
+          >
+            <img
+              alt="Desk view with laptop and coffee"
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+              data-alt="Modern minimalist workspace with a laptop, ceramic coffee mug, and soft sunlight filtering through a window"
+              src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHKvReKwjBh9dC3FGB4C-qOJwyWYhtwXIXxqWOIkhsOEU2PgdtkEEJg48O2eFBT1fNpLTY7HYC2TYCPoikm_12uqL6e021NPKM9rZbekR1huWZ1Pn5sdtHQDX_a6RTk2LY_H4LmdOBl-HbmxM3feKWMbuyP8PAzeFGwOnp3u6-6Wow7JuqZTEnsF8UrRRMuPKdsFusjGZdzEllDFmtZ3zmwVxf5Pl1EbOUUyMSb7gWBwH2BjDIvz9XFmotscCjERHNNP4NtsL76wBJ"
+            />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent p-6 flex flex-col justify-end"
+            >
+              <p class="text-white text-xs font-medium italic opacity-90">
+                "The secret to getting ahead is getting started."
+              </p>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+    <!-- Global Floating Action Button - Contextually appropriate for Dashboard -->
+    <button
+      class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-2xl shadow-primary/40 hover:scale-110 active:scale-95 transition-all z-40"
+    >
+      <span
+        class="material-symbols-outlined"
+        style="font-variation-settings: 'FILL' 1"
+        >add</span
+      >
+    </button>
+  </body>
+</html>

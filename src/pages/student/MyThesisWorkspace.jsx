@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import { FileText, Upload, Plus, X, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from '../../components/ui/card';
+import { Select, SelectItem } from '../../components/ui/select';
 import Modal from '../../components/ui/modal';
 import {
   obtenerMisTesis,
@@ -10,6 +16,11 @@ import {
   subirDocumentoAGoogleDrive,
   obtenerSugerenciasMiTesis,
 } from '../../services/thesisService';
+import {
+  asignarMiTesisAAsesor,
+  obtenerMisAsesores,
+  obtenerMisTesisConAsesores,
+} from '../../services/advisorService';
 import { toast } from 'react-hot-toast';
 
 const MyThesisWorkspace = () => {
@@ -23,6 +34,10 @@ const MyThesisWorkspace = () => {
 
   const [sugerencias, setSugerencias] = useState([]);
   const [loadingSugerencias, setLoadingSugerencias] = useState(false);
+  const [misAsesores, setMisAsesores] = useState([]);
+  const [tesisConAsesores, setTesisConAsesores] = useState([]);
+  const [asesorAsignadoId, setAsesorAsignadoId] = useState('');
+  const [assigningAdvisor, setAssigningAdvisor] = useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newThesisTitle, setNewThesisTitle] = useState('');
@@ -56,7 +71,10 @@ const MyThesisWorkspace = () => {
       setThesesList(theses || []);
 
       if (theses && theses.length > 0) {
-        if (!selectedThesisId || !theses.find((t) => t.id === selectedThesisId)) {
+        if (
+          !selectedThesisId ||
+          !theses.find((t) => t.id === selectedThesisId)
+        ) {
           setSelectedThesisId(theses[0].id);
         }
       } else {
@@ -70,32 +88,53 @@ const MyThesisWorkspace = () => {
     }
   };
 
-  const fetchDocuments = useCallback(async (thesisId) => {
+  const fetchMisAsesores = useCallback(async () => {
     try {
-      setLoading(true);
-      const docs = await obtenerDocumentosMiTesis(thesisId);
-      setDocuments(docs || []);
+      const [asesores, asignaciones] = await Promise.all([
+        obtenerMisAsesores(),
+        obtenerMisTesisConAsesores(),
+      ]);
 
-      if (docs && docs.length > 0) {
-        const latestInfo = docs[0];
-        setCurrentVersion(latestInfo);
-
-        const previewSource = latestInfo.url_google_doc || latestInfo.url_archivo_drive;
-        setPreviewUrl(buildPreviewUrl(previewSource));
-      } else {
-        setCurrentVersion(null);
-        setPreviewUrl(null);
-      }
+      setMisAsesores(asesores || []);
+      setTesisConAsesores(asignaciones || []);
     } catch (err) {
-      console.error('Error fetching documents:', err);
-      toast.error('No se pudieron cargar los documentos.');
-    } finally {
-      setLoading(false);
+      console.error('Error fetching advisors:', err);
+      setMisAsesores([]);
+      setTesisConAsesores([]);
     }
-  }, [buildPreviewUrl]);
+  }, []);
+
+  const fetchDocuments = useCallback(
+    async (thesisId) => {
+      try {
+        setLoading(true);
+        const docs = await obtenerDocumentosMiTesis(thesisId);
+        setDocuments(docs || []);
+
+        if (docs && docs.length > 0) {
+          const latestInfo = docs[0];
+          setCurrentVersion(latestInfo);
+
+          const previewSource =
+            latestInfo.url_google_doc || latestInfo.url_archivo_drive;
+          setPreviewUrl(buildPreviewUrl(previewSource));
+        } else {
+          setCurrentVersion(null);
+          setPreviewUrl(null);
+        }
+      } catch (err) {
+        console.error('Error fetching documents:', err);
+        toast.error('No se pudieron cargar los documentos.');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [buildPreviewUrl],
+  );
 
   useEffect(() => {
     fetchTheses();
+    fetchMisAsesores();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -132,8 +171,7 @@ const MyThesisWorkspace = () => {
     loadSugerencias();
   }, [selectedThesisId]);
 
-  const handleCreateThesis = async (e) => {
-    e.preventDefault();
+  const handleCreateThesis = async () => {
     if (!newThesisTitle.trim()) return toast.error('El título es requerido');
 
     try {
@@ -180,10 +218,37 @@ const MyThesisWorkspace = () => {
       fetchDocuments(selectedThesisId);
     } catch (err) {
       console.error('Upload error:', err);
-      toast.error(err.message || 'Error al subir el documento. Inténtalo de nuevo.');
+      toast.error(
+        err.message || 'Error al subir el documento. Inténtalo de nuevo.',
+      );
     } finally {
       setUploading(false);
       e.target.value = null;
+    }
+  };
+
+  const handleAsignarAsesor = async () => {
+    if (!selectedThesisId) {
+      toast.error('Selecciona una tesis primero');
+      return;
+    }
+
+    if (!asesorAsignadoId) {
+      toast.error('Selecciona un asesor');
+      return;
+    }
+
+    try {
+      setAssigningAdvisor(true);
+      await asignarMiTesisAAsesor(selectedThesisId, asesorAsignadoId, 'principal');
+      toast.success('Permiso de tesis otorgado al asesor');
+      setAsesorAsignadoId('');
+      await fetchMisAsesores();
+    } catch (err) {
+      console.error('Error asignando tesis al asesor:', err);
+      toast.error(err.message || 'No se pudo asignar la tesis al asesor');
+    } finally {
+      setAssigningAdvisor(false);
     }
   };
 
@@ -192,13 +257,44 @@ const MyThesisWorkspace = () => {
     [thesesList, selectedThesisId],
   );
 
+  const asesoresDeTesis = useMemo(
+    () =>
+      tesisConAsesores.filter((item) => item.tesis_id === selectedThesisId),
+    [tesisConAsesores, selectedThesisId],
+  );
+
+  const asesoresDisponiblesParaAsignar = useMemo(
+    () =>
+      misAsesores.filter(
+        (asesor) =>
+          !asesoresDeTesis.some(
+            (asignado) => asignado.asesor_id === asesor.asesor_id,
+          ),
+      ),
+    [misAsesores, asesoresDeTesis],
+  );
+
+  const seleccionarVersion = useCallback(
+    (doc) => {
+      setCurrentVersion(doc);
+      const previewSource = doc?.url_google_doc || doc?.url_archivo_drive;
+      setPreviewUrl(buildPreviewUrl(previewSource));
+    },
+    [buildPreviewUrl],
+  );
+
   const getSuggestionText = (item) =>
-    item?.sugerencia || item?.comentario || item?.observacion || item?.r_sugerencia || 'Sin detalle';
+    item?.sugerencia ||
+    item?.comentario ||
+    item?.observacion ||
+    item?.r_sugerencia ||
+    'Sin detalle';
 
   const getAdvisorName = (item) =>
     item?.nombre_asesor || item?.asesor || item?.r_nombre_asesor || 'Asesor';
 
-  const getSuggestionDate = (item) => item?.creado_en || item?.created_at || item?.r_creado_en;
+  const getSuggestionDate = (item) =>
+    item?.creado_en || item?.created_at || item?.r_creado_en;
 
   const formatDate = (value) => {
     if (!value) return '—';
@@ -218,7 +314,8 @@ const MyThesisWorkspace = () => {
             Aún no tienes una tesis
           </h2>
           <p className="text-gray-500 mb-8">
-            Para comenzar a gestionar tus documentos y versiones, crea tu primera tesis.
+            Para comenzar a gestionar tus documentos y versiones, crea tu
+            primera tesis.
           </p>
           <button
             onClick={() => setShowCreateModal(true)}
@@ -233,76 +330,162 @@ const MyThesisWorkspace = () => {
           open={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           title="Crear Nueva Tesis"
-          description={
-            <form onSubmit={handleCreateThesis} className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Título de la Tesis
-                </label>
-                <input
-                  type="text"
-                  value={newThesisTitle}
-                  onChange={(e) => setNewThesisTitle(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/80 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ios-blue outline-none transition-all"
-                  placeholder="Ej: Análisis del impacto..."
-                  required
-                  autoFocus
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
-                  Descripción (Opcional)
-                </label>
-                <textarea
-                  value={newThesisDesc}
-                  onChange={(e) => setNewThesisDesc(e.target.value)}
-                  className="w-full px-4 py-3 bg-white/80 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ios-blue outline-none transition-all resize-none"
-                  placeholder="Breve descripción de la investigación"
-                  rows="3"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={creating}
-                className="w-full py-3 bg-ios-blue text-white rounded-xl font-bold shadow-lg shadow-ios-blue/20 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {creating ? 'Creando...' : 'Crear Tesis'}
-              </button>
-            </form>
-          }
-        />
+          subtitle="Configura el título y una breve descripción para comenzar."
+          primaryAction={{
+            label: creating ? 'Creando...' : 'Crear tesis',
+            onClick: handleCreateThesis,
+          }}
+          secondaryAction={{
+            label: 'Cancelar',
+            onClick: () => setShowCreateModal(false),
+          }}
+        >
+          <div className="space-y-4 text-left">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Título de la tesis
+              </label>
+              <input
+                type="text"
+                value={newThesisTitle}
+                onChange={(e) => setNewThesisTitle(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                placeholder="Ej: Análisis del impacto..."
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Descripción
+              </label>
+              <textarea
+                value={newThesisDesc}
+                onChange={(e) => setNewThesisDesc(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100 resize-none"
+                placeholder="Breve descripción de la investigación"
+                rows="4"
+              />
+            </div>
+          </div>
+        </Modal>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full px-4 sm:px-6 lg:px-10 py-12 animate-in fade-in duration-700 text-slate-900">
-
+    <div className="relative w-full px-4 sm:px-6 lg:px-10 animate-in fade-in duration-700 text-slate-900">
       <div className="max-w-[1600px] mx-auto flex flex-col gap-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-{/* CREAR UN DROPDOWN PARA SELECCIONAR TESIS */}
+          <div className="w-full md:max-w-md">
+            <label className="mb-2 block text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              Tesis activa
+            </label>
+            <Select
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
+              value={selectedThesisId}
+              onChange={(e) => setSelectedThesisId(e.target.value)}
+            >
+              {thesesList.map((thesis) => (
+                <SelectItem key={thesis.id} value={thesis.id}>
+                  {thesis.titulo || 'Sin título'}
+                </SelectItem>
+              ))}
+            </Select>
           </div>
           <div className="flex gap-3">
             <Button
-              variant="secondary"
               onClick={() => setShowCreateModal(true)}
-              className="gap-2 bg-white/80 border-white/90 text-blue-600"
+              className="gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
               title="Crear Nueva Tesis"
             >
               <Plus size={18} />
               Crear tesis
             </Button>
-         </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-12 gap-8 items-start">
           <aside className="col-span-12 lg:col-span-3 space-y-8">
             <Card className="p-6">
+              <div className="mb-4 flex items-start justify-between">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Permisos
+                  </p>
+                  <h3 className="font-headline text-xl font-bold tracking-tight">
+                    Asesores con acceso
+                  </h3>
+                </div>
+                <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold text-blue-600">
+                  {asesoresDeTesis.length} activos
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {asesoresDeTesis.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                    Esta tesis aún no tiene asesores asignados.
+                  </div>
+                ) : (
+                  asesoresDeTesis.map((item) => (
+                    <div
+                      key={item.asesor_tesis_id || `${item.tesis_id}-${item.asesor_id}`}
+                      className="rounded-2xl border border-white/80 bg-white/70 p-4"
+                    >
+                      <p className="text-sm font-bold text-slate-900">
+                        {item.asesor_nombre || 'Asesor'}
+                      </p>
+                      <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                        Rol: {item.rol || 'principal'}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="mt-5 space-y-3">
+                <label className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  Dar permiso a un asesor
+                </label>
+                <Select
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
+                  value={asesorAsignadoId}
+                  onChange={(e) => setAsesorAsignadoId(e.target.value)}
+                >
+                  <SelectItem value="">Selecciona un asesor</SelectItem>
+                  {asesoresDisponiblesParaAsignar.map((asesor) => (
+                    <SelectItem
+                      key={asesor.asesor_id || asesor.relacion_id}
+                      value={asesor.asesor_id}
+                    >
+                      {asesor.nombre_mostrar || 'Asesor'}
+                    </SelectItem>
+                  ))}
+                </Select>
+
+                <Button
+                  onClick={handleAsignarAsesor}
+                  disabled={
+                    assigningAdvisor ||
+                    !selectedThesisId ||
+                    !asesorAsignadoId
+                  }
+                  className="w-full rounded-2xl bg-blue-600 px-4 py-3 text-white hover:bg-blue-700"
+                >
+                  {assigningAdvisor ? 'Otorgando permiso...' : 'Dar permiso'}
+                </Button>
+              </div>
+            </Card>
+
+            <Card className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Advisor Feedback</p>
-                  <h3 className="font-headline text-xl font-bold tracking-tight">Notas del asesor</h3>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+                    Advisor Feedback
+                  </p>
+                  <h3 className="font-headline text-xl font-bold tracking-tight">
+                    Notas del asesor
+                  </h3>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-600">
                   {sugerencias.length} notas
@@ -310,7 +493,9 @@ const MyThesisWorkspace = () => {
               </div>
 
               {loadingSugerencias ? (
-                <p className="text-sm text-slate-500">Cargando sugerencias...</p>
+                <p className="text-sm text-slate-500">
+                  Cargando sugerencias...
+                </p>
               ) : sugerencias.length === 0 ? (
                 <div className="border border-dashed border-slate-200 rounded-xl p-4 text-sm text-slate-500">
                   No hay sugerencias registradas para esta tesis.
@@ -319,7 +504,11 @@ const MyThesisWorkspace = () => {
                 <div className="space-y-3">
                   {sugerencias.map((item, idx) => (
                     <article
-                      key={item.id || item.sugerencia_id || `${selectedThesisId}-${idx}`}
+                      key={
+                        item.id ||
+                        item.sugerencia_id ||
+                        `${selectedThesisId}-${idx}`
+                      }
                       className="bg-white/70 border border-white/80 rounded-2xl p-4 hover:border-blue-100 transition"
                     >
                       <div className="flex gap-3 mb-2">
@@ -327,14 +516,21 @@ const MyThesisWorkspace = () => {
                           {getAdvisorName(item).charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-900 truncate">{getAdvisorName(item)}</p>
-                          <p className="text-[11px] text-slate-500">{formatDate(getSuggestionDate(item))}</p>
+                          <p className="text-sm font-bold text-slate-900 truncate">
+                            {getAdvisorName(item)}
+                          </p>
+                          <p className="text-[11px] text-slate-500">
+                            {formatDate(getSuggestionDate(item))}
+                          </p>
                         </div>
                       </div>
-                      <p className="text-sm text-slate-700 leading-relaxed">{getSuggestionText(item)}</p>
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        {getSuggestionText(item)}
+                      </p>
                       {(item.nombre_documento || item.documento_tesis_id) && (
                         <p className="text-[11px] text-slate-500 mt-2">
-                          Documento: {item.nombre_documento || item.documento_tesis_id}
+                          Documento:{' '}
+                          {item.nombre_documento || item.documento_tesis_id}
                         </p>
                       )}
                     </article>
@@ -344,24 +540,51 @@ const MyThesisWorkspace = () => {
             </Card>
 
             <Card className="p-6">
-              <h3 className="font-headline text-xl font-bold tracking-tight mb-4">Version History</h3>
+              <h3 className="font-headline text-xl font-bold tracking-tight mb-4">
+                Version History
+              </h3>
               <div className="relative pl-6 space-y-6 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200">
                 {documents.slice(0, 4).map((doc, idx) => (
-                  <div key={doc.id} className="relative">
+                  <button
+                    key={doc.id}
+                    type="button"
+                    onClick={() => seleccionarVersion(doc)}
+                    className={`relative w-full rounded-2xl p-3 text-left transition ${
+                      currentVersion?.id === doc.id
+                        ? 'bg-blue-50 border border-blue-200'
+                        : 'hover:bg-slate-50'
+                    }`}
+                  >
                     <div
                       className={`absolute -left-[20px] top-1 w-3 h-3 rounded-full ${
-                        idx === 0 ? 'bg-blue-600 border-4 border-white' : 'bg-slate-300'
+                        currentVersion?.id === doc.id
+                          ? 'bg-blue-600 border-4 border-white'
+                          : idx === 0
+                            ? 'bg-blue-400 border-4 border-white'
+                            : 'bg-slate-300'
                       }`}
                     />
-                    {idx === 0 && (
-                      <p className="text-[10px] font-bold text-blue-600">CURRENT VERSION</p>
-                    )}
-                    <p className="text-sm font-medium">{doc.nombre || doc.nombre_archivo}</p>
-                    <p className="text-[10px] text-slate-500">{formatDate(doc.created_at)}</p>
-                  </div>
+                    {currentVersion?.id === doc.id ? (
+                      <p className="text-[10px] font-bold text-blue-600">
+                        VERSIÓN SELECCIONADA
+                      </p>
+                    ) : idx === 0 ? (
+                      <p className="text-[10px] font-bold text-blue-600">
+                        CURRENT VERSION
+                      </p>
+                    ) : null}
+                    <p className="text-sm font-medium">
+                      {doc.nombre || doc.nombre_archivo}
+                    </p>
+                    <p className="text-[10px] text-slate-500">
+                      {formatDate(doc.created_at || doc.creado_en)}
+                    </p>
+                  </button>
                 ))}
                 {documents.length === 0 && (
-                  <p className="text-xs text-slate-400">Sin versiones disponibles.</p>
+                  <p className="text-xs text-slate-400">
+                    Sin versiones disponibles.
+                  </p>
                 )}
               </div>
             </Card>
@@ -379,7 +602,8 @@ const MyThesisWorkspace = () => {
                       {selectedThesis?.titulo || 'Selecciona una tesis'}
                     </h2>
                     <p className="text-xs text-slate-500">
-                      {selectedThesis?.descripcion || 'Elige una tesis para ver la vista previa'}
+                      {selectedThesis?.descripcion ||
+                        'Elige una tesis para ver la vista previa'}
                     </p>
                   </div>
                 </div>
@@ -421,11 +645,14 @@ const MyThesisWorkspace = () => {
               <div className="flex-1 p-4 space-y-4 overflow-y-auto">
                 <div className="p-3 rounded-lg rounded-tl-none">
                   <p className="text-xs">
-                    ¿Quieres un resumen ejecutivo o sugerencias de citas para tu capítulo activo?
+                    ¿Quieres un resumen ejecutivo o sugerencias de citas para tu
+                    capítulo activo?
                   </p>
                 </div>
                 <div className="p-3 rounded-lg rounded-tr-none ml-auto max-w-[80%] border border-blue-100">
-                  <p className="text-xs text-slate-800">Dame citas de 2024-2025.</p>
+                  <p className="text-xs text-slate-800">
+                    Dame citas de 2024-2025.
+                  </p>
                 </div>
               </div>
               <div className="p-4">
@@ -449,44 +676,44 @@ const MyThesisWorkspace = () => {
         open={showCreateModal && thesesList.length > 0}
         onClose={() => setShowCreateModal(false)}
         title="Crear Nueva Tesis"
-        description={
-          <form onSubmit={handleCreateThesis} className="space-y-4">
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Título de la Tesis
-              </label>
-              <input
-                type="text"
-                value={newThesisTitle}
-                onChange={(e) => setNewThesisTitle(e.target.value)}
-                className="w-full px-4 py-3 bg-white/80 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ios-blue outline-none transition-all"
-                placeholder="Ej: Análisis del impacto..."
-                required
-                autoFocus
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
-                Descripción (Opcional)
-              </label>
-              <textarea
-                value={newThesisDesc}
-                onChange={(e) => setNewThesisDesc(e.target.value)}
-                className="w-full px-4 py-3 bg-white/80 border border-gray-300 rounded-xl focus:ring-2 focus:ring-ios-blue outline-none transition-all resize-none"
-                placeholder="Breve descripción de la investigación"
-                rows="3"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={creating}
-              className="w-full py-3 bg-ios-blue text-white rounded-xl font-bold shadow-lg shadow-ios-blue/20 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {creating ? 'Creando...' : 'Crear Tesis'}
-            </button>
-          </form>
-        }
-      />
+        subtitle="Configura el título y una breve descripción para comenzar."
+        primaryAction={{
+          label: creating ? 'Creando...' : 'Crear tesis',
+          onClick: handleCreateThesis,
+        }}
+        secondaryAction={{
+          label: 'Cancelar',
+          onClick: () => setShowCreateModal(false),
+        }}
+      >
+        <div className="space-y-4 text-left">
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Título de la tesis
+            </label>
+            <input
+              type="text"
+              value={newThesisTitle}
+              onChange={(e) => setNewThesisTitle(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+              placeholder="Ej: Análisis del impacto..."
+              autoFocus
+            />
+          </div>
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Descripción
+            </label>
+            <textarea
+              value={newThesisDesc}
+              onChange={(e) => setNewThesisDesc(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100 resize-none"
+              placeholder="Breve descripción de la investigación"
+              rows="4"
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

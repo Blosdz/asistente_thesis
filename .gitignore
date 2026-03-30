@@ -32,3 +32,16 @@ dist-ssr
 !package.json
 !package-lock.json
 !tsconfig.json
+
+# envs
+.env
+.env.*
+!.env.example
+
+# supabase envs
+supabase/.env
+supabase/.env.*
+!supabase/.env.example
+
+# opcional
+*.local

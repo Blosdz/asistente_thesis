@@ -90,11 +90,9 @@ export async function subirDocumentoAGoogleDrive({
   return await response.json();
 }
 export async function obtenerDocumentosComplementarios(tesisId) {
-  const { data, error } = await atSchema()
-    .from('estudiante_documentos')
-    .select('*')
-    .eq('tesis_id', tesisId)
-    .order('creado_en', { ascending: false });
+  const { data, error } = await atSchema().rpc('get_estudiante_documentos', {
+    p_tesis_id: tesisId,
+  });
 
   if (error) {
     console.error('Error obteniendo documentos complementarios:', error);
