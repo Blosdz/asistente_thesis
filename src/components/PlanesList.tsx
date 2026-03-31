@@ -1,12 +1,9 @@
 import { useEffect, useState } from 'react';
-import { getPlanes, comprarPlan, type Plan } from '../services/planes';
+import { getPlanes, type Plan } from '../services/planes';
+import { iniciarPagoPlan } from '../services/pagosService';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
-type Props = {
-  estudianteId: string;
-};
-
-export default function PlanesList({ estudianteId }: Props) {
+export default function PlanesList() {
   const [planes, setPlanes] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [comprandoId, setComprandoId] = useState<string | null>(null);
@@ -34,12 +31,10 @@ export default function PlanesList({ estudianteId }: Props) {
       setComprandoId(plan.id);
       setError(null);
       setOk(null);
-      await comprarPlan({
-        estudianteId,
+      await iniciarPagoPlan({
         planId: plan.id,
-        duracionDias: plan.duracion_dias,
       });
-      setOk(`Se generó la suscripción del plan "${plan.nombre}" y el pago pendiente.`);
+      setOk(`Se genero la nota de pago del plan "${plan.nombre}".`);
     } catch (err: any) {
       setError(err.message || 'No se pudo comprar el plan');
     } finally {
@@ -60,7 +55,7 @@ export default function PlanesList({ estudianteId }: Props) {
           </CardHeader>
           <CardContent>
             <p className="font-bold text-lg mb-1">S/ {Number(plan.precio).toFixed(2)}</p>
-            <p className="mb-2">{plan.duracion_dias} días</p>
+            <p className="mb-2">{plan.duracion_dias} dias</p>
             {Array.isArray(plan.caracteristicas) && (
               <ul className="mt-2 list-disc pl-5">
                 {plan.caracteristicas.map((item: string, i: number) => (

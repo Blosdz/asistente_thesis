@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import Modal from '../../components/ui/modal';
-import { supabase } from '../../lib/supabase';
 import { obtenerAsesores } from '../../services/advisorService';
 import {
   disponibilidadAsesorSemana,
@@ -84,15 +83,9 @@ export default function ScheduleSession() {
     }
     try {
       setBooking(true);
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user?.id) throw new Error('Usuario no autenticado');
-
       const result = await reservarReunion({
         disponibilidadId: selectedSlot.disponibilidad_id,
         asesorId: selectedAdvisorId,
-        estudianteId: user.id,
         motivo: 'Reserva de sesión',
         modalidad: 'virtual',
       });

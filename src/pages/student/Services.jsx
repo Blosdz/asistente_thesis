@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Card } from '../../components/ui/card';
 import Modal from '../../components/ui/modal';
-import { supabase } from '../../lib/supabase';
 import {
   obtenerAsesores,
   obtenerHorariosPresustentacionAsesor,
@@ -236,18 +235,9 @@ const Services = () => {
 
     try {
       setBooking(true);
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user?.id) {
-        throw new Error('Usuario no autenticado');
-      }
-
       const result = await reservarReunion({
         disponibilidadId: selectedSlot.disponibilidad_id,
         asesorId: selectedAdvisor.id,
-        estudianteId: user.id,
         motivo: 'Reserva de pre-sustentación',
         modalidad: 'virtual',
       });

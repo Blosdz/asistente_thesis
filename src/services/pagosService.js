@@ -11,9 +11,8 @@ export async function obtenerPlanesDisponibles() {
   return data ?? [];
 }
 
-export async function iniciarPagoPlan({ pagadorId, planId }) {
+export async function iniciarPagoPlan({ planId }) {
   const { data, error } = await atSchema().rpc('fn_iniciar_pago_plan', {
-    pagador_id: pagadorId,
     plan_id: planId,
   });
   if (error) {
@@ -106,11 +105,10 @@ export async function disponibilidadAsesorSemana({ asesorId, desde, hasta }) {
   return data ?? [];
 }
 
-export async function reservarReunion({ disponibilidadId, asesorId, estudianteId, tesisId = null, motivo = '', modalidad = 'virtual' }) {
+export async function reservarReunion({ disponibilidadId, asesorId, tesisId = null, motivo = '', modalidad = 'virtual' }) {
   const { data, error } = await atSchema().rpc('fn_reservar_reunion', {
     p_disponibilidad: disponibilidadId,
     p_asesor: asesorId,
-    p_estudiante: estudianteId,
     p_tesis: tesisId,
     p_motivo: motivo || null,
     p_modalidad: modalidad,

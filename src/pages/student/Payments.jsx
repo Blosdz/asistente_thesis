@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 import Modal from '../../components/ui/modal';
-import { supabase } from '../../lib/supabase';
 import {
   iniciarPagoPlan,
   obtenerMisPagosEstudiante,
@@ -149,13 +148,7 @@ const Payments = () => {
 
     try {
       setPaying(true);
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user?.id) throw new Error('Usuario no autenticado');
-
       const result = await iniciarPagoPlan({
-        pagadorId: user.id,
         planId: selectedPlan.id,
       });
 
