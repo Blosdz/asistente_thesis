@@ -1,33 +1,84 @@
 import { supabase } from '../lib/supabase';
 
-export async function registrarEstudiante(email, password) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        rol: 'estudiante',
+async function encolarInvitacionSignup({ email, name, rol }) {
+  const { data, error } = await supabase.functions.invoke(
+    'encolar-invitacion-signup',
+    {
+      body: {
+        email,
+        name,
+        rol,
       },
     },
-  });
+  );
 
-  if (error) throw error;
+  if (error) {
+    throw error;
+  }
+
   return data;
 }
 
-export async function registrarAsesor(email, password) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        rol: 'asesor',
+export async function registrarEstudiante(email, password, name) {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          rol: 'estudiante',
+          nombre: name,
+          name,
+        },
       },
-    },
-  });
+    });
 
-  if (error) throw error;
-  return data;
+    if (error) throw error;
+    return { ...data, queued: false };
+  } catch (error) {
+    if (error?.code === 'over_email_send_rate_limit') {
+      await encolarInvitacionSignup({
+        email,
+        name,
+        rol: 'estudiante',
+      });
+
+      return { user: null, session: null, queued: true };
+    }
+
+    throw error;
+  }
+}
+
+export async function registrarAsesor(email, password, name) {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          rol: 'asesor',
+          nombre: name,
+          name,
+        },
+      },
+    });
+
+    if (error) throw error;
+    return { ...data, queued: false };
+  } catch (error) {
+    if (error?.code === 'over_email_send_rate_limit') {
+      await encolarInvitacionSignup({
+        email,
+        name,
+        rol: 'asesor',
+      });
+
+      return { user: null, session: null, queued: true };
+    }
+
+    throw error;
+  }
 }
 
 export async function loginEstudiante(email, password) {

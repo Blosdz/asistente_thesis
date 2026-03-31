@@ -41,6 +41,7 @@ dist-ssr
 # supabase envs
 supabase/.env
 supabase/.env.*
+supabase/.env_supabase
 !supabase/.env.example
 
 # opcional
