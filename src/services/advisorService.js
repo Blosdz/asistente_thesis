@@ -173,11 +173,17 @@ export async function obtenerHorariosDisponiblesAsesor(asesorId) {
   return data ?? [];
 }
 
-export async function obtenerHorariosPresustentacionAsesor(asesorId) {
+export async function obtenerHorariosPresustentacionAsesor(
+  asesorId,
+  fechaDesde,
+  fechaHasta,
+) {
   const { data, error } = await atSchema().rpc(
     'obtener_horarios_presustentacion_asesor',
     {
       p_asesor_id: asesorId,
+      p_fecha_desde: fechaDesde,
+      p_fecha_hasta: fechaHasta,
     },
   );
 
@@ -366,13 +372,15 @@ export async function obtenerDocumentosTesisAsignada(tesisId) {
 
 export async function registrarSugerenciaAsesor({
   tesisId,
-  sugerencia,
+  tipoSugerenciaId,
+  detalle,
   documentoTesisId = null,
 }) {
-  const { data, error } = await atSchema().rpc('registrar_sugerencia_asesor', {
+  const { data, error } = await atSchema().rpc('crear_sugerencia_asesor', {
     p_tesis_id: tesisId,
-    p_sugerencia: sugerencia,
     p_documento_tesis_id: documentoTesisId,
+    p_tipo_sugerencia_id: tipoSugerenciaId,
+    p_detalle: detalle,
   });
 
   if (error) {
@@ -384,12 +392,9 @@ export async function registrarSugerenciaAsesor({
 }
 
 export async function obtenerSugerenciasTesisAsignada(tesisId) {
-  const { data, error } = await atSchema().rpc(
-    'obtener_sugerencias_tesis_asignada',
-    {
-      p_tesis_id: tesisId,
-    },
-  );
+  const { data, error } = await atSchema().rpc('listar_sugerencias_tesis', {
+    p_tesis_id: tesisId,
+  });
 
   if (error) {
     console.error('Error obteniendo sugerencias de tesis asignada:', error);
@@ -403,6 +408,20 @@ export async function obtenerSugerenciasAsesor(tesisId) {
   return obtenerSugerenciasTesisAsignada(tesisId);
 }
 
+export async function listarTiposSugerenciaAsesor() {
+  const { data, error } = await atSchema().rpc(
+    'listar_tipos_sugerencia_asesor',
+  );
+
+  if (error) {
+    console.error('Error obteniendo tipos de sugerencia:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+// Compatibilidad temporal con imports antiguos del panel asesor.
 export async function actualizarEstadoSugerenciaAsesor(
   sugerenciaId,
   aplicado,
@@ -424,16 +443,26 @@ export async function actualizarEstadoSugerenciaAsesor(
 }
 
 export async function crearEspacioLibreAsesor(payload) {
-  const { data, error } = await atSchema().rpc('crear_espacio_libre_asesor', {
+  const rpcPayload = {
     p_inicio: payload.p_inicio,
     p_fin: payload.p_fin,
     p_usa_bloques: payload.p_usa_bloques ?? true,
     p_duracion_bloque_minutos: payload.p_duracion_bloque_minutos ?? 30,
     p_recurrente: payload.p_recurrente ?? false,
-    p_dia_semana: payload.p_dia_semana ?? null,
     p_fecha_inicio: payload.p_fecha_inicio ?? null,
     p_fecha_fin: payload.p_fecha_fin ?? null,
-  });
+  };
+
+  if (Array.isArray(payload.p_dias_semana)) {
+    rpcPayload.p_dias_semana = payload.p_dias_semana;
+  } else {
+    rpcPayload.p_dia_semana = payload.p_dia_semana ?? null;
+  }
+
+  const { data, error } = await atSchema().rpc(
+    'crear_espacio_libre_asesor',
+    rpcPayload,
+  );
 
   if (error) {
     console.error('Error creando espacio libre:', error);

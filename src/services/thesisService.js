@@ -105,12 +105,14 @@ export async function obtenerDocumentosComplementarios(tesisId) {
 export async function crearSugerenciaAsesor({
   tesisId,
   documentoTesisId,
-  sugerencia,
+  tipoSugerenciaId,
+  detalle,
 }) {
   const { data, error } = await atSchema().rpc('crear_sugerencia_asesor', {
     p_tesis_id: tesisId,
     p_documento_tesis_id: documentoTesisId ?? null,
-    p_sugerencia: sugerencia,
+    p_tipo_sugerencia_id: tipoSugerenciaId,
+    p_detalle: detalle,
   });
 
   if (error) {
@@ -122,7 +124,7 @@ export async function crearSugerenciaAsesor({
 }
 
 export async function obtenerSugerenciasMiTesis(tesisId) {
-  const { data, error } = await atSchema().rpc('obtener_sugerencias_mi_tesis', {
+  const { data, error } = await atSchema().rpc('listar_sugerencias_tesis', {
     p_tesis_id: tesisId,
   });
 
@@ -132,4 +134,24 @@ export async function obtenerSugerenciasMiTesis(tesisId) {
   }
 
   return data ?? [];
+}
+
+export async function marcarSugerenciaAplicadaEstudiante(
+  sugerenciaId,
+  aplicado,
+) {
+  const { data, error } = await atSchema().rpc(
+    'marcar_sugerencia_aplicada_estudiante',
+    {
+      p_sugerencia_id: sugerenciaId,
+      p_aplicado: aplicado,
+    },
+  );
+
+  if (error) {
+    console.error('Error marcando sugerencia como aplicada:', error);
+    throw error;
+  }
+
+  return data?.[0] ?? null;
 }

@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Info,
   PlusCircle,
   Repeat,
   Trash2,
@@ -18,6 +19,15 @@ import {
 } from '../../services/advisorService';
 
 const diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const diasSemanaLargos = [
+  'Domingo',
+  'Lunes',
+  'Martes',
+  'Miércoles',
+  'Jueves',
+  'Viernes',
+  'Sábado',
+];
 
 const formatterMes = new Intl.DateTimeFormat('es-PE', {
   month: 'long',
@@ -38,6 +48,12 @@ const formatterDiaLargo = new Intl.DateTimeFormat('es-PE', {
   weekday: 'long',
   day: '2-digit',
   month: 'long',
+});
+
+const formatterFechaCompleta = new Intl.DateTimeFormat('es-PE', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
 });
 
 function startOfMonth(date) {
@@ -84,6 +100,129 @@ function toDayKey(date) {
   return date.toISOString().slice(0, 10);
 }
 
+function getIsoDay(date) {
+  const day = date.getDay();
+  return day === 0 ? 7 : day;
+}
+
+function combineDateAndTime(baseDate, timeSource) {
+  const time = new Date(timeSource);
+  const combined = new Date(baseDate);
+  combined.setHours(
+    time.getHours(),
+    time.getMinutes(),
+    time.getSeconds(),
+    time.getMilliseconds(),
+  );
+  return combined;
+}
+
+function expandSpaceToOccurrences(space, rangeStart, rangeEnd) {
+  if (!space) return [];
+
+  const duracion = Number(space.duracion_bloque_minutos) || 30;
+  const usaBloques = space.usa_bloques !== false;
+  const inicioBase = new Date(space.inicio);
+  const finBase = new Date(space.fin);
+
+  if (Number.isNaN(inicioBase.getTime()) || Number.isNaN(finBase.getTime())) {
+    return [];
+  }
+
+  if (!space.recurrente) {
+    return [
+      {
+        ...space,
+        inicio_real: inicioBase,
+        fin_real: finBase,
+        duracion_bloque_minutos: duracion,
+        usa_bloques: usaBloques,
+      },
+    ];
+  }
+
+  const fechaInicio = space.fecha_inicio ? new Date(space.fecha_inicio) : null;
+  const fechaFin = space.fecha_fin ? new Date(space.fecha_fin) : null;
+  const diaSemana = Number(space.dia_semana);
+
+  if (!fechaInicio || !fechaFin || Number.isNaN(diaSemana)) {
+    return [];
+  }
+
+  const start = new Date(
+    Math.max(
+      new Date(fechaInicio.getFullYear(), fechaInicio.getMonth(), fechaInicio.getDate()).getTime(),
+      new Date(rangeStart.getFullYear(), rangeStart.getMonth(), rangeStart.getDate()).getTime(),
+    ),
+  );
+  const end = new Date(
+    Math.min(
+      new Date(fechaFin.getFullYear(), fechaFin.getMonth(), fechaFin.getDate()).getTime(),
+      new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), rangeEnd.getDate()).getTime(),
+    ),
+  );
+
+  const occurrences = [];
+  let cursor = new Date(start);
+
+  while (cursor <= end) {
+    if (getIsoDay(cursor) === diaSemana) {
+      const inicioReal = combineDateAndTime(cursor, inicioBase);
+      let finReal = combineDateAndTime(cursor, finBase);
+
+      if (finReal <= inicioReal) {
+        finReal = addDays(finReal, 1);
+      }
+
+      occurrences.push({
+        ...space,
+        inicio_real: inicioReal,
+        fin_real: finReal,
+        duracion_bloque_minutos: duracion,
+        usa_bloques: usaBloques,
+      });
+    }
+
+    cursor = addDays(cursor, 1);
+  }
+
+  return occurrences;
+}
+
+function buildBlocksForOccurrence(occurrence) {
+  const inicio = new Date(occurrence.inicio_real);
+  const fin = new Date(occurrence.fin_real);
+
+  if (Number.isNaN(inicio.getTime()) || Number.isNaN(fin.getTime()) || fin <= inicio) {
+    return [];
+  }
+
+  if (!occurrence.usa_bloques) {
+    return [
+      {
+        inicio,
+        fin,
+      },
+    ];
+  }
+
+  const duration = Math.max(Number(occurrence.duracion_bloque_minutos) || 0, 1);
+  const blocks = [];
+  let cursor = new Date(inicio);
+
+  while (cursor < fin && blocks.length < 48) {
+    const blockEnd = new Date(cursor.getTime() + duration * 60 * 1000);
+    if (blockEnd > fin) break;
+    blocks.push({
+      inicio: new Date(cursor),
+      fin: blockEnd,
+    });
+    cursor = blockEnd;
+  }
+
+  return blocks;
+}
+
 function toDateTimeLocalInputValue(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -112,21 +251,10 @@ const initialForm = () => ({
   usaBloques: true,
   duracionBloqueMinutos: 30,
   recurrente: false,
-  diaSemana: '',
+  diasSemana: [],
   fechaInicio: '',
   fechaFin: '',
 });
-
-function sincronizarFinConBloque(inicioValue, duracionBloqueMinutos) {
-  if (!inicioValue) return '';
-
-  const inicio = new Date(inicioValue);
-  if (Number.isNaN(inicio.getTime())) return '';
-
-  const minutos = Math.max(Number(duracionBloqueMinutos) || 0, 1);
-  const fin = new Date(inicio.getTime() + minutos * 60 * 1000);
-  return toDateTimeLocalInputValue(fin);
-}
 
 function EstadoBadge({ activo }) {
   return (
@@ -183,19 +311,44 @@ export default function AdvisorCalendar() {
     return days;
   }, [viewDate]);
 
+  const visibleRangeStart = calendarDays[0] ?? startOfMonth(viewDate);
+  const visibleRangeEnd = calendarDays[calendarDays.length - 1] ?? endOfMonth(viewDate);
+
+  const espaciosExpandidos = useMemo(() => {
+    return espacios.flatMap((space) =>
+      expandSpaceToOccurrences(space, visibleRangeStart, visibleRangeEnd),
+    );
+  }, [espacios, visibleRangeStart, visibleRangeEnd]);
+
   const espaciosPorDia = useMemo(() => {
-    return espacios.reduce((acc, espacio) => {
-      const key = toDayKey(new Date(espacio.inicio));
+    return espaciosExpandidos.reduce((acc, espacio) => {
+      const key = toDayKey(new Date(espacio.inicio_real));
       if (!acc[key]) acc[key] = [];
       acc[key].push(espacio);
       return acc;
     }, {});
-  }, [espacios]);
+  }, [espaciosExpandidos]);
 
   const espaciosDelDia = useMemo(
     () => espaciosPorDia[toDayKey(selectedDate)] ?? [],
     [espaciosPorDia, selectedDate],
   );
+
+  const bloquesPorDia = useMemo(() => {
+    return Object.entries(espaciosPorDia).reduce((acc, [key, daySpaces]) => {
+      const blocks = daySpaces.flatMap((space) =>
+        buildBlocksForOccurrence(space).map((block) => ({
+          ...block,
+          disponibilidad_id: space.disponibilidad_id,
+        })),
+      );
+
+      acc[key] = blocks.sort(
+        (a, b) => a.inicio.getTime() - b.inicio.getTime(),
+      );
+      return acc;
+    }, {});
+  }, [espaciosPorDia]);
 
   const espaciosActivos = useMemo(
     () => espacios.filter((espacio) => espacio.activo !== false),
@@ -204,10 +357,14 @@ export default function AdvisorCalendar() {
 
   const proximosEspacios = useMemo(() => {
     const now = Date.now();
-    return espaciosActivos
-      .filter((espacio) => new Date(espacio.fin).getTime() >= now)
+    return espaciosExpandidos
+      .filter((espacio) => new Date(espacio.fin_real).getTime() >= now)
+      .sort(
+        (a, b) =>
+          new Date(a.inicio_real).getTime() - new Date(b.inicio_real).getTime(),
+      )
       .slice(0, 5);
-  }, [espaciosActivos]);
+  }, [espaciosExpandidos]);
 
   const horasDisponibles = useMemo(() => {
     const totalMs = espaciosActivos.reduce((total, espacio) => {
@@ -223,8 +380,12 @@ export default function AdvisorCalendar() {
     if (!form.inicio || !form.fin) {
       return {
         valido: false,
-        mensaje: 'Completa la hora de inicio y fin para ver la vista previa.',
+        mensaje: 'Completa el horario para ver la vista previa.',
         bloques: [],
+        cantidadBloques: 0,
+        minutosSobrantes: 0,
+        encajaExacto: false,
+        sugerenciasDuracion: [],
       };
     }
 
@@ -236,6 +397,10 @@ export default function AdvisorCalendar() {
         valido: false,
         mensaje: 'El rango horario no es válido.',
         bloques: [],
+        cantidadBloques: 0,
+        minutosSobrantes: 0,
+        encajaExacto: false,
+        sugerenciasDuracion: [],
       };
     }
 
@@ -244,17 +409,34 @@ export default function AdvisorCalendar() {
         valido: false,
         mensaje: 'La hora final debe ser mayor que la inicial.',
         bloques: [],
+        cantidadBloques: 0,
+        minutosSobrantes: 0,
+        encajaExacto: false,
+        sugerenciasDuracion: [],
       };
     }
 
     const duracionMinutos = Math.round((fin - inicio) / (1000 * 60));
     const bloques = [];
+    let cantidadBloques = 1;
+    let minutosSobrantes = 0;
+    let encajaExacto = true;
+    let sugerenciasDuracion = [];
 
     if (form.usaBloques) {
       const bloqueMin = Math.max(Number(form.duracionBloqueMinutos) || 0, 1);
+      cantidadBloques = Math.floor(duracionMinutos / bloqueMin);
+      minutosSobrantes = duracionMinutos % bloqueMin;
+      encajaExacto = minutosSobrantes === 0;
+      sugerenciasDuracion = Array.from({ length: duracionMinutos }, (_, index) => index + 1)
+        .filter((min) => min >= 5 && min <= duracionMinutos && duracionMinutos % min === 0)
+        .filter((min) => min % 5 === 0)
+        .filter((min) => min <= 95)
+        .sort((a, b) => Math.abs(a - bloqueMin) - Math.abs(b - bloqueMin))
+        .slice(0, 4);
       let cursor = new Date(inicio);
 
-      while (cursor < fin && bloques.length < 8) {
+      while (cursor < fin && bloques.length < 24) {
         const bloqueFin = new Date(
           cursor.getTime() + bloqueMin * 60 * 1000,
         );
@@ -271,16 +453,21 @@ export default function AdvisorCalendar() {
     return {
       valido: true,
       duracionMinutos,
+      cantidadBloques,
+      minutosSobrantes,
+      encajaExacto,
+      sugerenciasDuracion,
       mensaje: form.usaBloques
-        ? `Se publicará una franja de ${duracionMinutos} minutos dividida en bloques de ${form.duracionBloqueMinutos} minutos.`
-        : `Se publicará una sola franja continua de ${duracionMinutos} minutos.`,
+        ? encajaExacto
+          ? `${cantidadBloques} bloque(s) de ${form.duracionBloqueMinutos} min`
+          : `${cantidadBloques} bloque(s) completos y ${minutosSobrantes} min libres`
+        : `${duracionMinutos} min continuos`,
       bloques,
     };
   }, [form]);
 
   const handleCreateSpace = async () => {
-    if (!form.inicio || !form.fin) {
-      toast.error('Completa la fecha y hora de inicio y fin.');
+    if (modalWarnings.length > 0) {
       return;
     }
 
@@ -292,10 +479,7 @@ export default function AdvisorCalendar() {
         p_usa_bloques: form.usaBloques,
         p_duracion_bloque_minutos: Number(form.duracionBloqueMinutos),
         p_recurrente: form.recurrente,
-        p_dia_semana:
-          form.recurrente && form.diaSemana !== ''
-            ? Number(form.diaSemana)
-            : null,
+        p_dias_semana: form.recurrente ? form.diasSemana : null,
         p_fecha_inicio:
           form.recurrente && form.fechaInicio ? form.fechaInicio : null,
         p_fecha_fin: form.recurrente && form.fechaFin ? form.fechaFin : null,
@@ -331,9 +515,6 @@ export default function AdvisorCalendar() {
     setForm((prev) => ({
       ...prev,
       inicio: value,
-      fin: prev.usaBloques
-        ? sincronizarFinConBloque(value, prev.duracionBloqueMinutos)
-        : prev.fin,
     }));
   };
 
@@ -341,9 +522,6 @@ export default function AdvisorCalendar() {
     setForm((prev) => ({
       ...prev,
       duracionBloqueMinutos: value,
-      fin: prev.usaBloques
-        ? sincronizarFinConBloque(prev.inicio, value)
-        : prev.fin,
     }));
   };
 
@@ -351,10 +529,131 @@ export default function AdvisorCalendar() {
     setForm((prev) => ({
       ...prev,
       usaBloques: checked,
-      fin: checked
-        ? sincronizarFinConBloque(prev.inicio, prev.duracionBloqueMinutos)
-        : prev.fin,
     }));
+  };
+
+  const setModoCreacion = (modo) => {
+    setForm((prev) => ({
+      ...prev,
+      recurrente: modo === 'recurrente',
+      diasSemana: modo === 'recurrente' ? prev.diasSemana : [],
+    }));
+  };
+
+  const textoModo = form.recurrente
+    ? 'Este horario se repetirá semanalmente dentro del rango de fechas que definas.'
+    : 'Este horario se publicará solo para una fecha específica.';
+
+  const resumenRecurrencia = useMemo(() => {
+    if (!form.recurrente || form.diasSemana.length === 0) return '';
+
+    const dias = [...form.diasSemana]
+      .map((day) => diasSemanaLargos[Number(day)] || '')
+      .filter(Boolean)
+      .join(', ');
+    const desde = form.fechaInicio
+      ? formatterFechaCompleta.format(new Date(form.fechaInicio))
+      : 'la fecha que indiques';
+    const hasta = form.fechaFin
+      ? formatterFechaCompleta.format(new Date(form.fechaFin))
+      : 'sin fecha final';
+
+    return `${dias} · desde ${desde} hasta ${hasta}`;
+  }, [form.recurrente, form.diasSemana, form.fechaInicio, form.fechaFin]);
+
+  const modalWarnings = useMemo(() => {
+    const warnings = [];
+
+    if (!form.inicio || !form.fin) {
+      warnings.push('Completa la fecha y hora de inicio y fin.');
+    } else {
+      const inicio = new Date(form.inicio);
+      const fin = new Date(form.fin);
+
+      if (Number.isNaN(inicio.getTime()) || Number.isNaN(fin.getTime())) {
+        warnings.push('El rango horario no es válido.');
+      } else if (fin <= inicio) {
+        warnings.push('La hora final debe ser mayor que la inicial.');
+      }
+    }
+
+    if (Number(form.duracionBloqueMinutos) <= 0) {
+      warnings.push('La duración del bloque debe ser mayor que cero.');
+    }
+
+    if (form.recurrente) {
+      if (form.diasSemana.length === 0) {
+        warnings.push('Selecciona al menos un día para la recurrencia.');
+      }
+
+      if (!form.fechaInicio || !form.fechaFin) {
+        warnings.push('Completa las fechas de inicio y fin de la recurrencia.');
+      } else if (new Date(form.fechaFin) < new Date(form.fechaInicio)) {
+        warnings.push('La fecha final no puede ser menor que la fecha inicial.');
+      }
+    }
+
+    return warnings;
+  }, [
+    form.inicio,
+    form.fin,
+    form.duracionBloqueMinutos,
+    form.recurrente,
+    form.diasSemana,
+    form.fechaInicio,
+    form.fechaFin,
+  ]);
+
+  const bloquesHelper = useMemo(() => {
+    if (!form.inicio || !form.fin) {
+      return 'El sistema usará este rango para generar los horarios reservables.';
+    }
+
+    const inicio = new Date(form.inicio);
+    const fin = new Date(form.fin);
+
+    if (
+      Number.isNaN(inicio.getTime()) ||
+      Number.isNaN(fin.getTime()) ||
+      fin <= inicio
+    ) {
+      return 'Ajusta el rango para ver cómo se separará tu tiempo disponible.';
+    }
+
+    if (!form.usaBloques) {
+      return `Se publicará una sola franja de ${formatterHora.format(inicio)} a ${formatterHora.format(fin)}.`;
+    }
+
+    if (previewConfig.encajaExacto) {
+      return `De ${formatterHora.format(inicio)} a ${formatterHora.format(fin)} se crearán ${previewConfig.cantidadBloques || 0} bloque(s) exactos de ${form.duracionBloqueMinutos} min.`;
+    }
+
+    if (previewConfig.sugerenciasDuracion.length > 0) {
+      return `La duración de ${form.duracionBloqueMinutos} min no encaja exacta en este rango. Sobran ${previewConfig.minutosSobrantes} min. Puedes usar: ${previewConfig.sugerenciasDuracion.join(', ')} min.`;
+    }
+
+    return `La duración de ${form.duracionBloqueMinutos} min no encaja exacta en este rango. Sobran ${previewConfig.minutosSobrantes} min.`;
+  }, [
+    form.inicio,
+    form.fin,
+    form.usaBloques,
+    form.duracionBloqueMinutos,
+    previewConfig.cantidadBloques,
+    previewConfig.encajaExacto,
+    previewConfig.minutosSobrantes,
+    previewConfig.sugerenciasDuracion,
+  ]);
+
+  const toggleDiaRecurrencia = (day) => {
+    setForm((prev) => {
+      const exists = prev.diasSemana.includes(day);
+      return {
+        ...prev,
+        diasSemana: exists
+          ? prev.diasSemana.filter((item) => item !== day)
+          : [...prev.diasSemana, day].sort((a, b) => a - b),
+      };
+    });
   };
 
   return (
@@ -469,6 +768,7 @@ export default function AdvisorCalendar() {
               {calendarDays.map((day) => {
                 const key = toDayKey(day);
                 const items = espaciosPorDia[key] ?? [];
+                const blocks = bloquesPorDia[key] ?? [];
                 const isCurrentMonth = isSameMonth(day, viewDate);
                 const isSelected = isSameDay(day, selectedDate);
                 const isToday = isSameDay(day, new Date());
@@ -499,26 +799,26 @@ export default function AdvisorCalendar() {
                       >
                         {day.getDate()}
                       </span>
-                      {items.length > 0 && (
+                      {blocks.length > 0 && (
                         <span className="rounded-full bg-white/70 px-2 py-1 text-[10px] font-bold text-slate-500">
-                          {items.length}
+                          {blocks.length}
                         </span>
                       )}
                     </div>
 
-                    {items.length > 0 && (
+                    {blocks.length > 0 && (
                       <div className="absolute bottom-3 left-3 right-3 space-y-1.5">
-                        {items.slice(0, 2).map((item) => (
+                        {blocks.slice(0, 3).map((block, index) => (
                           <div
-                            key={item.disponibilidad_id}
+                            key={`${block.disponibilidad_id}-${block.inicio.toISOString()}-${index}`}
                             className="truncate rounded-full bg-blue-100/90 px-2.5 py-1 text-[10px] font-bold text-blue-700"
                           >
-                            {formatterHora.format(new Date(item.inicio))}
+                            {formatterHora.format(block.inicio)}
                           </div>
                         ))}
-                        {items.length > 2 && (
+                        {blocks.length > 3 && (
                           <p className="text-[10px] font-bold text-slate-500">
-                            +{items.length - 2} más
+                            +{blocks.length - 3} más
                           </p>
                         )}
                       </div>
@@ -548,17 +848,17 @@ export default function AdvisorCalendar() {
                 ) : (
                   proximosEspacios.map((espacio) => (
                     <div
-                      key={espacio.disponibilidad_id}
+                      key={`${espacio.disponibilidad_id}-${espacio.inicio_real}`}
                       className="rounded-2xl border border-white/50 bg-white/35 p-4 shadow-sm"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-bold text-slate-900">
-                            {formatterFecha.format(new Date(espacio.inicio))}
+                            {formatterFecha.format(new Date(espacio.inicio_real))}
                           </p>
                           <p className="mt-1 text-xs text-slate-500">
-                            {formatterHora.format(new Date(espacio.inicio))} -{' '}
-                            {formatterHora.format(new Date(espacio.fin))}
+                            {formatterHora.format(new Date(espacio.inicio_real))} -{' '}
+                            {formatterHora.format(new Date(espacio.fin_real))}
                           </p>
                         </div>
                         <EstadoBadge activo={espacio.activo} />
@@ -593,54 +893,74 @@ export default function AdvisorCalendar() {
                     franja libre para empezar a recibir reservas.
                   </div>
                 ) : (
-                  espaciosDelDia.map((espacio) => (
-                    <div
-                      key={espacio.disponibilidad_id}
-                      className="rounded-2xl border border-white/50 bg-white/35 p-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                            <Clock3 className="h-4 w-4 text-blue-600" />
-                            {formatterHora.format(new Date(espacio.inicio))} -{' '}
-                            {formatterHora.format(new Date(espacio.fin))}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            {espacio.duracion_bloque_minutos} min por bloque
-                          </p>
-                        </div>
-                        <EstadoBadge activo={espacio.activo} />
-                      </div>
+                  espaciosDelDia.map((espacio) => {
+                    const blocks = buildBlocksForOccurrence(espacio);
 
-                      <div className="mt-3 flex items-center justify-between gap-3">
-                        <div className="text-[11px] text-slate-500">
-                          {espacio.recurrente ? (
-                            <span className="inline-flex items-center gap-1">
-                              <Repeat className="h-3.5 w-3.5" />
-                              Recurrente
+                    return (
+                      <div
+                        key={`${espacio.disponibilidad_id}-${espacio.inicio_real}`}
+                        className="rounded-2xl border border-white/50 bg-white/35 p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                              <Clock3 className="h-4 w-4 text-blue-600" />
+                              {formatterHora.format(new Date(espacio.inicio_real))} -{' '}
+                              {formatterHora.format(new Date(espacio.fin_real))}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {espacio.duracion_bloque_minutos} min por bloque
+                            </p>
+                          </div>
+                          <EstadoBadge activo={espacio.activo} />
+                        </div>
+
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {blocks.slice(0, 8).map((block) => (
+                            <span
+                              key={`${espacio.disponibilidad_id}-${block.inicio.toISOString()}`}
+                              className="rounded-full bg-blue-100 px-3 py-1 text-[11px] font-semibold text-blue-700"
+                            >
+                              {formatterHora.format(block.inicio)} - {formatterHora.format(block.fin)}
                             </span>
-                          ) : (
-                            'Única vez'
+                          ))}
+                          {blocks.length > 8 && (
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">
+                              +{blocks.length - 8} bloques
+                            </span>
                           )}
                         </div>
-                        {espacio.activo !== false && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDesactivar(espacio.disponibilidad_id)
-                            }
-                            disabled={desactivandoId === espacio.disponibilidad_id}
-                            className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 transition hover:text-rose-700 disabled:opacity-60"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            {desactivandoId === espacio.disponibilidad_id
-                              ? 'Desactivando...'
-                              : 'Desactivar'}
-                          </button>
-                        )}
+
+                        <div className="mt-3 flex items-center justify-between gap-3">
+                          <div className="text-[11px] text-slate-500">
+                            {espacio.recurrente ? (
+                              <span className="inline-flex items-center gap-1">
+                                <Repeat className="h-3.5 w-3.5" />
+                                Recurrente
+                              </span>
+                            ) : (
+                              'Única vez'
+                            )}
+                          </div>
+                          {espacio.activo !== false && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDesactivar(espacio.disponibilidad_id)
+                              }
+                              disabled={desactivandoId === espacio.disponibilidad_id}
+                              className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 transition hover:text-rose-700 disabled:opacity-60"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              {desactivandoId === espacio.disponibilidad_id
+                                ? 'Desactivando...'
+                                : 'Desactivar'}
+                            </button>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </Card>
@@ -651,10 +971,11 @@ export default function AdvisorCalendar() {
       <Modal
         open={showCreateModal}
         onClose={() => setShowCreateModal(false)}
-        title="Crear espacio libre"
-        subtitle="Define la ventana de disponibilidad que verán tus estudiantes."
+        title="Configurar disponibilidad"
+        modalWidth="xl"
+        subtitle="Publica un horario único o recurrente."
         primaryAction={{
-          label: creating ? 'Guardando...' : 'Guardar espacio',
+          label: creating ? 'Guardando...' : 'Guardar disponibilidad',
           onClick: handleCreateSpace,
         }}
         secondaryAction={{
@@ -663,16 +984,70 @@ export default function AdvisorCalendar() {
         }}
       >
         <div className="space-y-5 text-left">
-          <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
-            <p className="text-sm font-semibold text-blue-900">
-              Así verán tu disponibilidad los estudiantes
-            </p>
-            <p className="mt-2 text-sm leading-6 text-blue-800">
-              Primero defines una franja, por ejemplo de 2:00 PM a 4:00 PM. Si
-              activas bloques de 30 minutos, esa franja se convierte en citas
-              como 2:00-2:30, 2:30-3:00, 3:00-3:30 y 3:30-4:00.
-            </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setModoCreacion('unico')}
+              className={`rounded-2xl border p-4 text-left transition ${
+                !form.recurrente
+                  ? 'border-blue-500 bg-blue-50 shadow-sm'
+                  : 'border-slate-200 bg-white hover:border-slate-300'
+              }`}
+            >
+              <p className="text-sm font-bold text-slate-900">Horario único</p>
+              <p className="mt-1 text-xs leading-5 text-slate-600">
+                Publica una disponibilidad para una fecha concreta.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setModoCreacion('recurrente')}
+              className={`rounded-2xl border p-4 text-left transition ${
+                form.recurrente
+                  ? 'border-blue-500 bg-blue-50 shadow-sm'
+                  : 'border-slate-200 bg-white hover:border-slate-300'
+              }`}
+            >
+              <p className="text-sm font-bold text-slate-900">
+                Horario recurrente
+              </p>
+              <p className="mt-1 text-xs leading-5 text-slate-600">
+                Repite el mismo horario cada semana dentro de un rango.
+              </p>
+            </button>
           </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-full bg-slate-200 p-2 text-slate-700">
+                <Info className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{textoModo}</p>
+                {resumenRecurrencia && (
+                  <p className="mt-1 text-sm text-slate-600">
+                    {resumenRecurrencia}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {modalWarnings.length > 0 && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <p className="text-sm font-semibold text-amber-900">
+                Revisa estos datos
+              </p>
+              <div className="mt-2 space-y-1">
+                {modalWarnings.map((warning) => (
+                  <p key={warning} className="text-sm text-amber-800">
+                    {warning}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
           <div>
@@ -714,60 +1089,61 @@ export default function AdvisorCalendar() {
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
             />
             <p className="mt-2 text-xs text-slate-500">
-              Ejemplo: `30` crea bloques como 4:00-4:30, 4:30-5:00.
+              {bloquesHelper}
             </p>
           </div>
 
           <div className="flex items-end">
-            <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-              <input
-                type="checkbox"
-                checked={form.usaBloques}
-                onChange={(e) => handleUsaBloquesChange(e.target.checked)}
-              />
-              Usar bloques
-            </label>
+            <div className="w-full">
+              <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={form.usaBloques}
+                  onChange={(e) => handleUsaBloquesChange(e.target.checked)}
+                />
+                Dividir en bloques reservables
+              </label>
+              <p className="mt-2 text-xs text-slate-500">{bloquesHelper}</p>
+            </div>
           </div>
-          </div>
-
-          <div className="sm:col-span-2">
-            <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-              <input
-                type="checkbox"
-                checked={form.recurrente}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    recurrente: e.target.checked,
-                  }))
-                }
-              />
-              Repetir este espacio
-            </label>
           </div>
 
           {form.recurrente && (
             <>
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Día de semana
+                  Días de la semana
                 </label>
-                <select
-                  value={form.diaSemana}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, diaSemana: e.target.value }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                >
-                  <option value="">Selecciona un día</option>
-                  <option value="1">Lunes</option>
-                  <option value="2">Martes</option>
-                  <option value="3">Miércoles</option>
-                  <option value="4">Jueves</option>
-                  <option value="5">Viernes</option>
-                  <option value="6">Sábado</option>
-                  <option value="0">Domingo</option>
-                </select>
+                <div className="grid grid-cols-7 gap-2">
+                  {[
+                    { key: 1, label: 'L' },
+                    { key: 2, label: 'M' },
+                    { key: 3, label: 'X' },
+                    { key: 4, label: 'J' },
+                    { key: 5, label: 'V' },
+                    { key: 6, label: 'S' },
+                    { key: 0, label: 'D' },
+                  ].map((day) => {
+                    const isActive = form.diasSemana.includes(day.key);
+                    return (
+                      <button
+                        key={day.key}
+                        type="button"
+                        onClick={() => toggleDiaRecurrencia(day.key)}
+                        className={`rounded-xl border px-0 py-3 text-sm font-bold transition ${
+                          isActive
+                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
+                        }`}
+                      >
+                        {day.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  Puedes elegir varios días. Se creará una recurrencia por cada día seleccionado.
+                </p>
               </div>
 
               <div>
@@ -797,12 +1173,18 @@ export default function AdvisorCalendar() {
                   className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
                 />
               </div>
+
+              {resumenRecurrencia && (
+                <div className="sm:col-span-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+                  {resumenRecurrencia}
+                </div>
+              )}
             </>
           )}
 
           <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
             <p className="text-sm font-semibold text-slate-900">
-              Vista previa
+              Vista previa de tu disponibilidad
             </p>
             <p className="mt-2 text-sm text-slate-600">
               {previewConfig.mensaje}
@@ -812,7 +1194,7 @@ export default function AdvisorCalendar() {
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-xl bg-white p-3">
                   <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                    Rango elegido
+                    Franja base
                   </p>
                   <p className="mt-2 text-sm font-semibold text-slate-900">
                     {formatterHora.format(new Date(form.inicio))} -{' '}
@@ -821,21 +1203,49 @@ export default function AdvisorCalendar() {
                 </div>
                 <div className="rounded-xl bg-white p-3">
                   <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                    Resultado
+                    Resultado visible
                   </p>
                   <p className="mt-2 text-sm font-semibold text-slate-900">
                     {form.usaBloques
-                      ? `${previewConfig.bloques.length || 0} bloque(s) visibles`
+                      ? `${previewConfig.cantidadBloques || 0} bloque(s)`
                       : '1 franja continua'}
                   </p>
+                  {form.usaBloques && !previewConfig.encajaExacto && (
+                    <p className="mt-2 text-xs text-amber-700">
+                      Sobran {previewConfig.minutosSobrantes} min fuera de bloque.
+                    </p>
+                  )}
                 </div>
+                {form.recurrente && form.fechaInicio && form.fechaFin && (
+                  <div className="rounded-xl bg-white p-3 sm:col-span-2">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                      Vigencia
+                    </p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">
+                      Del {formatterFechaCompleta.format(new Date(form.fechaInicio))} al{' '}
+                      {formatterFechaCompleta.format(new Date(form.fechaFin))}
+                    </p>
+                  </div>
+                )}
+                {form.usaBloques &&
+                  !previewConfig.encajaExacto &&
+                  previewConfig.sugerenciasDuracion.length > 0 && (
+                    <div className="rounded-xl bg-white p-3 sm:col-span-2">
+                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+                        Duraciones que sí encajan
+                      </p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">
+                        {previewConfig.sugerenciasDuracion.join(', ')} min
+                      </p>
+                    </div>
+                  )}
               </div>
             )}
 
             {form.usaBloques && previewConfig.bloques.length > 0 && (
               <div className="mt-4">
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                  Ejemplo de bloques generados
+                  Bloques reservables
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {previewConfig.bloques.map((bloque) => (

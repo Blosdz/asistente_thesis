@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Card } from '../../components/ui/card';
 import { obtenerResumenDashboardEstudiante } from '../../services/dashboardService';
+import { vincularmeConAsesorPorCodigo } from '../../services/advisorService';
 import { toast } from 'react-hot-toast';
 
 const formatterFecha = new Intl.DateTimeFormat('es-PE', {
@@ -73,6 +74,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [resumen, setResumen] = useState(resumenInicial);
+  const [codigoAsesor, setCodigoAsesor] = useState('');
+  const [linkingByCode, setLinkingByCode] = useState(false);
 
   useEffect(() => {
     const cargarResumen = async () => {
@@ -90,6 +93,30 @@ export default function Dashboard() {
 
     cargarResumen();
   }, []);
+
+  const handleLinkByCode = async () => {
+    const codigo = codigoAsesor.trim().toUpperCase();
+
+    if (!codigo) {
+      toast.error('Ingresa un código de asesor');
+      return;
+    }
+
+    try {
+      setLinkingByCode(true);
+      const result = await vincularmeConAsesorPorCodigo(codigo);
+      toast.success(
+        result?.r_mensaje || result?.mensaje || 'Vinculación creada correctamente',
+      );
+      setCodigoAsesor('');
+      navigate('/student/asesorias');
+    } catch (error) {
+      console.error('Error vinculando por código:', error);
+      toast.error(error.message || 'No se pudo vincular con el asesor');
+    } finally {
+      setLinkingByCode(false);
+    }
+  };
 
   const stats = useMemo(
     () => [
@@ -235,6 +262,45 @@ export default function Dashboard() {
           </section>
 
           <aside className="space-y-8 lg:col-span-4">
+            <Card className="rounded-[32px] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-600">
+                    Vincular asesor
+                  </p>
+                  <h3 className="mt-3 text-xl font-bold text-slate-900">
+                    Conéctate con un código
+                  </h3>
+                </div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+              </div>
+
+              <p className="mt-4 text-sm leading-6 text-slate-600">
+                Si tu asesor te compartió un código público, úsalo aquí para crear la vinculación rápidamente.
+              </p>
+
+              <div className="mt-6 space-y-3">
+                <input
+                  type="text"
+                  value={codigoAsesor}
+                  onChange={(event) => setCodigoAsesor(event.target.value.toUpperCase())}
+                  placeholder="Ejemplo: ABC123"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                />
+                <button
+                  type="button"
+                  onClick={handleLinkByCode}
+                  disabled={linkingByCode}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {linkingByCode ? 'Vinculando...' : 'Conectar con código'}
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </div>
+            </Card>
+
             <Card className="rounded-[32px] border border-white/70 bg-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <div className="flex items-start justify-between gap-4">
                 <div>

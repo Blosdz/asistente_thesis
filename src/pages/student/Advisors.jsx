@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Card } from '../../components/ui/card';
 import Modal from '../../components/ui/modal';
+import { Select, SelectItem } from '../../components/ui/select';
 import {
   crearCitaAsesoria,
   obtenerAsesores,
@@ -59,6 +60,65 @@ const formatDuration = (minutes) => {
 const buildSlotKey = (slot) =>
   `${slot.disponibilidad_id}-${slot.inicio_bloque}`;
 
+const SLOT_VIEW_OPTIONS = [
+  { value: 'this_week', label: 'Esta semana' },
+  { value: 'next_week', label: 'Siguiente semana' },
+  { value: 'this_month', label: 'Este mes' },
+  { value: 'all', label: 'Todo lo disponible' },
+];
+
+const startOfDay = (date) => {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
+};
+
+const endOfDay = (date) => {
+  const next = new Date(date);
+  next.setHours(23, 59, 59, 999);
+  return next;
+};
+
+const getStartOfWeek = (date) => {
+  const next = startOfDay(date);
+  const day = next.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  next.setDate(next.getDate() + diff);
+  return next;
+};
+
+const getEndOfWeek = (date) => {
+  const next = getStartOfWeek(date);
+  next.setDate(next.getDate() + 6);
+  return endOfDay(next);
+};
+
+const getEndOfMonth = (date) => {
+  const next = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  return endOfDay(next);
+};
+
+const getSlotRange = (view) => {
+  const today = new Date();
+  const rangeStart = startOfDay(today);
+
+  if (view === 'next_week') {
+    const start = getStartOfWeek(today);
+    start.setDate(start.getDate() + 7);
+    return { start, end: getEndOfWeek(start) };
+  }
+
+  if (view === 'this_month') {
+    return { start: rangeStart, end: getEndOfMonth(today) };
+  }
+
+  if (view === 'all') {
+    return { start: null, end: null };
+  }
+
+  return { start: rangeStart, end: getEndOfWeek(today) };
+};
+
 const Advisors = () => {
   const [catalogAdvisors, setCatalogAdvisors] = useState([]);
   const [myAdvisors, setMyAdvisors] = useState([]);
@@ -72,6 +132,7 @@ const Advisors = () => {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedSlotKey, setSelectedSlotKey] = useState(null);
+  const [slotView, setSlotView] = useState('this_week');
   const [booking, setBooking] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
@@ -111,11 +172,22 @@ const Advisors = () => {
     [myAdvisors, selectedAdvisorId],
   );
 
+  const filteredSlots = useMemo(() => {
+    const { start, end } = getSlotRange(slotView);
+
+    return slots.filter((slot) => {
+      const slotDate = new Date(slot.inicio_bloque);
+      if (start && slotDate < start) return false;
+      if (end && slotDate > end) return false;
+      return true;
+    });
+  }, [slots, slotView]);
+
   const availableDays = useMemo(() => {
     const uniqueDays = [];
     const seen = new Set();
 
-    slots.forEach((slot) => {
+    filteredSlots.forEach((slot) => {
       const key = formatDateKey(slot.inicio_bloque);
       if (seen.has(key)) return;
       seen.add(key);
@@ -128,18 +200,20 @@ const Advisors = () => {
     });
 
     return uniqueDays;
-  }, [slots]);
+  }, [filteredSlots]);
 
   const slotsForSelectedDay = useMemo(() => {
     if (!selectedDay) return [];
-    return slots.filter(
+    return filteredSlots.filter(
       (slot) => formatDateKey(slot.inicio_bloque) === selectedDay,
     );
-  }, [slots, selectedDay]);
+  }, [filteredSlots, selectedDay]);
 
   const selectedSlot = useMemo(
-    () => slots.find((slot) => buildSlotKey(slot) === selectedSlotKey) || null,
-    [slots, selectedSlotKey],
+    () =>
+      filteredSlots.find((slot) => buildSlotKey(slot) === selectedSlotKey) ||
+      null,
+    [filteredSlots, selectedSlotKey],
   );
 
   useEffect(() => {
@@ -258,6 +332,39 @@ const Advisors = () => {
     setCurrentPage(1);
   }, [searchAdvisor]);
 
+  useEffect(() => {
+    if (filteredSlots.length === 0) {
+      setSelectedDay(null);
+      setSelectedSlotKey(null);
+      return;
+    }
+
+    const currentDayStillVisible =
+      selectedDay &&
+      filteredSlots.some(
+        (slot) => formatDateKey(slot.inicio_bloque) === selectedDay,
+      );
+
+    const nextDay = currentDayStillVisible
+      ? selectedDay
+      : formatDateKey(filteredSlots[0].inicio_bloque);
+
+    if (nextDay !== selectedDay) {
+      setSelectedDay(nextDay);
+    }
+
+    const currentSlotStillVisible =
+      selectedSlotKey &&
+      filteredSlots.some((slot) => buildSlotKey(slot) === selectedSlotKey);
+
+    if (!currentSlotStillVisible) {
+      const firstSlotForDay = filteredSlots.find(
+        (slot) => formatDateKey(slot.inicio_bloque) === nextDay,
+      );
+      setSelectedSlotKey(firstSlotForDay ? buildSlotKey(firstSlotForDay) : null);
+    }
+  }, [filteredSlots, selectedDay, selectedSlotKey]);
+
   const handleSelectAdvisor = (advisorId, advisorName = '') => {
     setSelectedAdvisorId(advisorId);
     if (advisorName) {
@@ -303,7 +410,7 @@ const Advisors = () => {
 
   const handleSelectDay = (dayKey) => {
     setSelectedDay(dayKey);
-    const firstSlotForDay = slots.find(
+    const firstSlotForDay = filteredSlots.find(
       (slot) => formatDateKey(slot.inicio_bloque) === dayKey,
     );
     setSelectedSlotKey(firstSlotForDay ? buildSlotKey(firstSlotForDay) : null);
@@ -594,16 +701,38 @@ const Advisors = () => {
 
               <div className="space-y-8 relative z-10">
                 <section>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <h3 className="font-headline text-sm font-bold uppercase tracking-widest text-blue-600/80">
                       Seleccionar fecha
                     </h3>
+                    <div className="min-w-[180px]">
+                      <Select
+                        value={slotView}
+                        onChange={(event) => setSlotView(event.target.value)}
+                        className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600"
+                      >
+                        {SLOT_VIEW_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
                     <span className="text-xs font-semibold text-slate-500">
                       {selectedAdvisor
                         ? 'Próximos bloques libres'
                         : 'Selecciona un asesor'}
                     </span>
                   </div>
+                  <p className="mb-4 text-xs text-slate-500">
+                    {selectedAdvisor
+                      ? `Vista de bloques para ${
+                          SLOT_VIEW_OPTIONS.find(
+                            (option) => option.value === slotView,
+                          )?.label.toLowerCase() || 'la agenda'
+                        }.`
+                      : 'Selecciona un asesor para ver su agenda por semana o por mes.'}
+                  </p>
                   <div className="grid grid-cols-7 gap-1 text-center">
                     {selectedAdvisor &&
                       !selectedAdvisorRelation &&
@@ -623,7 +752,8 @@ const Advisors = () => {
                       selectedAdvisorRelation &&
                       availableDays.length === 0 && (
                         <div className="col-span-7 rounded-lg border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
-                          No hay fechas libres para este asesor.
+                          No hay fechas libres en esta vista. Prueba con otra
+                          semana o con este mes.
                         </div>
                       )}
                     {!loadingSlots &&

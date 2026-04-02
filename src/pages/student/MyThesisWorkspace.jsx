@@ -15,6 +15,7 @@ import {
   obtenerDocumentosMiTesis,
   subirDocumentoAGoogleDrive,
   obtenerSugerenciasMiTesis,
+  marcarSugerenciaAplicadaEstudiante,
 } from '../../services/thesisService';
 import {
   asignarMiTesisAAsesor,
@@ -34,6 +35,7 @@ const MyThesisWorkspace = () => {
 
   const [sugerencias, setSugerencias] = useState([]);
   const [loadingSugerencias, setLoadingSugerencias] = useState(false);
+  const [updatingSuggestionId, setUpdatingSuggestionId] = useState(null);
   const [misAsesores, setMisAsesores] = useState([]);
   const [tesisConAsesores, setTesisConAsesores] = useState([]);
   const [asesorAsignadoId, setAsesorAsignadoId] = useState('');
@@ -132,6 +134,25 @@ const MyThesisWorkspace = () => {
     [buildPreviewUrl],
   );
 
+  const cargarSugerencias = useCallback(async (thesisId) => {
+    if (!thesisId) {
+      setSugerencias([]);
+      return;
+    }
+
+    try {
+      setLoadingSugerencias(true);
+      const data = await obtenerSugerenciasMiTesis(thesisId);
+      setSugerencias(data || []);
+    } catch (err) {
+      console.error('Error fetching suggestions:', err);
+      toast.error('No se pudieron cargar las sugerencias.');
+      setSugerencias([]);
+    } finally {
+      setLoadingSugerencias(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchTheses();
     fetchMisAsesores();
@@ -149,27 +170,12 @@ const MyThesisWorkspace = () => {
   }, [selectedThesisId, fetchDocuments]);
 
   useEffect(() => {
-    const loadSugerencias = async () => {
-      if (!selectedThesisId) {
-        setSugerencias([]);
-        return;
-      }
-
-      try {
-        setLoadingSugerencias(true);
-        const data = await obtenerSugerenciasMiTesis(selectedThesisId);
-        setSugerencias(data || []);
-      } catch (err) {
-        console.error('Error fetching suggestions:', err);
-        toast.error('No se pudieron cargar las sugerencias.');
-        setSugerencias([]);
-      } finally {
-        setLoadingSugerencias(false);
-      }
-    };
-
-    loadSugerencias();
-  }, [selectedThesisId]);
+    if (selectedThesisId) {
+      cargarSugerencias(selectedThesisId);
+    } else {
+      setSugerencias([]);
+    }
+  }, [selectedThesisId, cargarSugerencias]);
 
   const handleCreateThesis = async () => {
     if (!newThesisTitle.trim()) return toast.error('El título es requerido');
@@ -257,6 +263,14 @@ const MyThesisWorkspace = () => {
     [thesesList, selectedThesisId],
   );
 
+  const sugerenciasVisibles = useMemo(
+    () =>
+      sugerencias.filter(
+        (item) => !item?.tesis_id || item.tesis_id === selectedThesisId,
+      ),
+    [sugerencias, selectedThesisId],
+  );
+
   const asesoresDeTesis = useMemo(
     () =>
       tesisConAsesores.filter((item) => item.tesis_id === selectedThesisId),
@@ -284,6 +298,7 @@ const MyThesisWorkspace = () => {
   );
 
   const getSuggestionText = (item) =>
+    item?.detalle ||
     item?.sugerencia ||
     item?.comentario ||
     item?.observacion ||
@@ -295,6 +310,37 @@ const MyThesisWorkspace = () => {
 
   const getSuggestionDate = (item) =>
     item?.creado_en || item?.created_at || item?.r_creado_en;
+
+  const getSuggestionType = (item) =>
+    item?.tipo_nombre || item?.tipo_codigo || item?.categoria || 'Observación';
+
+  const getSuggestionId = (item) => item?.id || item?.sugerencia_id || null;
+
+  const handleToggleAppliedSuggestion = async (item) => {
+    const suggestionId = getSuggestionId(item);
+    if (!suggestionId) {
+      toast.error('No se pudo identificar la sugerencia');
+      return;
+    }
+
+    const nextApplied = !Boolean(item?.aplicado);
+
+    try {
+      setUpdatingSuggestionId(suggestionId);
+      await marcarSugerenciaAplicadaEstudiante(suggestionId, nextApplied);
+      toast.success(
+        nextApplied
+          ? 'Sugerencia marcada como aplicada'
+          : 'Sugerencia marcada como pendiente',
+      );
+      await cargarSugerencias(selectedThesisId);
+    } catch (error) {
+      console.error('Error updating suggestion:', error);
+      toast.error('No se pudo actualizar la sugerencia');
+    } finally {
+      setUpdatingSuggestionId(null);
+    }
+  };
 
   const formatDate = (value) => {
     if (!value) return '—';
@@ -488,7 +534,7 @@ const MyThesisWorkspace = () => {
                   </h3>
                 </div>
                 <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-blue-50 text-blue-600">
-                  {sugerencias.length} notas
+                  {sugerenciasVisibles.length} notas
                 </span>
               </div>
 
@@ -496,13 +542,13 @@ const MyThesisWorkspace = () => {
                 <p className="text-sm text-slate-500">
                   Cargando sugerencias...
                 </p>
-              ) : sugerencias.length === 0 ? (
+              ) : sugerenciasVisibles.length === 0 ? (
                 <div className="border border-dashed border-slate-200 rounded-xl p-4 text-sm text-slate-500">
                   No hay sugerencias registradas para esta tesis.
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {sugerencias.map((item, idx) => (
+                  {sugerenciasVisibles.map((item, idx) => (
                     <article
                       key={
                         item.id ||
@@ -516,23 +562,56 @@ const MyThesisWorkspace = () => {
                           {getAdvisorName(item).charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-900 truncate">
-                            {getAdvisorName(item)}
-                          </p>
-                          <p className="text-[11px] text-slate-500">
-                            {formatDate(getSuggestionDate(item))}
-                          </p>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="text-sm font-bold text-slate-900 truncate">
+                                {getAdvisorName(item)}
+                              </p>
+                              <p className="text-[11px] text-slate-500">
+                                {formatDate(getSuggestionDate(item))}
+                              </p>
+                            </div>
+                            <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-700">
+                              {getSuggestionType(item)}
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <p className="text-sm text-slate-700 leading-relaxed">
                         {getSuggestionText(item)}
                       </p>
-                      {(item.nombre_documento || item.documento_tesis_id) && (
+                      {item.nombre_documento && (
                         <p className="text-[11px] text-slate-500 mt-2">
-                          Documento:{' '}
-                          {item.nombre_documento || item.documento_tesis_id}
+                          Documento: {item.nombre_documento}
                         </p>
                       )}
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <span
+                          className={`rounded-full px-2 py-1 text-[10px] font-bold ${
+                            item.aplicado
+                              ? 'bg-emerald-50 text-emerald-700'
+                              : 'bg-amber-50 text-amber-700'
+                          }`}
+                        >
+                          {item.aplicado ? 'Aplicada' : 'Pendiente'}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleAppliedSuggestion(item)}
+                          disabled={updatingSuggestionId === getSuggestionId(item)}
+                          className={`inline-flex items-center justify-center rounded-xl px-3 py-2 text-[11px] font-bold text-white shadow-sm transition ${
+                            item.aplicado
+                              ? 'bg-slate-500 hover:bg-slate-600'
+                              : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
+                          } disabled:cursor-not-allowed disabled:opacity-50`}
+                        >
+                          {updatingSuggestionId === getSuggestionId(item)
+                            ? 'Actualizando...'
+                            : item.aplicado
+                              ? 'Marcar pendiente'
+                              : 'Ya la apliqué'}
+                        </button>
+                      </div>
                     </article>
                   ))}
                 </div>

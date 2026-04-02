@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Card } from '../../components/ui/card';
 import Modal from '../../components/ui/modal';
+import { Select, SelectItem } from '../../components/ui/select';
 import {
   obtenerAsesores,
   obtenerHorariosPresustentacionAsesor,
@@ -19,6 +20,7 @@ const fallbackAvatar =
   'https://lh3.googleusercontent.com/aida-public/AB6AXuBfY_M1vYqCVJM6C281-xl9p2WF-lRoXoF6XWzZ3OqCcsHuwSRxUQP-xUghy-u2Bub3dY-GFZgtO43We88a02lzg2ET9t9HPW_r-Z2C5pajAgGBthu0_JRhit-K_6qz0OOOJpruPijct0DLYYuXb47wLCaWCYr7D-u0FeS6Otbx5PaPL73ofhNRn8nat3vu10fB-1hEezuYn0ZumKHVMGzcrxLFAxbzHMp4yUlO4jQW9oHWW25bJh9WZflyp94rlf3CjlU01K_QO9u1';
 
 const PRICE_PEN = 200;
+const DIEGO_ASESOR_ID = 'cadc37f0-6037-4430-b993-533880b036b1';
 
 const formatDateKey = (value) => {
   const date = new Date(value);
@@ -50,6 +52,88 @@ const formatTime = (value) =>
 const buildSlotKey = (slot) =>
   `${slot.disponibilidad_id}-${slot.inicio || slot.inicio_bloque}`;
 
+const SLOT_VIEW_OPTIONS = [
+  { value: 'this_week', label: 'Esta semana' },
+  { value: 'next_week', label: 'Siguiente semana' },
+  { value: 'this_month', label: 'Este mes' },
+  { value: 'all', label: 'Todo lo disponible' },
+];
+
+const startOfDay = (date) => {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
+};
+
+const endOfDay = (date) => {
+  const next = new Date(date);
+  next.setHours(23, 59, 59, 999);
+  return next;
+};
+
+const getStartOfWeek = (date) => {
+  const next = startOfDay(date);
+  const day = next.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  next.setDate(next.getDate() + diff);
+  return next;
+};
+
+const getEndOfWeek = (date) => {
+  const next = getStartOfWeek(date);
+  next.setDate(next.getDate() + 6);
+  return endOfDay(next);
+};
+
+const getEndOfMonth = (date) => {
+  const next = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  return endOfDay(next);
+};
+
+const getSlotRange = (view) => {
+  const today = new Date();
+  const rangeStart = startOfDay(today);
+
+  if (view === 'next_week') {
+    const start = getStartOfWeek(today);
+    start.setDate(start.getDate() + 7);
+    return { start, end: getEndOfWeek(start) };
+  }
+
+  if (view === 'this_month') {
+    return { start: rangeStart, end: getEndOfMonth(today) };
+  }
+
+  if (view === 'all') {
+    return { start: null, end: null };
+  }
+
+  return { start: rangeStart, end: getEndOfWeek(today) };
+};
+
+const formatDateParam = (date) => {
+  if (!date) return null;
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
+    date.getDate(),
+  ).padStart(2, '0')}`;
+};
+
+const getFetchRange = (view) => {
+  const baseRange = getSlotRange(view);
+
+  if (view === 'all') {
+    const today = startOfDay(new Date());
+    const end = new Date(today);
+    end.setDate(end.getDate() + 180);
+    return {
+      start: today,
+      end: endOfDay(end),
+    };
+  }
+
+  return baseRange;
+};
+
 const formatDuration = (start, end) => {
   if (!start || !end) return 'No definida';
   const diff = Math.max(
@@ -72,6 +156,7 @@ const Services = () => {
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedSlotKey, setSelectedSlotKey] = useState(null);
+  const [slotView, setSlotView] = useState('this_week');
   const [booking, setBooking] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
@@ -102,11 +187,24 @@ const Services = () => {
     [advisors, selectedAdvisorId],
   );
 
+  const slotFetchRange = useMemo(() => getFetchRange(slotView), [slotView]);
+
+  const filteredSlots = useMemo(() => {
+    const { start, end } = getSlotRange(slotView);
+
+    return slots.filter((slot) => {
+      const slotDate = new Date(slot.inicio);
+      if (start && slotDate < start) return false;
+      if (end && slotDate > end) return false;
+      return true;
+    });
+  }, [slots, slotView]);
+
   const availableDays = useMemo(() => {
     const uniqueDays = [];
     const seen = new Set();
 
-    slots.forEach((slot) => {
+    filteredSlots.forEach((slot) => {
       const key = formatDateKey(slot.inicio);
       if (seen.has(key)) return;
       seen.add(key);
@@ -118,16 +216,20 @@ const Services = () => {
     });
 
     return uniqueDays;
-  }, [slots]);
+  }, [filteredSlots]);
 
   const slotsForSelectedDay = useMemo(() => {
     if (!selectedDay) return [];
-    return slots.filter((slot) => formatDateKey(slot.inicio) === selectedDay);
-  }, [slots, selectedDay]);
+    return filteredSlots.filter(
+      (slot) => formatDateKey(slot.inicio) === selectedDay,
+    );
+  }, [filteredSlots, selectedDay]);
 
   const selectedSlot = useMemo(
-    () => slots.find((slot) => buildSlotKey(slot) === selectedSlotKey) || null,
-    [slots, selectedSlotKey],
+    () =>
+      filteredSlots.find((slot) => buildSlotKey(slot) === selectedSlotKey) ||
+      null,
+    [filteredSlots, selectedSlotKey],
   );
 
   useEffect(() => {
@@ -147,9 +249,13 @@ const Services = () => {
           tags: [item.especialidad || item.nivel_academico].filter(Boolean),
         }));
 
-        setAdvisors(mapped);
-        if (mapped.length > 0) {
-          setSelectedAdvisorId(mapped[0].id);
+        const onlyDiego = mapped.filter(
+          (advisor) => advisor.id === DIEGO_ASESOR_ID,
+        );
+
+        setAdvisors(onlyDiego);
+        if (onlyDiego.length > 0) {
+          setSelectedAdvisorId(onlyDiego[0].id);
         }
       } catch (error) {
         console.error(error);
@@ -174,15 +280,20 @@ const Services = () => {
 
       try {
         setLoadingSlots(true);
-        const data =
-          await obtenerHorariosPresustentacionAsesor(selectedAdvisorId);
+        const data = await obtenerHorariosPresustentacionAsesor(
+          selectedAdvisorId,
+          formatDateParam(slotFetchRange.start),
+          formatDateParam(slotFetchRange.end),
+        );
 
-        const normalizedSlots = (data || []).map((slot) => ({
-          ...slot,
-          inicio: slot.inicio || slot.inicio_bloque,
-          fin: slot.fin || slot.fin_bloque,
-          slotKey: buildSlotKey(slot),
-        }));
+        const normalizedSlots = (data || [])
+          .filter((slot) => slot.estado === 'libre')
+          .map((slot) => ({
+            ...slot,
+            inicio: slot.inicio || slot.inicio_bloque,
+            fin: slot.fin || slot.fin_bloque,
+            slotKey: buildSlotKey(slot),
+          }));
 
         setSlots(normalizedSlots);
 
@@ -206,11 +317,42 @@ const Services = () => {
     };
 
     loadSlots();
-  }, [selectedAdvisorId]);
+  }, [selectedAdvisorId, slotFetchRange]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [searchAdvisor]);
+
+  useEffect(() => {
+    if (filteredSlots.length === 0) {
+      setSelectedDay(null);
+      setSelectedSlotKey(null);
+      return;
+    }
+
+    const currentDayStillVisible =
+      selectedDay &&
+      filteredSlots.some((slot) => formatDateKey(slot.inicio) === selectedDay);
+
+    const nextDay = currentDayStillVisible
+      ? selectedDay
+      : formatDateKey(filteredSlots[0].inicio);
+
+    if (nextDay !== selectedDay) {
+      setSelectedDay(nextDay);
+    }
+
+    const currentSlotStillVisible =
+      selectedSlotKey &&
+      filteredSlots.some((slot) => buildSlotKey(slot) === selectedSlotKey);
+
+    if (!currentSlotStillVisible) {
+      const firstSlotForDay = filteredSlots.find(
+        (slot) => formatDateKey(slot.inicio) === nextDay,
+      );
+      setSelectedSlotKey(firstSlotForDay ? buildSlotKey(firstSlotForDay) : null);
+    }
+  }, [filteredSlots, selectedDay, selectedSlotKey]);
 
   const handleSelectAdvisor = (advisorId, advisorName = '') => {
     setSelectedAdvisorId(advisorId);
@@ -221,7 +363,7 @@ const Services = () => {
 
   const handleSelectDay = (dayKey) => {
     setSelectedDay(dayKey);
-    const firstSlotForDay = slots.find(
+    const firstSlotForDay = filteredSlots.find(
       (slot) => formatDateKey(slot.inicio) === dayKey,
     );
     setSelectedSlotKey(firstSlotForDay ? buildSlotKey(firstSlotForDay) : null);
@@ -249,14 +391,18 @@ const Services = () => {
 
       const refreshed = await obtenerHorariosPresustentacionAsesor(
         selectedAdvisor.id,
+        formatDateParam(slotFetchRange.start),
+        formatDateParam(slotFetchRange.end),
       );
 
-      const normalizedSlots = (refreshed || []).map((slot) => ({
-        ...slot,
-        inicio: slot.inicio || slot.inicio_bloque,
-        fin: slot.fin || slot.fin_bloque,
-        slotKey: buildSlotKey(slot),
-      }));
+      const normalizedSlots = (refreshed || [])
+        .filter((slot) => slot.estado === 'libre')
+        .map((slot) => ({
+          ...slot,
+          inicio: slot.inicio || slot.inicio_bloque,
+          fin: slot.fin || slot.fin_bloque,
+          slotKey: buildSlotKey(slot),
+        }));
 
       setSlots(normalizedSlots);
 
@@ -408,14 +554,31 @@ const Services = () => {
 
               <div className="space-y-8 relative z-10">
                 <section>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <h3 className="font-headline text-sm font-bold uppercase tracking-widest text-blue-600/80">
                       Seleccionar fecha
                     </h3>
+                    <div className="min-w-[180px]">
+                      <Select
+                        value={slotView}
+                        onChange={(event) => setSlotView(event.target.value)}
+                        className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600"
+                      >
+                        {SLOT_VIEW_OPTIONS.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </Select>
+                    </div>
                     <span className="text-xs font-semibold text-slate-500">
                       Próximas 2 semanas
                     </span>
                   </div>
+                  <p className="mb-4 text-xs text-slate-500">
+                    Vista de bloques para{' '}
+                    {SLOT_VIEW_OPTIONS.find((option) => option.value === slotView)?.label.toLowerCase() || 'la agenda'}.
+                  </p>
                   <div className="grid grid-cols-7 gap-1 text-center">
                     {loadingSlots && (
                       <div className="col-span-7 flex items-center justify-center gap-2 rounded-lg border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
@@ -425,7 +588,8 @@ const Services = () => {
                     )}
                     {!loadingSlots && availableDays.length === 0 && (
                       <div className="col-span-7 rounded-lg border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
-                        No hay fechas libres para este asesor.
+                        No hay fechas libres en esta vista. Prueba con otra
+                        semana o con este mes.
                       </div>
                     )}
                     {!loadingSlots &&

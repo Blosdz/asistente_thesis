@@ -10,6 +10,13 @@ const sizeMap = {
   xxl: 'text-2xl',
 };
 
+const widthMap = {
+  md: 'max-w-xl',
+  lg: 'max-w-3xl',
+  xl: 'max-w-5xl',
+  full: 'max-w-[min(96vw,1200px)]',
+};
+
 /**
  * Multi-purpose glassmorphism modal.
  * Props:
@@ -19,6 +26,7 @@ const sizeMap = {
  * - subtitle?: string
  * - description?: string | JSX
  * - descriptionSize?: 'sm'|'md'|'lg'|'xl'|'xxl'
+ * - modalWidth?: 'md'|'lg'|'xl'|'full'
  * - primaryAction?: { label: string; onClick: () => void }
  * - secondaryAction?: { label: string; onClick: () => void }
  * - children?: ReactNode (custom content below description)
@@ -30,6 +38,7 @@ const Modal = ({
   subtitle,
   description,
   descriptionSize = 'md',
+  modalWidth = 'md',
   primaryAction,
   secondaryAction,
   children,
@@ -66,6 +75,7 @@ const Modal = ({
   if (!open || !mounted) return null;
 
   const descClass = sizeMap[descriptionSize] || sizeMap.md;
+  const modalWidthClass = widthMap[modalWidth] || widthMap.md;
   const modalContent = (
     <div
       ref={overlayRef}
@@ -77,7 +87,9 @@ const Modal = ({
       }}
     >
       <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-[8px]" />
-      <div className="relative z-10 w-full max-w-xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg animate-in fade-in zoom-in-95 duration-300">
+      <div
+        className={`relative z-10 w-full ${modalWidthClass} overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg animate-in fade-in zoom-in-95 duration-300`}
+      >
         <button
           ref={closeBtnRef}
           onClick={onClose}
@@ -87,7 +99,7 @@ const Modal = ({
           <X className="h-5 w-5 text-slate-500" />
         </button>
 
-        <div className="p-10 sm:p-12 flex flex-col items-center text-center gap-6">
+        <div className="flex max-h-[min(88vh,960px)] flex-col gap-6 overflow-y-auto p-6 text-center sm:p-8 lg:p-10">
           <div className="space-y-2">
             <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">{title}</h2>
             {subtitle && <p className="text-sm font-semibold text-slate-500">{subtitle}</p>}
@@ -97,7 +109,7 @@ const Modal = ({
             <p className={`${descClass} text-slate-700 leading-relaxed max-w-xl`}>{description}</p>
           )}
 
-          {children && <div className="w-full">{children}</div>}
+          {children && <div className="w-full text-left">{children}</div>}
 
           <div className="w-full flex flex-col sm:flex-row gap-3 mt-2">
             {secondaryAction && (
