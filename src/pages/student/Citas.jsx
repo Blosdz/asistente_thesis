@@ -6,19 +6,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  CreditCard,
   ExternalLink,
   MapPin,
   Video,
-  XCircle,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Card } from '../../components/ui/card';
 import Modal from '../../components/ui/modal';
-import {
-  cancelarCitaEstudiante,
-  obtenerDetalleCitaEstudiante,
-  obtenerMisCitasEstudiante,
-} from '../../services/dashboardService';
+import { obtenerHistorialValidacionesCitaEstudiante } from '../../services/dashboardService';
 
 const diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
@@ -99,17 +95,21 @@ function toKey(date) {
 
 function estadoBadgeClass(estado) {
   switch (estado) {
-    case 'confirmado':
+    case 'confirmed':
       return 'bg-emerald-50 text-emerald-700 border-emerald-100';
-    case 'pendiente':
-      return 'bg-amber-50 text-amber-700 border-amber-100';
-    case 'cancelado':
-      return 'bg-rose-50 text-rose-700 border-rose-100';
-    case 'completado':
-      return 'bg-slate-100 text-slate-700 border-slate-200';
-    default:
+    case 'payment_pending':
       return 'bg-blue-50 text-blue-700 border-blue-100';
+    case 'pending':
+      return 'bg-amber-50 text-amber-700 border-amber-100';
+    case 'rejected':
+      return 'bg-rose-50 text-rose-700 border-rose-100';
+    default:
+      return 'bg-slate-100 text-slate-700 border-slate-200';
   }
+}
+
+function estadoTexto(estado) {
+  return (estado || 'sin_estado').replaceAll('_', ' ');
 }
 
 export default function Citas() {
@@ -119,22 +119,12 @@ export default function Citas() {
   const [citas, setCitas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCitaId, setSelectedCitaId] = useState(null);
-  const [detalleCita, setDetalleCita] = useState(null);
-  const [loadingDetalle, setLoadingDetalle] = useState(false);
-  const [cancelando, setCancelando] = useState(false);
 
   useEffect(() => {
     const cargarCitas = async () => {
       try {
         setLoading(true);
-        const inicio = startOfWeekMonday(startOfMonth(viewDate));
-        const fin = addDays(endOfWeekSunday(endOfMonth(viewDate)), 1);
-
-        const data = await obtenerMisCitasEstudiante({
-          fechaInicio: inicio.toISOString(),
-          fechaFin: fin.toISOString(),
-        });
-
+        const data = await obtenerHistorialValidacionesCitaEstudiante();
         setCitas(data ?? []);
 
         if (!isSameMonth(selectedDate, viewDate)) {
@@ -142,7 +132,7 @@ export default function Citas() {
         }
       } catch (error) {
         console.error('Error cargando citas:', error);
-        toast.error('No se pudieron cargar tus citas.');
+        toast.error('No se pudieron cargar tus solicitudes de cita.');
       } finally {
         setLoading(false);
       }
@@ -151,27 +141,11 @@ export default function Citas() {
     cargarCitas();
   }, [viewDate]);
 
-  useEffect(() => {
-    if (!selectedCitaId) {
-      setDetalleCita(null);
-      return;
-    }
-
-    const cargarDetalle = async () => {
-      try {
-        setLoadingDetalle(true);
-        const data = await obtenerDetalleCitaEstudiante(selectedCitaId);
-        setDetalleCita(data);
-      } catch (error) {
-        console.error('Error cargando detalle de cita:', error);
-        toast.error('No se pudo cargar el detalle de la cita.');
-      } finally {
-        setLoadingDetalle(false);
-      }
-    };
-
-    cargarDetalle();
-  }, [selectedCitaId]);
+  const selectedCita = useMemo(
+    () =>
+      citas.find((cita) => cita.validation_cita_id === selectedCitaId) || null,
+    [citas, selectedCitaId],
+  );
 
   const calendarDays = useMemo(() => {
     const first = startOfWeekMonday(startOfMonth(viewDate));
@@ -189,7 +163,7 @@ export default function Citas() {
 
   const citasPorDia = useMemo(() => {
     return citas.reduce((acc, cita) => {
-      const key = toKey(new Date(cita.inicio));
+      const key = toKey(new Date(cita.start_at));
       if (!acc[key]) acc[key] = [];
       acc[key].push(cita);
       return acc;
@@ -204,35 +178,14 @@ export default function Citas() {
     const now = Date.now();
     return (
       citas.find((cita) => {
-        const inicio = new Date(cita.inicio).getTime();
-        return inicio >= now && ['pendiente', 'confirmado'].includes(cita.estado);
+        const inicio = new Date(cita.start_at).getTime();
+        return (
+          inicio >= now &&
+          ['pending', 'payment_pending', 'confirmed'].includes(cita.status)
+        );
       }) ?? null
     );
   }, [citas]);
-
-  const handleCancelarCita = async () => {
-    if (!detalleCita?.reunion_id) return;
-
-    try {
-      setCancelando(true);
-      await cancelarCitaEstudiante(detalleCita.reunion_id);
-      toast.success('La cita fue cancelada.');
-      setSelectedCitaId(null);
-
-      const inicio = startOfWeekMonday(startOfMonth(viewDate));
-      const fin = addDays(endOfWeekSunday(endOfMonth(viewDate)), 1);
-      const data = await obtenerMisCitasEstudiante({
-        fechaInicio: inicio.toISOString(),
-        fechaFin: fin.toISOString(),
-      });
-      setCitas(data ?? []);
-    } catch (error) {
-      console.error('Error cancelando cita:', error);
-      toast.error('No se pudo cancelar la cita.');
-    } finally {
-      setCancelando(false);
-    }
-  };
 
   return (
     <div className="w-full flex-1 px-4 py-12 text-slate-900 sm:px-6 lg:px-10">
@@ -252,11 +205,11 @@ export default function Citas() {
               Citas
             </p>
             <h1 className="font-['Ubuntu'] text-4xl font-bold tracking-tight text-slate-900">
-              Calendario mensual de reuniones
+              Calendario de solicitudes y citas
             </h1>
             <p className="max-w-2xl text-sm leading-7 text-slate-500">
-              Revisa tus asesorías y sesiones agendadas. Si la cita tiene enlace
-              de Google Meet, podrás abrirlo desde el detalle.
+              Aquí verás tus solicitudes pendientes, pagos por completar y citas
+              ya confirmadas.
             </p>
           </div>
         </div>
@@ -293,7 +246,7 @@ export default function Citas() {
                 className="inline-flex items-center gap-2 rounded-full bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700"
               >
                 <CalendarDays size={16} />
-                Nueva cita
+                Nueva solicitud
               </Link>
             </div>
 
@@ -350,10 +303,12 @@ export default function Citas() {
                     <div className="mt-3 space-y-2">
                       {items.slice(0, 2).map((item) => (
                         <div
-                          key={item.reunion_id}
-                          className="rounded-xl border border-blue-100 bg-blue-50 px-2 py-1.5 text-[11px] font-semibold text-blue-700"
+                          key={item.validation_cita_id}
+                          className={`rounded-xl border px-2 py-1.5 text-[11px] font-semibold ${estadoBadgeClass(
+                            item.status,
+                          )}`}
                         >
-                          {formatterHora.format(new Date(item.inicio))}
+                          {formatterHora.format(new Date(item.start_at))}
                         </div>
                       ))}
                       {items.length > 2 && (
@@ -380,34 +335,36 @@ export default function Citas() {
               <div className="mt-6 space-y-3">
                 {loading ? (
                   <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
-                    Cargando citas...
+                    Cargando solicitudes...
                   </div>
                 ) : citasDelDia.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
-                    No hay reuniones para este día.
+                    No hay citas o solicitudes para este día.
                   </div>
                 ) : (
                   citasDelDia.map((cita) => (
                     <button
-                      key={cita.reunion_id}
+                      key={cita.validation_cita_id}
                       type="button"
-                      onClick={() => setSelectedCitaId(cita.reunion_id)}
+                      onClick={() => setSelectedCitaId(cita.validation_cita_id)}
                       className="w-full rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-left transition hover:bg-slate-50"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <p className="text-sm font-bold text-slate-900">
-                            {cita.asesor_nombre || 'Asesor asignado'}
+                            {cita.advisor_nombre || 'Asesor asignado'}
                           </p>
                           <p className="mt-1 text-xs text-slate-500">
-                            {formatterHora.format(new Date(cita.inicio))} -{' '}
-                            {formatterHora.format(new Date(cita.fin))}
+                            {formatterHora.format(new Date(cita.start_at))} -{' '}
+                            {formatterHora.format(new Date(cita.end_at))}
                           </p>
                         </div>
                         <span
-                          className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase ${estadoBadgeClass(cita.estado)}`}
+                          className={`rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase ${estadoBadgeClass(
+                            cita.status,
+                          )}`}
                         >
-                          {cita.estado}
+                          {estadoTexto(cita.status)}
                         </span>
                       </div>
                     </button>
@@ -418,41 +375,37 @@ export default function Citas() {
 
             <Card className="rounded-[32px] border border-white/70 bg-white/80 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
-                Próxima reunión
+                Próximo estado activo
               </p>
 
               {proximaCita ? (
                 <div className="mt-5 space-y-4">
                   <div>
                     <p className="text-lg font-bold text-slate-900">
-                      {proximaCita.asesor_nombre || 'Asesor asignado'}
+                      {proximaCita.advisor_nombre || 'Asesor asignado'}
                     </p>
                     <p className="mt-1 text-sm text-slate-500">
-                      {formatterFechaHora.format(new Date(proximaCita.inicio))}
+                      {formatterFechaHora.format(new Date(proximaCita.start_at))}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-2 text-sm text-slate-500">
                     <Clock3 className="h-4 w-4" />
-                    {formatterHora.format(new Date(proximaCita.inicio))} -{' '}
-                    {formatterHora.format(new Date(proximaCita.fin))}
+                    {formatterHora.format(new Date(proximaCita.start_at))} -{' '}
+                    {formatterHora.format(new Date(proximaCita.end_at))}
                   </div>
 
-                  {proximaCita.enlace_reunion && (
-                    <a
-                      href={proximaCita.enlace_reunion}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-                    >
-                      Abrir Google Meet
-                      <ExternalLink className="h-4 w-4" />
-                    </a>
-                  )}
+                  <span
+                    className={`inline-flex w-fit rounded-full border px-3 py-1 text-[10px] font-bold uppercase ${estadoBadgeClass(
+                      proximaCita.status,
+                    )}`}
+                  >
+                    {estadoTexto(proximaCita.status)}
+                  </span>
                 </div>
               ) : (
                 <p className="mt-4 text-sm text-slate-500">
-                  No se encontraron reuniones próximas en este rango.
+                  No se encontraron citas próximas en este rango.
                 </p>
               )}
             </Card>
@@ -463,19 +416,15 @@ export default function Citas() {
       <Modal
         open={Boolean(selectedCitaId)}
         onClose={() => setSelectedCitaId(null)}
-        title={detalleCita?.asesor_nombre || 'Detalle de la cita'}
-        subtitle="Información de la reunión"
+        title={selectedCita?.advisor_nombre || 'Detalle de la solicitud'}
+        subtitle="Información de la cita"
         primaryAction={{
           label: 'Cerrar',
           onClick: () => setSelectedCitaId(null),
         }}
       >
         <div className="space-y-4 text-left">
-          {loadingDetalle ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 p-5 text-sm text-slate-500">
-              Cargando detalle...
-            </div>
-          ) : detalleCita ? (
+          {selectedCita ? (
             <>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="rounded-2xl bg-slate-50 p-4">
@@ -483,15 +432,15 @@ export default function Citas() {
                     Fecha
                   </p>
                   <p className="mt-2 text-sm font-semibold text-slate-900">
-                    {formatterFechaHora.format(new Date(detalleCita.inicio))}
+                    {formatterFechaHora.format(new Date(selectedCita.start_at))}
                   </p>
                 </div>
                 <div className="rounded-2xl bg-slate-50 p-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
                     Estado
                   </p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">
-                    {detalleCita.estado_reunion}
+                  <p className="mt-2 text-sm font-semibold capitalize text-slate-900">
+                    {estadoTexto(selectedCita.status)}
                   </p>
                 </div>
               </div>
@@ -504,13 +453,13 @@ export default function Citas() {
                       Horario
                     </p>
                     <p className="text-sm font-medium text-slate-700">
-                      {formatterHora.format(new Date(detalleCita.inicio))} -{' '}
-                      {formatterHora.format(new Date(detalleCita.fin))}
+                      {formatterHora.format(new Date(selectedCita.start_at))} -{' '}
+                      {formatterHora.format(new Date(selectedCita.end_at))}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 rounded-2xl border border-slate-200 p-4">
-                  {detalleCita.modalidad === 'virtual' ? (
+                  {selectedCita.modalidad === 'virtual' ? (
                     <Video className="h-4 w-4 text-slate-400" />
                   ) : (
                     <MapPin className="h-4 w-4 text-slate-400" />
@@ -520,59 +469,57 @@ export default function Citas() {
                       Modalidad
                     </p>
                     <p className="text-sm font-medium text-slate-700">
-                      {detalleCita.modalidad || 'No especificada'}
+                      {selectedCita.modalidad || 'No especificada'}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {detalleCita.lugar && (
+              {selectedCita.motivo && (
                 <div className="rounded-2xl border border-slate-200 p-4">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-400">
-                    Lugar
+                    Motivo
                   </p>
                   <p className="mt-1 text-sm text-slate-700">
-                    {detalleCita.lugar}
+                    {selectedCita.motivo}
                   </p>
                 </div>
               )}
 
-              {detalleCita.notas && (
+              {selectedCita.notas && (
                 <div className="rounded-2xl border border-slate-200 p-4">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-400">
                     Notas
                   </p>
                   <p className="mt-1 text-sm text-slate-700">
-                    {detalleCita.notas}
+                    {selectedCita.notas}
                   </p>
                 </div>
               )}
 
               <div className="flex flex-col gap-3 sm:flex-row">
-                {detalleCita.enlace_reunion && (
-                  <a
-                    href={detalleCita.enlace_reunion}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex-1 rounded-2xl bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
+                {selectedCita.status === 'payment_pending' && (
+                  <Link
+                    to="/student/payments"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
                   >
-                    Unirse a Google Meet
-                  </a>
+                    <CreditCard className="h-4 w-4" />
+                    Ir a pagos
+                  </Link>
                 )}
 
-                {['pendiente', 'confirmado'].includes(
-                  detalleCita.estado_reunion,
-                ) && (
-                  <button
-                    type="button"
-                    onClick={handleCancelarCita}
-                    disabled={cancelando}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    <XCircle className="h-4 w-4" />
-                    {cancelando ? 'Cancelando...' : 'Cancelar cita'}
-                  </button>
-                )}
+                {selectedCita.status === 'confirmed' &&
+                  selectedCita.enlace_reunion && (
+                    <a
+                      href={selectedCita.enlace_reunion}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
+                    >
+                      Abrir reunión
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
               </div>
             </>
           ) : (

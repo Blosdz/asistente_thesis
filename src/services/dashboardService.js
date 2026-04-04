@@ -32,6 +32,24 @@ export async function obtenerMisCitasEstudiante({
   return data ?? [];
 }
 
+export async function obtenerHistorialValidacionesCitaEstudiante(
+  status = null,
+) {
+  const { data, error } = await atSchema().rpc(
+    'obtener_historial_validaciones_cita_estudiante',
+    {
+      p_status: status,
+    },
+  );
+
+  if (error) {
+    console.error('Error obteniendo historial de solicitudes de cita:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
 export async function obtenerDetalleCitaEstudiante(reunionId) {
   const { data, error } = await atSchema().rpc(
     'obtener_detalle_cita_estudiante',

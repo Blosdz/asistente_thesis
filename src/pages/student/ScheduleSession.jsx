@@ -10,10 +10,9 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import Modal from '../../components/ui/modal';
-import { obtenerAsesores } from '../../services/advisorService';
+import { crearCitaAsesoria, obtenerAsesores } from '../../services/advisorService';
 import {
   disponibilidadAsesorSemana,
-  reservarReunion,
 } from '../../services/pagosService';
 
 const formatTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -83,15 +82,22 @@ export default function ScheduleSession() {
     }
     try {
       setBooking(true);
-      const result = await reservarReunion({
-        disponibilidadId: selectedSlot.disponibilidad_id,
-        asesorId: selectedAdvisorId,
-        motivo: 'Reserva de sesión',
-        modalidad: 'virtual',
+      const result = await crearCitaAsesoria({
+        p_asesor_id: selectedAdvisorId,
+        p_disponibilidad_id: selectedSlot.disponibilidad_id,
+        p_inicio: selectedSlot.inicio,
+        p_fin: selectedSlot.fin,
+        p_tesis_id: null,
+        p_motivo: 'Solicitud de sesión',
+        p_modalidad: 'virtual',
+        p_lugar: null,
+        p_enlace_reunion: null,
+        p_notas: null,
       });
       setBookingResult(result);
       setConfirmOpen(false);
       setResultOpen(true);
+      toast.success('Solicitud enviada al asesor');
     } catch (error) {
       console.error(error);
       toast.error(error.message || 'No se pudo reservar');
@@ -191,7 +197,7 @@ export default function ScheduleSession() {
                 disabled={!selectedSlot || booking}
                 onClick={() => setConfirmOpen(true)}
               >
-                {booking ? 'Reservando...' : 'Confirmar Reserva'}
+                {booking ? 'Enviando...' : 'Solicitar Reserva'}
               </Button>
             </div>
 
@@ -212,10 +218,10 @@ export default function ScheduleSession() {
         open={confirmOpen && !!selectedSlot}
         onClose={() => !booking && setConfirmOpen(false)}
         title="Confirmar reserva"
-        subtitle="Se generará una nota de pago de S/200"
+        subtitle="La solicitud quedará pendiente de validación"
         description={selectedSlot ? `${formatDate(selectedSlot.inicio)} · ${formatTime(selectedSlot.inicio)} - ${formatTime(selectedSlot.fin)}` : ''}
         primaryAction={{
-          label: booking ? 'Reservando...' : 'Reservar y pagar',
+          label: booking ? 'Enviando...' : 'Solicitar reserva',
           onClick: handleReserve,
         }}
         secondaryAction={{
@@ -227,27 +233,17 @@ export default function ScheduleSession() {
       <Modal
         open={resultOpen}
         onClose={() => setResultOpen(false)}
-        title="Reserva creada"
-        subtitle="Revisa tu pago pendiente"
-        description={bookingResult ? `Pago ID: ${bookingResult.pago_id}\nEstado: ${bookingResult.estado}` : ''}
+        title="Solicitud creada"
+        subtitle="Espera la respuesta del asesor"
+        description={bookingResult ? `Solicitud ID: ${bookingResult.validation_cita_id}\nEstado: ${bookingResult.estado}` : ''}
         primaryAction={{
           label: 'Listo',
           onClick: () => setResultOpen(false),
         }}
       >
-        {bookingResult?.enlace && (
-          <div className="text-sm text-slate-700 bg-white/70 border border-slate-200 rounded-2xl p-4">
-            <p className="font-semibold mb-1">Enlace provisional:</p>
-            <a
-              className="text-blue-600 hover:underline break-all"
-              href={bookingResult.enlace}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {bookingResult.enlace}
-            </a>
-          </div>
-        )}
+        <div className="text-sm text-slate-700 bg-white/70 border border-slate-200 rounded-2xl p-4">
+          El pago se generará solo si el asesor acepta tu solicitud.
+        </div>
       </Modal>
     </div>
   );

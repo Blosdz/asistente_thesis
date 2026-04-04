@@ -18,6 +18,7 @@ import Profile from './pages/student/Profile';
 import AdvisorLayout from './layouts/AdvisorLayout';
 import AdvisorProfile from './pages/advisor/Profile';
 import AdvisorStudents from './pages/advisor/Students';
+import AdvisorReservations from './pages/advisor/Reservations';
 import AdvisorCalendar from './pages/advisor/Calendar';
 import AdvisorThesisReview from './pages/advisor/ThesisReview';
 import AdvisorStudentDetail from './pages/advisor/StudentDetail';
@@ -101,6 +102,7 @@ const AppRoutes = () => {
         <Route index element={<Navigate to="students" replace />} />
         <Route path="profile" element={<AdvisorProfile />} />
         <Route path="students" element={<AdvisorStudents />} />
+        <Route path="reservations" element={<AdvisorReservations />} />
         <Route path="students/:studentId" element={<AdvisorStudentDetail />} />
         <Route path="calendar" element={<AdvisorCalendar />} />
         <Route path="thesis" element={<AdvisorThesisReview />} />

@@ -4,10 +4,10 @@ import { Card } from '../../components/ui/card';
 import Modal from '../../components/ui/modal';
 import { Select, SelectItem } from '../../components/ui/select';
 import {
+  crearCitaAsesoria,
   obtenerAsesores,
   obtenerHorariosPresustentacionAsesor,
 } from '../../services/advisorService';
-import { reservarReunion } from '../../services/pagosService';
 import {
   ArrowRight,
   CalendarDays,
@@ -377,17 +377,23 @@ const Services = () => {
 
     try {
       setBooking(true);
-      const result = await reservarReunion({
-        disponibilidadId: selectedSlot.disponibilidad_id,
-        asesorId: selectedAdvisor.id,
-        motivo: 'Reserva de pre-sustentación',
-        modalidad: 'virtual',
+      const result = await crearCitaAsesoria({
+        p_asesor_id: selectedAdvisor.id,
+        p_disponibilidad_id: selectedSlot.disponibilidad_id,
+        p_inicio: selectedSlot.inicio,
+        p_fin: selectedSlot.fin,
+        p_tesis_id: null,
+        p_motivo: 'Solicitud de pre-sustentación',
+        p_modalidad: 'virtual',
+        p_lugar: null,
+        p_enlace_reunion: null,
+        p_notas: null,
       });
 
       setBookingResult(result || null);
       setConfirmOpen(false);
       setResultOpen(true);
-      toast.success('Pre-sustentación reservada correctamente');
+      toast.success('Solicitud enviada al asesor');
 
       const refreshed = await obtenerHorariosPresustentacionAsesor(
         selectedAdvisor.id,
@@ -787,11 +793,11 @@ const Services = () => {
                     disabled={!selectedAdvisor || !selectedSlot || booking}
                     className="w-full py-5 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-500 text-white font-headline font-bold text-base shadow-[0_10px_30px_rgba(10,71,238,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
-                    <span>Reservar y pagar</span>
+                    <span>Solicitar reserva</span>
                     <ArrowRight className="w-5 h-5" />
                   </button>
                   <p className="text-center text-[10px] text-slate-500 mt-4 font-medium">
-                    Se generará una nota de pago para tu pre-sustentación
+                    El asesor debe aceptar tu solicitud antes de generar el pago
                   </p>
                 </section>
               </div>
@@ -804,7 +810,7 @@ const Services = () => {
         open={confirmOpen && !!selectedAdvisor && !!selectedSlot}
         onClose={() => !booking && setConfirmOpen(false)}
         title="Confirmar reserva"
-        subtitle="Pre-sustentación"
+        subtitle="La solicitud quedará pendiente de validación"
         description={
           selectedAdvisor && selectedSlot
             ? `${selectedAdvisor.name} · ${formatFullDate(selectedSlot.inicio)} · ${formatTime(
@@ -813,7 +819,7 @@ const Services = () => {
             : ''
         }
         primaryAction={{
-          label: booking ? 'Reservando...' : 'Reservar y generar pago',
+          label: booking ? 'Enviando...' : 'Solicitar reserva',
           onClick: handleReserve,
         }}
         secondaryAction={{
@@ -825,11 +831,11 @@ const Services = () => {
       <Modal
         open={resultOpen}
         onClose={() => setResultOpen(false)}
-        title="Reserva creada"
-        subtitle="Tu pre-sustentación quedó registrada"
+        title="Solicitud creada"
+        subtitle="Ahora debes esperar la validación del asesor"
         description={
           bookingResult
-            ? `Reunión ID: ${bookingResult.reunion_id}\nPago ID: ${bookingResult.pago_id}\nEstado: ${bookingResult.estado || 'pendiente'}`
+            ? `Solicitud ID: ${bookingResult.validation_cita_id}\nEstado: ${bookingResult.estado || 'pending'}`
             : ''
         }
         primaryAction={{
@@ -840,9 +846,9 @@ const Services = () => {
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left text-sm text-emerald-800">
           <div className="mb-2 flex items-center gap-2 font-semibold">
             <CheckCircle2 className="w-4 h-4" />
-            Reserva registrada correctamente
+            Solicitud registrada correctamente
           </div>
-          <p>Ahora puedes continuar con el pago desde tu bandeja de pagos.</p>
+          <p>Cuando el asesor la acepte, recién verás el pago pendiente.</p>
         </div>
       </Modal>
     </div>

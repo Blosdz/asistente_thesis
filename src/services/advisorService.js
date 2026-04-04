@@ -3,6 +3,17 @@ import { supabase } from '../lib/supabase';
 // Helper for schema
 const atSchema = () => supabase.schema('AT');
 
+const toUtcIsoString = (value) => {
+  if (!value) return value ?? null;
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toISOString();
+};
+
 export async function obtenerAsesores() {
   const { data, error } = await atSchema().rpc('obtener_asesores');
 
@@ -199,7 +210,16 @@ export async function obtenerHorariosPresustentacionAsesor(
 }
 
 export async function crearCitaAsesoria(params) {
-  const { data, error } = await atSchema().rpc('crear_cita_asesoria', params);
+  const rpcPayload = {
+    ...params,
+    p_inicio: toUtcIsoString(params?.p_inicio),
+    p_fin: toUtcIsoString(params?.p_fin),
+  };
+
+  const { data, error } = await atSchema().rpc(
+    'crear_cita_asesoria',
+    rpcPayload,
+  );
 
   if (error) {
     console.error('Error creando cita de asesoría:', error);
@@ -207,6 +227,59 @@ export async function crearCitaAsesoria(params) {
   }
 
   return Array.isArray(data) ? data[0] : data;
+}
+
+export async function obtenerHistorialValidacionesCitaAsesor(status = null) {
+  const { data, error } = await atSchema().rpc(
+    'obtener_historial_validaciones_cita_asesor',
+    {
+      p_status: status,
+    },
+  );
+
+  if (error) {
+    console.error('Error obteniendo historial de validaciones:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function responderReservaCita(validationCitaId, accion) {
+  const { data, error } = await atSchema().rpc('responder_reserva_cita', {
+    p_validation_cita_id: validationCitaId,
+    p_accion: accion,
+  });
+
+  if (error) {
+    console.error('Error respondiendo reserva de cita:', error);
+    throw error;
+  }
+
+  return Array.isArray(data) ? (data[0] ?? null) : data;
+}
+
+export async function aprobarPagoReservaCita(
+  validationCitaId,
+  {
+    enlaceReunion = null,
+    lugar = null,
+    notas = null,
+  } = {},
+) {
+  const { data, error } = await atSchema().rpc('aprobar_pago_reserva_cita', {
+    p_validation_cita_id: validationCitaId,
+    p_enlace_reunion: enlaceReunion,
+    p_lugar: lugar,
+    p_notas: notas,
+  });
+
+  if (error) {
+    console.error('Error aprobando pago de reserva:', error);
+    throw error;
+  }
+
+  return Array.isArray(data) ? (data[0] ?? null) : data;
 }
 
 export async function obtenerBloquesDisponibles(asesorId, desde, hasta) {
@@ -225,7 +298,16 @@ export async function obtenerBloquesDisponibles(asesorId, desde, hasta) {
 }
 
 export async function crearCitaEstudianteAsesor(params) {
-  const { data, error } = await atSchema().rpc('crear_cita_estudiante_asesor', params);
+  const rpcPayload = {
+    ...params,
+    p_inicio: toUtcIsoString(params?.p_inicio),
+    p_fin: toUtcIsoString(params?.p_fin),
+  };
+
+  const { data, error } = await atSchema().rpc(
+    'crear_cita_estudiante_asesor',
+    rpcPayload,
+  );
 
   if (error) {
     console.error('Error creando cita:', error);

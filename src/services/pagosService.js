@@ -2,6 +2,17 @@ import { supabase } from '../lib/supabase';
 
 const atSchema = () => supabase.schema('AT');
 
+const toUtcIsoString = (value) => {
+  if (!value) return value ?? null;
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toISOString();
+};
+
 export async function obtenerPlanesDisponibles() {
   const { data, error } = await atSchema().rpc('fn_planes_disponibles');
   if (error) {
@@ -95,8 +106,8 @@ export async function subirVoucherPago({ pagoId, file }) {
 export async function disponibilidadAsesorSemana({ asesorId, desde, hasta }) {
   const { data, error } = await atSchema().rpc('fn_disponibilidad_asesor_semana', {
     p_asesor: asesorId,
-    desde,
-    hasta,
+    desde: toUtcIsoString(desde),
+    hasta: toUtcIsoString(hasta),
   });
   if (error) {
     console.error('Error obteniendo disponibilidad:', error);
@@ -105,7 +116,13 @@ export async function disponibilidadAsesorSemana({ asesorId, desde, hasta }) {
   return data ?? [];
 }
 
-export async function reservarReunion({ disponibilidadId, asesorId, tesisId = null, motivo = '', modalidad = 'virtual' }) {
+export async function reservarReunion({
+  disponibilidadId,
+  asesorId,
+  tesisId = null,
+  motivo = '',
+  modalidad = 'virtual',
+}) {
   const { data, error } = await atSchema().rpc('fn_reservar_reunion', {
     p_disponibilidad: disponibilidadId,
     p_asesor: asesorId,

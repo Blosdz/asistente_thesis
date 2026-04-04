@@ -3,6 +3,7 @@ import {
   Users,
   CalendarDays,
   BookOpenCheck,
+  ClipboardCheck,
   User as UserIcon,
   LogOut,
   Settings,
@@ -129,6 +130,11 @@ const AdvisorLayout = () => {
       label: 'Estudiantes',
       path: '/advisor/students',
       icon: <Users size={18} />,
+    },
+    {
+      label: 'Reservas',
+      path: '/advisor/reservations',
+      icon: <ClipboardCheck size={18} />,
     },
     {
       label: 'Calendario',

@@ -440,7 +440,7 @@ const Advisors = () => {
       setBookingResult(result || null);
       setConfirmOpen(false);
       setResultOpen(true);
-      toast.success('Cita creada correctamente');
+      toast.success('Solicitud enviada al asesor');
 
       const refreshedSlots = await obtenerHorariosDisponiblesAsesor(
         selectedAdvisor.id,
@@ -954,12 +954,11 @@ const Advisors = () => {
                     }
                     className="w-full py-5 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-500 text-white font-headline font-bold text-base shadow-[0_10px_30px_rgba(10,71,238,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
                   >
-                    <span>Reservar y pagar</span>
+                    <span>Solicitar reserva</span>
                     <ArrowRight className="w-5 h-5" />
                   </button>
                   <p className="text-center text-[10px] text-slate-500 mt-4 font-medium">
-                    Se creará una reunión en estado pendiente de pago por S/
-                    100.00
+                    El asesor validará tu solicitud antes de generar el pago.
                   </p>
                 </section>
               </div>
@@ -972,7 +971,7 @@ const Advisors = () => {
         open={confirmOpen && !!selectedSlot && !!selectedAdvisor}
         onClose={() => !booking && setConfirmOpen(false)}
         title="Confirmar reserva"
-        subtitle="Se generará una nota de pago de S/ 100.00"
+        subtitle="La solicitud quedará pendiente de validación"
         description={
           selectedSlot && selectedAdvisor
             ? `${selectedAdvisor.name} · ${formatFullDate(selectedSlot.inicio_bloque)} · ${formatTime(
@@ -981,7 +980,7 @@ const Advisors = () => {
             : ''
         }
         primaryAction={{
-          label: booking ? 'Reservando...' : 'Reservar y generar pago',
+          label: booking ? 'Enviando...' : 'Solicitar reserva',
           onClick: handleReserve,
         }}
         secondaryAction={{
@@ -993,11 +992,11 @@ const Advisors = () => {
       <Modal
         open={resultOpen}
         onClose={() => setResultOpen(false)}
-        title="Cita creada"
-        subtitle="Tu pago quedó pendiente"
+        title="Solicitud creada"
+        subtitle="Ahora debes esperar la respuesta del asesor"
         description={
           bookingResult
-            ? `Reunión ID: ${bookingResult.reunion_id}\nPago ID: ${bookingResult.pago_id}\nEstado: ${bookingResult.estado_pago || bookingResult.estado || 'pendiente'}`
+            ? `Solicitud ID: ${bookingResult.validation_cita_id}\nEstado: ${bookingResult.estado || 'pending'}`
             : ''
         }
         primaryAction={{
@@ -1008,11 +1007,10 @@ const Advisors = () => {
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left text-sm text-emerald-800">
           <div className="mb-2 flex items-center gap-2 font-semibold">
             <CheckCircle2 className="w-4 h-4" />
-            Reserva registrada correctamente
+            Solicitud registrada correctamente
           </div>
           <p>
-            Ahora puedes continuar con el flujo de pago desde tu bandeja de
-            pagos.
+            Cuando el asesor la acepte, verás el pago pendiente en tu bandeja.
           </p>
         </div>
       </Modal>
