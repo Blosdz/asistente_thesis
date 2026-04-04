@@ -28,7 +28,7 @@ function construirRedirectResetPassword(redirectTo) {
     return undefined;
   }
 
-  return `${window.location.origin}/reset-password`;
+  return `${window.location.origin}/#/reset-password`;
 }
 
 export async function registrarEstudiante(email, password, name) {

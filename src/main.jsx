@@ -1,6 +1,7 @@
+/* eslint-disable react-refresh/only-export-components */
 import { StrictMode, useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import './index.css';
 import App from './App.jsx';
 
@@ -22,9 +23,9 @@ const Root = () => {
 
   return (
     <StrictMode>
-      <BrowserRouter>
+      <HashRouter>
         <App />
-      </BrowserRouter>
+      </HashRouter>
     </StrictMode>
   );
 };
