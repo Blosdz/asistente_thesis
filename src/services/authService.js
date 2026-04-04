@@ -19,6 +19,18 @@ async function encolarInvitacionSignup({ email, name, rol }) {
   return data;
 }
 
+function construirRedirectResetPassword(redirectTo) {
+  if (redirectTo) {
+    return redirectTo;
+  }
+
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  return `${window.location.origin}/reset-password`;
+}
+
 export async function registrarEstudiante(email, password, name) {
   try {
     const { data, error } = await supabase.auth.signUp({
@@ -121,4 +133,63 @@ export async function isAuthenticated() {
   } = await supabase.auth.getSession();
   if (error) return false;
   return !!session;
+}
+
+export async function getCurrentSession() {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) {
+    throw error;
+  }
+
+  return session;
+}
+
+export async function enviarResetPassword(email, options = {}) {
+  const redirectTo = construirRedirectResetPassword(options.redirectTo);
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export async function cambiarPassword(password) {
+  const { data, error } = await supabase.auth.updateUser({
+    password,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+export function escucharCambiosAuth(callback) {
+  return supabase.auth.onAuthStateChange(callback);
+}
+
+export function esFlujoRecuperacionPassword() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+
+  return (
+    searchParams.get('type') === 'recovery' ||
+    hashParams.get('type') === 'recovery' ||
+    searchParams.has('code') ||
+    searchParams.has('token_hash') ||
+    hashParams.has('access_token')
+  );
 }

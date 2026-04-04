@@ -138,20 +138,17 @@ export async function obtenerSugerenciasMiTesis(tesisId) {
 
 export async function marcarSugerenciaAplicadaEstudiante(
   sugerenciaId,
-  aplicado,
+  comentarioEstudiante = null,
 ) {
-  const { data, error } = await atSchema().rpc(
-    'marcar_sugerencia_aplicada_estudiante',
-    {
-      p_sugerencia_id: sugerenciaId,
-      p_aplicado: aplicado,
-    },
-  );
+  const { data, error } = await atSchema().rpc('marcar_sugerencia_aplicada', {
+    p_historial_sugerencia_id: sugerenciaId,
+    p_comentario_estudiante: comentarioEstudiante,
+  });
 
   if (error) {
     console.error('Error marcando sugerencia como aplicada:', error);
     throw error;
   }
 
-  return data?.[0] ?? null;
+  return Array.isArray(data) ? (data[0] ?? null) : data;
 }

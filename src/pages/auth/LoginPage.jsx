@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Lock, Eye, EyeOff, Fingerprint, ScanFace } from 'lucide-react';
-import { loginUsuario } from '../../services/authService';
+import { User, Lock, Eye, EyeOff, Mail, Loader2 } from 'lucide-react';
+import { enviarResetPassword, loginUsuario } from '../../services/authService';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [resetEmail, setResetEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetLoading, setIsResetLoading] = useState(false);
+  const [showResetForm, setShowResetForm] = useState(false);
   const [error, setError] = useState('');
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -29,6 +34,42 @@ const LoginPage = () => {
       setError(err.message || 'Login failed. Please try again.');
       setIsLoading(false);
     }
+  };
+
+  const handleResetPassword = async (event) => {
+    event.preventDefault();
+    setResetError('');
+    setResetSuccess('');
+
+    const emailToReset = resetEmail.trim() || email.trim();
+    if (!emailToReset) {
+      setResetError('Ingresa tu correo para enviarte el enlace de recuperación.');
+      return;
+    }
+
+    try {
+      setIsResetLoading(true);
+      await enviarResetPassword(emailToReset);
+      setResetEmail(emailToReset);
+      setResetSuccess(
+        'Te enviamos un enlace para cambiar tu contraseña. Revisa también spam o promociones.',
+      );
+    } catch (resetPasswordError) {
+      console.error('Error sending reset password email:', resetPasswordError);
+      setResetError(
+        resetPasswordError.message ||
+          'No se pudo enviar el enlace de recuperación.',
+      );
+    } finally {
+      setIsResetLoading(false);
+    }
+  };
+
+  const toggleResetForm = () => {
+    setShowResetForm((current) => !current);
+    setResetError('');
+    setResetSuccess('');
+    setResetEmail((current) => current || email);
   };
 
   return (
@@ -103,12 +144,13 @@ const LoginPage = () => {
               <label className="text-[13px] font-medium text-slate-500">
                 Contraseña
               </label>
-              {/* <a
-                href="#"
+              <button
+                type="button"
+                onClick={toggleResetForm}
                 className="text-[13px] font-medium text-ios-blue hover:opacity-80 transition-opacity"
               >
-                Forgot?
-              </a> */}
+                {showResetForm ? 'Ocultar' : '¿Olvidaste tu contraseña?'}
+              </button>
             </div>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-ios-blue transition-colors">
@@ -141,24 +183,65 @@ const LoginPage = () => {
           </button>
         </form>
 
+        {showResetForm && (
+          <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+            <div className="flex items-start gap-3">
+              <div className="mt-0.5 rounded-xl bg-white/80 p-2 text-blue-600">
+                <Mail size={18} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm font-semibold text-slate-900">
+                  Recuperar contraseña
+                </h2>
+                <p className="mt-1 text-xs leading-6 text-slate-500">
+                  Te enviaremos un enlace seguro a tu correo para que completes
+                  el cambio desde la ruta <strong>/reset-password</strong>.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleResetPassword} className="mt-4 space-y-3">
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-ios-blue transition-colors">
+                  <User size={18} />
+                </div>
+                <input
+                  type="email"
+                  value={resetEmail}
+                  onChange={(event) => setResetEmail(event.target.value)}
+                  className="block w-full rounded-xl border border-white/70 bg-white/85 py-3.5 pl-11 pr-4 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-ios-blue/20 transition-all text-sm"
+                  placeholder="name@university.edu"
+                  required
+                />
+              </div>
+
+              {resetError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {resetError}
+                </div>
+              )}
+
+              {resetSuccess && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {resetSuccess}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isResetLoading}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {isResetLoading && <Loader2 size={16} className="animate-spin" />}
+                {isResetLoading
+                  ? 'Enviando enlace...'
+                  : 'Enviar enlace de recuperación'}
+              </button>
+            </form>
+          </div>
+        )}
+
         <div className="mt-8 flex flex-col gap-4 text-center">
-          {/* <div className="flex items-center gap-4 text-slate-300">
-            <div className="h-px w-full bg-current"></div>
-            <span className="text-xs uppercase tracking-widest font-semibold text-slate-400">
-              or
-            </span>
-            <div className="h-px w-full bg-current"></div>
-          </div> */}
-
-          {/* <div className="flex justify-center gap-6">
-            <button className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-100/50 text-slate-600 hover:bg-slate-200/50 transition-all">
-              <ScanFace size={24} />
-            </button>
-            <button className="flex items-center justify-center w-12 h-12 rounded-full bg-slate-100/50 text-slate-600 hover:bg-slate-200/50 transition-all">
-              <Fingerprint size={24} />
-            </button> 
-          </div>*/}
-
           <p className="text-sm text-slate-500">
             Registrate{' '}
             <Link

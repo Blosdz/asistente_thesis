@@ -26,6 +26,18 @@ async function encolarInvitacionSignup(params: {
   return data;
 }
 
+function construirRedirectResetPassword(redirectTo?: string) {
+  if (redirectTo) {
+    return redirectTo;
+  }
+
+  if (typeof window === "undefined") {
+    return undefined;
+  }
+
+  return `${window.location.origin}/reset-password`;
+}
+
 export async function registrarEstudiante(
   email: string,
   password: string,
@@ -127,4 +139,71 @@ export async function getCurrentUser() {
   const { data, error } = await supabase.auth.getUser();
   if (error) throw error;
   return data.user;
+}
+
+export async function isAuthenticated() {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) return false;
+  return !!session;
+}
+
+export async function getCurrentSession() {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) throw error;
+  return session;
+}
+
+export async function enviarResetPassword(
+  email: string,
+  options: {
+    redirectTo?: string;
+  } = {},
+) {
+  const redirectTo = construirRedirectResetPassword(options.redirectTo);
+  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function cambiarPassword(password: string) {
+  const { data, error } = await supabase.auth.updateUser({
+    password,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+export function escucharCambiosAuth(
+  callback: Parameters<typeof supabase.auth.onAuthStateChange>[0],
+) {
+  return supabase.auth.onAuthStateChange(callback);
+}
+
+export function esFlujoRecuperacionPassword() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  const searchParams = new URLSearchParams(window.location.search);
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+
+  return (
+    searchParams.get("type") === "recovery" ||
+    hashParams.get("type") === "recovery" ||
+    searchParams.has("code") ||
+    searchParams.has("token_hash") ||
+    hashParams.has("access_token")
+  );
 }

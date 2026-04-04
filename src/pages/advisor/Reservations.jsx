@@ -10,6 +10,7 @@ import {
 const STATUS_OPTIONS = [
   { value: 'all', label: 'Todas' },
   { value: 'pending', label: 'Pendientes' },
+  { value: 'approved', label: 'Aprobadas' },
   { value: 'payment_pending', label: 'Pago pendiente' },
   { value: 'confirmed', label: 'Confirmadas' },
   { value: 'rejected', label: 'Rechazadas' },
@@ -17,6 +18,7 @@ const STATUS_OPTIONS = [
 
 const statusStyles = {
   pending: 'bg-amber-100 text-amber-700',
+  approved: 'bg-cyan-100 text-cyan-700',
   payment_pending: 'bg-blue-100 text-blue-700',
   confirmed: 'bg-emerald-100 text-emerald-700',
   rejected: 'bg-rose-100 text-rose-700',
@@ -92,7 +94,14 @@ export default function AdvisorReservations() {
         acc[item.status] = (acc[item.status] || 0) + 1;
         return acc;
       },
-      { total: 0, pending: 0, payment_pending: 0, confirmed: 0, rejected: 0 },
+      {
+        total: 0,
+        pending: 0,
+        approved: 0,
+        payment_pending: 0,
+        confirmed: 0,
+        rejected: 0,
+      },
     );
   }, [items]);
 

@@ -10,10 +10,13 @@ import {
   Info,
   MessageSquare,
   Send,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Select, SelectItem } from '../../components/ui/select';
 import { toast } from 'react-hot-toast';
+import Modal from '../../components/ui/modal';
 
 import {
   getTesisAsesor,
@@ -21,8 +24,14 @@ import {
   obtenerDocumentosTesisAsignada,
   registrarSugerenciaAsesor,
   listarTiposSugerenciaAsesor,
+  validarAplicacionSugerenciaAsesor,
 } from '../../services/advisorService';
 import { subirDocumentoAGoogleDrive } from '../../services/thesisService';
+import {
+  canAdvisorValidateSuggestion,
+  getSuggestionId,
+  getSuggestionStatusMeta,
+} from '../../lib/suggestionValidation';
 
 const normalizeSuggestionTone = (codigo = '', nombre = '') => {
   const raw = `${codigo} ${nombre}`.toLowerCase();
@@ -71,6 +80,13 @@ export default function AdvisorThesisReview() {
   const [suggestionTypeId, setSuggestionTypeId] = useState('');
   const [suggestionTypes, setSuggestionTypes] = useState([]);
   const [suggestionsList, setSuggestionsList] = useState([]);
+  const [validationModal, setValidationModal] = useState({
+    open: false,
+    suggestion: null,
+    approved: true,
+    comment: '',
+  });
+  const [submittingValidation, setSubmittingValidation] = useState(false);
 
   const buildPreviewUrl = useCallback((url) => {
     if (!url) return null;
@@ -191,6 +207,11 @@ export default function AdvisorThesisReview() {
     [thesisList, selectedThesisId],
   );
 
+  const pendingAdvisorValidations = useMemo(
+    () => suggestionsList.filter((item) => canAdvisorValidateSuggestion(item)).length,
+    [suggestionsList],
+  );
+
   const handleSubmitSuggestion = async (e) => {
     e.preventDefault();
     if (!currentThesis) return;
@@ -228,6 +249,62 @@ export default function AdvisorThesisReview() {
       toast.error(error?.message || 'No se pudo enviar la sugerencia');
     } finally {
       setSendingSuggestion(false);
+    }
+  };
+
+  const openValidationModal = (suggestion, approved) => {
+    setValidationModal({
+      open: true,
+      suggestion,
+      approved,
+      comment: approved ? '' : suggestion?.comentario_asesor || '',
+    });
+  };
+
+  const closeValidationModal = () => {
+    setValidationModal({
+      open: false,
+      suggestion: null,
+      approved: true,
+      comment: '',
+    });
+  };
+
+  const handleSubmitValidation = async () => {
+    if (submittingValidation) return;
+
+    const suggestionId = getSuggestionId(validationModal.suggestion);
+    if (!suggestionId) {
+      toast.error('No se pudo identificar la sugerencia');
+      return;
+    }
+
+    if (!validationModal.approved && !validationModal.comment.trim()) {
+      toast.error('Agrega un comentario para explicar el rechazo');
+      return;
+    }
+
+    try {
+      setSubmittingValidation(true);
+      await validarAplicacionSugerenciaAsesor({
+        sugerenciaId: suggestionId,
+        aprobado: validationModal.approved,
+        comentarioAsesor: validationModal.comment.trim() || null,
+      });
+
+      toast.success(
+        validationModal.approved
+          ? 'Aplicacion validada correctamente'
+          : 'Aplicacion rechazada con observaciones',
+      );
+
+      closeValidationModal();
+      await loadSuggestions(selectedThesisId);
+    } catch (error) {
+      console.error('Error validating suggestion:', error);
+      toast.error(error?.message || 'No se pudo validar la sugerencia');
+    } finally {
+      setSubmittingValidation(false);
     }
   };
 
@@ -512,9 +589,19 @@ export default function AdvisorThesisReview() {
 
       {currentThesis && (
         <aside className="hidden xl:flex w-[340px] bg-white/60 backdrop-blur-xl rounded-3xl p-6 flex-col shadow-sm border border-slate-200/60 h-full flex-shrink-0">
-          <h2 className="text-xl font-black text-slate-900 tracking-tight mb-6">
-            Sugerencias del Asesor
-          </h2>
+          <div className="mb-6 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                Sugerencias del Asesor
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                {pendingAdvisorValidations} pendiente(s) por validar
+              </p>
+            </div>
+            <span className="rounded-full bg-sky-50 px-2 py-1 text-[10px] font-bold text-sky-700">
+              {suggestionsList.length} total
+            </span>
+          </div>
 
           <div className="flex-1 space-y-3 overflow-y-auto mb-6 pr-2 custom-scrollbar">
             {suggestionsList.length > 0 ? (
@@ -527,6 +614,8 @@ export default function AdvisorThesisReview() {
                   sug.tipo_codigo,
                   sug.tipo_nombre,
                 );
+                const statusMeta = getSuggestionStatusMeta(sug);
+                const canValidate = canAdvisorValidateSuggestion(sug);
 
                 return (
                   <div
@@ -549,22 +638,56 @@ export default function AdvisorThesisReview() {
                     <p className="text-sm text-slate-700 leading-relaxed break-words">
                       {detalle}
                     </p>
+                    {sug.comentario_estudiante && (
+                      <div className="mt-3 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                          Comentario del estudiante
+                        </p>
+                        <p className="mt-1 text-xs text-slate-700 leading-relaxed">
+                          {sug.comentario_estudiante}
+                        </p>
+                      </div>
+                    )}
+                    {sug.comentario_asesor && (
+                      <div className="mt-3 rounded-xl bg-rose-50 border border-rose-100 px-3 py-2">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-rose-600">
+                          Ultima observacion del asesor
+                        </p>
+                        <p className="mt-1 text-xs text-rose-700 leading-relaxed">
+                          {sug.comentario_asesor}
+                        </p>
+                      </div>
+                    )}
                     <div className="mt-3 flex items-center justify-between gap-3">
                       <span
-                        className={`rounded-full px-2 py-1 text-[10px] font-bold ${
-                          sug.aplicado
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-amber-50 text-amber-700'
-                        }`}
+                        className={`rounded-full px-2 py-1 text-[10px] font-bold ${statusMeta.badgeClass}`}
                       >
-                        {sug.aplicado ? 'Aplicada' : 'Pendiente'}
+                        {statusMeta.label}
                       </span>
                       <span className="text-[11px] text-slate-500">
-                        {sug.aplicado_por_estudiante
-                          ? 'Marcada por estudiante'
-                          : 'Esperando estudiante'}
+                        {statusMeta.hint}
                       </span>
                     </div>
+                    {canValidate && (
+                      <div className="mt-3 grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openValidationModal(sug, true)}
+                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3 py-2 text-[11px] font-bold text-white transition hover:bg-emerald-700"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Verificar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => openValidationModal(sug, false)}
+                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-3 py-2 text-[11px] font-bold text-white transition hover:bg-rose-700"
+                        >
+                          <XCircle className="h-4 w-4" />
+                          Rechazar
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -626,6 +749,77 @@ export default function AdvisorThesisReview() {
           </div>
         </aside>
       )}
+
+      <Modal
+        open={validationModal.open}
+        onClose={closeValidationModal}
+        title={
+          validationModal.approved
+            ? 'Validar correccion'
+            : 'Rechazar correccion'
+        }
+        subtitle={
+          validationModal.approved
+            ? 'Confirma si la observacion ya fue atendida correctamente.'
+            : 'Explica al estudiante que aun falta corregir.'
+        }
+        primaryAction={{
+          label: submittingValidation
+            ? 'Guardando...'
+            : validationModal.approved
+              ? 'Confirmar validacion'
+              : 'Registrar rechazo',
+          onClick: handleSubmitValidation,
+        }}
+        secondaryAction={{
+          label: 'Cancelar',
+          onClick: closeValidationModal,
+        }}
+      >
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              Sugerencia
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-700">
+              {validationModal.suggestion?.detalle ||
+                validationModal.suggestion?.sugerencia ||
+                'Sin detalle'}
+            </p>
+          </div>
+          {validationModal.suggestion?.comentario_estudiante && (
+            <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-sky-700">
+                Comentario del estudiante
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-sky-900">
+                {validationModal.suggestion.comentario_estudiante}
+              </p>
+            </div>
+          )}
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Comentario del asesor
+            </label>
+            <textarea
+              rows="4"
+              value={validationModal.comment}
+              onChange={(e) =>
+                setValidationModal((current) => ({
+                  ...current,
+                  comment: e.target.value,
+                }))
+              }
+              placeholder={
+                validationModal.approved
+                  ? 'Opcional: agrega una nota final para el estudiante.'
+                  : 'Indica con claridad que falta corregir.'
+              }
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-sky-300 focus:ring-4 focus:ring-sky-100"
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

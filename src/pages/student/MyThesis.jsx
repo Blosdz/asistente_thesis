@@ -17,6 +17,12 @@ import {
   obtenerSugerenciasMiTesis,
 } from '../../services/thesisService';
 import { toast } from 'react-hot-toast';
+import {
+  getSuggestionAdvisorName,
+  getSuggestionStatusMeta,
+  getSuggestionText,
+  getSuggestionValidationState,
+} from '../../lib/suggestionValidation';
 
 const MyThesis = () => {
   const [thesesList, setThesesList] = useState([]);
@@ -216,29 +222,9 @@ const MyThesis = () => {
   };
 
   const selectedThesis = thesesList.find((t) => t.id === selectedThesisId);
-  const totalTheses = thesesList.length;
-  const totalDocuments = documents.length;
-  const totalSuggestions = sugerencias.length;
-
-  const getSuggestionText = (item) =>
-    item?.sugerencia || item?.comentario || item?.observacion || 'Sin detalle';
-
-  const getAdvisorName = (item) =>
-    item?.nombre_asesor || item?.asesor || item?.r_nombre_asesor || 'Asesor';
-
-  const getSuggestionStatus = (item) => {
-    const estado = (item?.estado || item?.estado_sugerencia || item?.r_estado || '')
-      .toString()
-      .toLowerCase();
-
-    if (estado.includes('resuelto') || estado.includes('aprob')) {
-      return { label: 'Resuelto', tone: 'success' };
-    }
-    if (estado.includes('rechaz')) {
-      return { label: 'Rechazado', tone: 'danger' };
-    }
-    return { label: 'Action required', tone: 'warning' };
-  };
+  const totalSuggestions = sugerencias.filter(
+    (item) => getSuggestionValidationState(item) !== 'verificado',
+  ).length;
 
   if (!loading && thesesList.length === 0) {
     return (
@@ -366,7 +352,7 @@ const MyThesis = () => {
 
         {totalSuggestions > 0 && (
           <div className="rounded-2xl p-4 border border-amber-200 bg-amber-50/60 text-amber-800 text-sm font-medium">
-            Tienes {totalSuggestions} sugerencia(s) pendiente(s) de revision.
+            Tienes {totalSuggestions} sugerencia(s) por atender o validar.
           </div>
         )}
 
@@ -437,13 +423,7 @@ const MyThesis = () => {
               ) : (
                 <div className="space-y-3">
                   {sugerencias.map((item, idx) => {
-                    const status = getSuggestionStatus(item);
-                    const toneMap = {
-                      success: 'bg-emerald-50 text-emerald-700',
-                      danger: 'bg-rose-50 text-rose-700',
-                      warning: 'bg-amber-50 text-amber-800',
-                    };
-                    const badgeClass = toneMap[status.tone] || toneMap.warning;
+                    const status = getSuggestionStatusMeta(item);
 
                     return (
                       <article
@@ -452,19 +432,19 @@ const MyThesis = () => {
                       >
                         <div className="flex gap-3 mb-2">
                           <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                            {getAdvisorName(item).charAt(0).toUpperCase()}
+                            {getSuggestionAdvisorName(item).charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
                               <div>
                                 <p className="text-sm font-bold text-slate-900 truncate">
-                                  {getAdvisorName(item)}
+                                  {getSuggestionAdvisorName(item)}
                                 </p>
                                 <p className="text-[11px] text-slate-500">
                                   {formatDate(item.creado_en || item.created_at || item.r_creado_en)}
                                 </p>
                               </div>
-                              <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${badgeClass}`}>
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${status.badgeClass}`}>
                                 {status.label}
                               </span>
                             </div>
@@ -477,6 +457,16 @@ const MyThesis = () => {
                           <p className="text-[11px] text-slate-500 mt-2">
                             Documento: {item.nombre_documento || item.documento_tesis_id}
                           </p>
+                        )}
+                        {item.comentario_asesor && (
+                          <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50 px-3 py-2">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-rose-700">
+                              Comentario del asesor
+                            </p>
+                            <p className="mt-1 text-xs text-rose-900 leading-relaxed">
+                              {item.comentario_asesor}
+                            </p>
+                          </div>
                         )}
                       </article>
                     );
@@ -845,31 +835,53 @@ const MyThesis = () => {
                   No tienes sugerencias registradas para esta tesis.
                 </div>
               ) : (
-                sugerencias.map((item, idx) => (
-                  <article
-                    key={
-                      item.id ||
-                      item.sugerencia_id ||
-                      `${selectedThesisId}-${idx}`
-                    }
-                    className="bg-white/70 border border-white/80 rounded-2xl p-4"
-                  >
-                    <p className="text-sm text-gray-800 leading-relaxed">
-                      {getSuggestionText(item)}
-                    </p>
-                    <div className="mt-3 text-xs text-gray-500 flex flex-wrap gap-3">
-                      <span>
-                        Fecha: {formatDate(item.creado_en || item.created_at)}
-                      </span>
-                      {(item.nombre_documento || item.documento_tesis_id) && (
-                        <span>
-                          Documento:{' '}
-                          {item.nombre_documento || item.documento_tesis_id}
+                sugerencias.map((item, idx) => {
+                  const status = getSuggestionStatusMeta(item);
+
+                  return (
+                    <article
+                      key={
+                        item.id ||
+                        item.sugerencia_id ||
+                        `${selectedThesisId}-${idx}`
+                      }
+                      className="bg-white/70 border border-white/80 rounded-2xl p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm font-semibold text-slate-900">
+                          {getSuggestionAdvisorName(item)}
+                        </p>
+                        <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${status.badgeClass}`}>
+                          {status.label}
                         </span>
+                      </div>
+                      <p className="mt-3 text-sm text-gray-800 leading-relaxed">
+                        {getSuggestionText(item)}
+                      </p>
+                      {item.comentario_asesor && (
+                        <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50 px-3 py-2">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-rose-700">
+                            Comentario del asesor
+                          </p>
+                          <p className="mt-1 text-xs text-rose-900 leading-relaxed">
+                            {item.comentario_asesor}
+                          </p>
+                        </div>
                       )}
-                    </div>
-                  </article>
-                ))
+                      <div className="mt-3 text-xs text-gray-500 flex flex-wrap gap-3">
+                        <span>
+                          Fecha: {formatDate(item.creado_en || item.created_at)}
+                        </span>
+                        {(item.nombre_documento || item.documento_tesis_id) && (
+                          <span>
+                            Documento:{' '}
+                            {item.nombre_documento || item.documento_tesis_id}
+                          </span>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })
               )}
             </div>
           </div>

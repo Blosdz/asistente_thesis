@@ -97,6 +97,8 @@ function estadoBadgeClass(estado) {
   switch (estado) {
     case 'confirmed':
       return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+    case 'approved':
+      return 'bg-cyan-50 text-cyan-700 border-cyan-100';
     case 'payment_pending':
       return 'bg-blue-50 text-blue-700 border-blue-100';
     case 'pending':
@@ -181,7 +183,9 @@ export default function Citas() {
         const inicio = new Date(cita.start_at).getTime();
         return (
           inicio >= now &&
-          ['pending', 'payment_pending', 'confirmed'].includes(cita.status)
+          ['pending', 'approved', 'payment_pending', 'confirmed'].includes(
+            cita.status,
+          )
         );
       }) ?? null
     );
@@ -520,6 +524,12 @@ export default function Citas() {
                       <ExternalLink className="h-4 w-4" />
                     </a>
                   )}
+
+                {selectedCita.status === 'approved' && (
+                  <div className="flex-1 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-center text-sm font-semibold text-cyan-800">
+                    Tu solicitud fue aprobada y está en proceso de confirmación final.
+                  </div>
+                )}
               </div>
             </>
           ) : (

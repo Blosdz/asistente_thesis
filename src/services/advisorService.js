@@ -282,6 +282,56 @@ export async function aprobarPagoReservaCita(
   return Array.isArray(data) ? (data[0] ?? null) : data;
 }
 
+export async function crearObservacionTesisEnriquecida({
+  tesisId,
+  documentoTesisId = null,
+  reunionId = null,
+  validationCitaId = null,
+  titulo = null,
+  texto = null,
+  contenidoHtml = null,
+  contenidoDelta = null,
+  tipoOrigen = 'manual',
+}) {
+  const { data, error } = await atSchema().rpc(
+    'crear_observacion_tesis_enriquecida',
+    {
+      p_tesis_id: tesisId,
+      p_documento_tesis_id: documentoTesisId,
+      p_reunion_id: reunionId,
+      p_validation_cita_id: validationCitaId,
+      p_titulo: titulo,
+      p_texto: texto,
+      p_contenido_html: contenidoHtml,
+      p_contenido_delta: contenidoDelta,
+      p_tipo_origen: tipoOrigen,
+    },
+  );
+
+  if (error) {
+    console.error('Error creando observación enriquecida:', error);
+    throw error;
+  }
+
+  return Array.isArray(data) ? (data[0] ?? null) : data;
+}
+
+export async function listarHistorialObservacionesTesis(tesisId) {
+  const { data, error } = await atSchema().rpc(
+    'listar_historial_observaciones_tesis',
+    {
+      p_tesis_id: tesisId,
+    },
+  );
+
+  if (error) {
+    console.error('Error obteniendo historial de observaciones:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
 export async function obtenerBloquesDisponibles(asesorId, desde, hasta) {
   const { data, error } = await atSchema().rpc('obtener_bloques_disponibles_asesor', {
     p_asesor_id: asesorId,
@@ -503,25 +553,37 @@ export async function listarTiposSugerenciaAsesor() {
   return data ?? [];
 }
 
+export async function validarAplicacionSugerenciaAsesor({
+  sugerenciaId,
+  aprobado,
+  comentarioAsesor = null,
+}) {
+  const { data, error } = await atSchema().rpc(
+    'validar_aplicacion_sugerencia',
+    {
+      p_historial_sugerencia_id: sugerenciaId,
+      p_aprobado: aprobado,
+      p_comentario_asesor: comentarioAsesor,
+    },
+  );
+
+  if (error) {
+    console.error('Error validando aplicacion de sugerencia:', error);
+    throw error;
+  }
+
+  return Array.isArray(data) ? (data[0] ?? null) : data;
+}
+
 // Compatibilidad temporal con imports antiguos del panel asesor.
 export async function actualizarEstadoSugerenciaAsesor(
   sugerenciaId,
   aplicado,
 ) {
-  const { data, error } = await atSchema().rpc(
-    'actualizar_estado_sugerencia_asesor',
-    {
-      p_sugerencia_id: sugerenciaId,
-      p_aplicado: aplicado,
-    },
-  );
-
-  if (error) {
-    console.error('Error actualizando estado de sugerencia:', error);
-    throw error;
-  }
-
-  return Array.isArray(data) ? (data[0] ?? null) : data;
+  return validarAplicacionSugerenciaAsesor({
+    sugerenciaId,
+    aprobado: aplicado,
+  });
 }
 
 export async function crearEspacioLibreAsesor(payload) {

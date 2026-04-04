@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import LoginPage from './pages/auth/LoginPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import SignupPage from './pages/auth/SignupPage';
 import StudentLayout from './layouts/StudentLayout';
 import Dashboard from './pages/student/Dashboard';
@@ -22,7 +23,10 @@ import AdvisorReservations from './pages/advisor/Reservations';
 import AdvisorCalendar from './pages/advisor/Calendar';
 import AdvisorThesisReview from './pages/advisor/ThesisReview';
 import AdvisorStudentDetail from './pages/advisor/StudentDetail';
+import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/Dashboard';
+import AdminUsers from './pages/admin/Users';
+import AdminPayments from './pages/admin/Payments';
 import Advisors from './pages/student/Advisors';
 import { isAuthenticated } from './services/authService';
 
@@ -66,6 +70,7 @@ const AppRoutes = () => {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       <Route
         path="/student/*"
@@ -109,13 +114,18 @@ const AppRoutes = () => {
       </Route>
 
       <Route
-        path="/admin"
+        path="/admin/*"
         element={
           <ProtectedRoute>
-            <AdminDashboard />
+            <AdminLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="payments" element={<AdminPayments />} />
+      </Route>
 
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="*" element={<div>404 - Not Found</div>} />

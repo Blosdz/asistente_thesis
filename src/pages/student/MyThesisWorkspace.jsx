@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { FileText, Upload, Plus, X, Sparkles } from 'lucide-react';
+import { FileText, Plus, X, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import {
   Card,
@@ -13,7 +13,6 @@ import {
   obtenerMisTesis,
   crearMiTesis,
   obtenerDocumentosMiTesis,
-  subirDocumentoAGoogleDrive,
   obtenerSugerenciasMiTesis,
   marcarSugerenciaAplicadaEstudiante,
 } from '../../services/thesisService';
@@ -23,6 +22,15 @@ import {
   obtenerMisTesisConAsesores,
 } from '../../services/advisorService';
 import { toast } from 'react-hot-toast';
+import {
+  canStudentSubmitSuggestion,
+  getStudentSuggestionActionLabel,
+  getSuggestionAdvisorName,
+  getSuggestionId,
+  getSuggestionStatusMeta,
+  getSuggestionText,
+  getSuggestionTypeLabel,
+} from '../../lib/suggestionValidation';
 
 const MyThesisWorkspace = () => {
   const [thesesList, setThesesList] = useState([]);
@@ -31,7 +39,6 @@ const MyThesisWorkspace = () => {
   const [currentVersion, setCurrentVersion] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState(false);
 
   const [sugerencias, setSugerencias] = useState([]);
   const [loadingSugerencias, setLoadingSugerencias] = useState(false);
@@ -40,6 +47,13 @@ const MyThesisWorkspace = () => {
   const [tesisConAsesores, setTesisConAsesores] = useState([]);
   const [asesorAsignadoId, setAsesorAsignadoId] = useState('');
   const [assigningAdvisor, setAssigningAdvisor] = useState(false);
+  const [applyModal, setApplyModal] = useState({
+    open: false,
+    suggestion: null,
+    comment: '',
+  });
+  const [submittingAppliedSuggestion, setSubmittingAppliedSuggestion] =
+    useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newThesisTitle, setNewThesisTitle] = useState('');
@@ -205,34 +219,6 @@ const MyThesisWorkspace = () => {
     }
   };
 
-  const handleUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    if (!selectedThesisId) return toast.error('Selecciona una tesis primero');
-
-    try {
-      setUploading(true);
-      const loadingToast = toast.loading('Subiendo documento...');
-
-      await subirDocumentoAGoogleDrive({
-        tesisId: selectedThesisId,
-        file,
-      });
-
-      toast.dismiss(loadingToast);
-      toast.success('Documento subido con éxito');
-      fetchDocuments(selectedThesisId);
-    } catch (err) {
-      console.error('Upload error:', err);
-      toast.error(
-        err.message || 'Error al subir el documento. Inténtalo de nuevo.',
-      );
-    } finally {
-      setUploading(false);
-      e.target.value = null;
-    }
-  };
-
   const handleAsignarAsesor = async () => {
     if (!selectedThesisId) {
       toast.error('Selecciona una tesis primero');
@@ -297,48 +283,50 @@ const MyThesisWorkspace = () => {
     [buildPreviewUrl],
   );
 
-  const getSuggestionText = (item) =>
-    item?.detalle ||
-    item?.sugerencia ||
-    item?.comentario ||
-    item?.observacion ||
-    item?.r_sugerencia ||
-    'Sin detalle';
-
-  const getAdvisorName = (item) =>
-    item?.nombre_asesor || item?.asesor || item?.r_nombre_asesor || 'Asesor';
-
   const getSuggestionDate = (item) =>
     item?.creado_en || item?.created_at || item?.r_creado_en;
 
-  const getSuggestionType = (item) =>
-    item?.tipo_nombre || item?.tipo_codigo || item?.categoria || 'Observación';
+  const openApplyModal = (item) => {
+    setApplyModal({
+      open: true,
+      suggestion: item,
+      comment: '',
+    });
+  };
 
-  const getSuggestionId = (item) => item?.id || item?.sugerencia_id || null;
+  const closeApplyModal = () => {
+    setApplyModal({
+      open: false,
+      suggestion: null,
+      comment: '',
+    });
+  };
 
-  const handleToggleAppliedSuggestion = async (item) => {
-    const suggestionId = getSuggestionId(item);
+  const handleSubmitAppliedSuggestion = async () => {
+    if (submittingAppliedSuggestion) return;
+
+    const suggestionId = getSuggestionId(applyModal.suggestion);
     if (!suggestionId) {
       toast.error('No se pudo identificar la sugerencia');
       return;
     }
 
-    const nextApplied = !Boolean(item?.aplicado);
-
     try {
       setUpdatingSuggestionId(suggestionId);
-      await marcarSugerenciaAplicadaEstudiante(suggestionId, nextApplied);
-      toast.success(
-        nextApplied
-          ? 'Sugerencia marcada como aplicada'
-          : 'Sugerencia marcada como pendiente',
+      setSubmittingAppliedSuggestion(true);
+      await marcarSugerenciaAplicadaEstudiante(
+        suggestionId,
+        applyModal.comment.trim() || null,
       );
+      toast.success('Sugerencia enviada a validacion del asesor');
+      closeApplyModal();
       await cargarSugerencias(selectedThesisId);
     } catch (error) {
       console.error('Error updating suggestion:', error);
       toast.error('No se pudo actualizar la sugerencia');
     } finally {
       setUpdatingSuggestionId(null);
+      setSubmittingAppliedSuggestion(false);
     }
   };
 
@@ -548,72 +536,90 @@ const MyThesisWorkspace = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {sugerenciasVisibles.map((item, idx) => (
-                    <article
-                      key={
-                        item.id ||
-                        item.sugerencia_id ||
-                        `${selectedThesisId}-${idx}`
-                      }
-                      className="bg-white/70 border border-white/80 rounded-2xl p-4 hover:border-blue-100 transition"
-                    >
-                      <div className="flex gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                          {getAdvisorName(item).charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                              <p className="text-sm font-bold text-slate-900 truncate">
-                                {getAdvisorName(item)}
-                              </p>
-                              <p className="text-[11px] text-slate-500">
-                                {formatDate(getSuggestionDate(item))}
-                              </p>
+                  {sugerenciasVisibles.map((item, idx) => {
+                    const statusMeta = getSuggestionStatusMeta(item);
+                    const suggestionId = getSuggestionId(item);
+                    const canSubmit = canStudentSubmitSuggestion(item);
+
+                    return (
+                      <article
+                        key={suggestionId || `${selectedThesisId}-${idx}`}
+                        className="bg-white/70 border border-white/80 rounded-2xl p-4 hover:border-blue-100 transition"
+                      >
+                        <div className="flex gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                            {getSuggestionAdvisorName(item).charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="text-sm font-bold text-slate-900 truncate">
+                                  {getSuggestionAdvisorName(item)}
+                                </p>
+                                <p className="text-[11px] text-slate-500">
+                                  {formatDate(getSuggestionDate(item))}
+                                </p>
+                              </div>
+                              <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-700">
+                                {getSuggestionTypeLabel(item)}
+                              </span>
                             </div>
-                            <span className="shrink-0 rounded-full bg-blue-50 px-2 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-blue-700">
-                              {getSuggestionType(item)}
-                            </span>
                           </div>
                         </div>
-                      </div>
-                      <p className="text-sm text-slate-700 leading-relaxed">
-                        {getSuggestionText(item)}
-                      </p>
-                      {item.nombre_documento && (
-                        <p className="text-[11px] text-slate-500 mt-2">
-                          Documento: {item.nombre_documento}
+                        <p className="text-sm text-slate-700 leading-relaxed">
+                          {getSuggestionText(item)}
                         </p>
-                      )}
-                      <div className="mt-3 flex items-center justify-between gap-3">
-                        <span
-                          className={`rounded-full px-2 py-1 text-[10px] font-bold ${
-                            item.aplicado
-                              ? 'bg-emerald-50 text-emerald-700'
-                              : 'bg-amber-50 text-amber-700'
-                          }`}
-                        >
-                          {item.aplicado ? 'Aplicada' : 'Pendiente'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleToggleAppliedSuggestion(item)}
-                          disabled={updatingSuggestionId === getSuggestionId(item)}
-                          className={`inline-flex items-center justify-center rounded-xl px-3 py-2 text-[11px] font-bold text-white shadow-sm transition ${
-                            item.aplicado
-                              ? 'bg-slate-500 hover:bg-slate-600'
-                              : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200'
-                          } disabled:cursor-not-allowed disabled:opacity-50`}
-                        >
-                          {updatingSuggestionId === getSuggestionId(item)
-                            ? 'Actualizando...'
-                            : item.aplicado
-                              ? 'Marcar pendiente'
-                              : 'Ya la apliqué'}
-                        </button>
-                      </div>
-                    </article>
-                  ))}
+                        {item.nombre_documento && (
+                          <p className="text-[11px] text-slate-500 mt-2">
+                            Documento: {item.nombre_documento}
+                          </p>
+                        )}
+                        {item.comentario_estudiante && (
+                          <div className="mt-3 rounded-xl border border-sky-100 bg-sky-50 px-3 py-2">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-700">
+                              Tu comentario
+                            </p>
+                            <p className="mt-1 text-xs text-sky-900 leading-relaxed">
+                              {item.comentario_estudiante}
+                            </p>
+                          </div>
+                        )}
+                        {item.comentario_asesor && (
+                          <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50 px-3 py-2">
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-rose-700">
+                              Comentario del asesor
+                            </p>
+                            <p className="mt-1 text-xs text-rose-900 leading-relaxed">
+                              {item.comentario_asesor}
+                            </p>
+                          </div>
+                        )}
+                        <div className="mt-3 flex items-center justify-between gap-3">
+                          <span
+                            className={`rounded-full px-2 py-1 text-[10px] font-bold ${statusMeta.badgeClass}`}
+                          >
+                            {statusMeta.label}
+                          </span>
+                          {canSubmit ? (
+                            <button
+                              type="button"
+                              onClick={() => openApplyModal(item)}
+                              disabled={updatingSuggestionId === suggestionId}
+                              className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-3 py-2 text-[11px] font-bold text-white shadow-sm transition hover:bg-emerald-700 shadow-emerald-200 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {updatingSuggestionId === suggestionId
+                                ? 'Enviando...'
+                                : getStudentSuggestionActionLabel(item)}
+                            </button>
+                          ) : (
+                            <span className="text-[11px] text-slate-500">
+                              {statusMeta.hint}
+                            </span>
+                          )}
+                        </div>
+                      </article>
+                    );
+                  })}
                 </div>
               )}
             </Card>
@@ -750,6 +756,59 @@ const MyThesisWorkspace = () => {
           </aside>
         </div>
       </div>
+
+      <Modal
+        open={applyModal.open}
+        onClose={closeApplyModal}
+        title="Enviar correccion"
+        subtitle="Avisa al asesor que ya aplicaste esta sugerencia en tu tesis."
+        primaryAction={{
+          label: submittingAppliedSuggestion ? 'Enviando...' : 'Enviar a revision',
+          onClick: handleSubmitAppliedSuggestion,
+        }}
+        secondaryAction={{
+          label: 'Cancelar',
+          onClick: closeApplyModal,
+        }}
+      >
+        <div className="space-y-4 text-left">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              Sugerencia
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-700">
+              {getSuggestionText(applyModal.suggestion)}
+            </p>
+          </div>
+          {applyModal.suggestion?.comentario_asesor && (
+            <div className="rounded-2xl border border-rose-100 bg-rose-50 p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-rose-700">
+                Observacion actual del asesor
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-rose-900">
+                {applyModal.suggestion.comentario_asesor}
+              </p>
+            </div>
+          )}
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Comentario para el asesor
+            </label>
+            <textarea
+              rows="4"
+              value={applyModal.comment}
+              onChange={(e) =>
+                setApplyModal((current) => ({
+                  ...current,
+                  comment: e.target.value,
+                }))
+              }
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100 resize-none"
+              placeholder="Opcional: indica que partes corregiste o en que documento lo aplicaste."
+            />
+          </div>
+        </div>
+      </Modal>
 
       <Modal
         open={showCreateModal && thesesList.length > 0}
