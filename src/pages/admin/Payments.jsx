@@ -102,14 +102,23 @@ const extractReunionId = (payload) =>
   payload?.metadata?.reunionId ||
   null;
 
+const extractReunionLink = (payload) =>
+  payload?.enlace_reunion ||
+  payload?.meet_link ||
+  payload?.meetingUri ||
+  payload?.meeting_link ||
+  null;
+
 const buildMeetPayload = (payment, reunionId, notaVerificacion) => {
   const inicio =
+    payment?.reunion_inicio ||
     payment?.inicio ||
     payment?.start_at ||
     payment?.metadata?.inicio ||
     payment?.metadata?.start_at ||
     null;
   const fin =
+    payment?.reunion_fin ||
     payment?.fin ||
     payment?.end_at ||
     payment?.metadata?.fin ||
@@ -332,8 +341,15 @@ const AdminPayments = () => {
       let meetMessage = null;
 
       if (verificationModal.estado === 'validado' && isReservationPayment) {
+        const refreshedPaymentDetail = await adminObtenerPago(pagoId);
         const reunionId =
-          extractReunionId(result) || extractReunionId(paymentDetail);
+          extractReunionId(result) ||
+          extractReunionId(refreshedPaymentDetail) ||
+          extractReunionId(paymentDetail);
+        const existingMeetLink =
+          extractReunionLink(refreshedPaymentDetail) ||
+          extractReunionLink(result) ||
+          extractReunionLink(paymentDetail);
 
         if (!reunionId) {
           throw new Error(
@@ -341,11 +357,19 @@ const AdminPayments = () => {
           );
         }
 
-        const meetResult = await crearGoogleMeetAdmin(
-          buildMeetPayload(paymentDetail, reunionId, notaVerificacion),
-        );
+        if (existingMeetLink) {
+          meetMessage = existingMeetLink;
+        } else {
+          const meetResult = await crearGoogleMeetAdmin(
+            buildMeetPayload(
+              refreshedPaymentDetail || paymentDetail,
+              reunionId,
+              notaVerificacion,
+            ),
+          );
 
-        meetMessage = meetResult?.enlace_reunion || null;
+          meetMessage = meetResult?.enlace_reunion || null;
+        }
       }
 
       toast.success(
