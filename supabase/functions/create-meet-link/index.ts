@@ -199,6 +199,54 @@ function extractMeetUrl(eventData: Record<string, unknown>) {
     null;
 }
 
+async function saveDirectMeetingSuccess(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  reunionId: string,
+  eventData: Record<string, unknown>,
+  meetUrl: string,
+) {
+  const meetCode =
+    (eventData.conferenceData as { conferenceId?: string } | undefined)
+      ?.conferenceId ?? null;
+  const now = new Date().toISOString();
+
+  const { error } = await supabaseAdmin
+    .schema("AT")
+    .from("reuniones_asesor")
+    .update({
+      enlace_reunion: meetUrl,
+      google_event_id: eventData.id ?? null,
+      meet_codigo: meetCode,
+      meet_creado_en: now,
+      meet_error: null,
+      actualizado_en: now,
+    })
+    .eq("id", reunionId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+async function saveDirectMeetingError(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  reunionId: string,
+  errorMessage: string,
+) {
+  const { error } = await supabaseAdmin
+    .schema("AT")
+    .from("reuniones_asesor")
+    .update({
+      meet_error: errorMessage,
+      actualizado_en: new Date().toISOString(),
+    })
+    .eq("id", reunionId);
+
+  if (error) {
+    console.error("No se pudo guardar meet_error en reuniones_asesor", error);
+  }
+}
+
 async function processQueueItem(
   supabaseAdmin: ReturnType<typeof createClient>,
   accessToken: string,
@@ -308,28 +356,50 @@ Deno.serve(async (req) => {
     const accessToken = await getGoogleAccessToken();
 
     if (isDirectCreationRequest(body)) {
-      const eventData = await createGoogleCalendarEvent(accessToken, body);
-      const meetUrl = extractMeetUrl(eventData);
+      try {
+        const eventData = await createGoogleCalendarEvent(accessToken, body);
+        const meetUrl = extractMeetUrl(eventData);
 
-      if (!meetUrl) {
-        throw new Error(
-          "Google Calendar creo el evento, pero no devolvio enlace Meet",
-        );
+        if (!meetUrl) {
+          throw new Error(
+            "Google Calendar creo el evento, pero no devolvio enlace Meet",
+          );
+        }
+
+        if (body.reunion_id) {
+          await saveDirectMeetingSuccess(
+            supabaseAdmin,
+            body.reunion_id,
+            eventData,
+            meetUrl,
+          );
+        }
+
+        return jsonResponse({
+          ok: true,
+          mode: "direct",
+          space_id: null,
+          reunion_id: body.reunion_id ?? null,
+          event_id: eventData.id ?? null,
+          meet_link: meetUrl,
+          enlace_reunion: meetUrl,
+          meetingUri: meetUrl,
+          meetingCode:
+            (eventData.conferenceData as { conferenceId?: string } | undefined)
+              ?.conferenceId ?? null,
+          meetingEvent: eventData,
+        });
+      } catch (error) {
+        if (body.reunion_id) {
+          await saveDirectMeetingError(
+            supabaseAdmin,
+            body.reunion_id,
+            error instanceof Error ? error.message : "Error desconocido",
+          );
+        }
+
+        throw error;
       }
-
-      return jsonResponse({
-        ok: true,
-        mode: "direct",
-        space_id: null,
-        event_id: eventData.id ?? null,
-        meet_link: meetUrl,
-        enlace_reunion: meetUrl,
-        meetingUri: meetUrl,
-        meetingCode:
-          (eventData.conferenceData as { conferenceId?: string } | undefined)
-            ?.conferenceId ?? null,
-        meetingEvent: eventData,
-      });
     }
 
     const batchSize = Math.max(1, Math.min(Number(body.batch_size ?? 1), 10));
