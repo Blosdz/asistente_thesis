@@ -42,12 +42,14 @@ export async function adminVerificarPago(
   {
     estado,
     notaVerificacion = null,
+    enlaceReunion = null,
   } = {},
 ) {
   const { data, error } = await atSchema().rpc('admin_verificar_pago', {
     p_pago_id: pagoId,
     p_estado: estado,
     p_nota_verificacion: notaVerificacion,
+    p_enlace_reunion: enlaceReunion,
   });
 
   if (error) {

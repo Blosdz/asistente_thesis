@@ -18,11 +18,9 @@ import {
   adminListarPagos,
   adminObtenerPago,
   adminVerificarPago,
-  validarCitaAsesoriaAdmin,
 } from '../../services/adminService';
 
 const VERIFICATION_STATUS_OPTIONS = [
-  { value: 'pendiente', label: 'Pendiente' },
   { value: 'validado', label: 'Validado' },
   { value: 'rechazado', label: 'Rechazado' },
 ];
@@ -107,6 +105,7 @@ const AdminPayments = () => {
     payment: null,
     estado: 'validado',
     nota: '',
+    enlaceReunion: '',
   });
   const [submittingVerification, setSubmittingVerification] = useState(false);
 
@@ -213,15 +212,18 @@ const AdminPayments = () => {
   };
 
   const openVerificationModal = (payment) => {
+    const normalizedStatus = (payment?.estado || '').toLowerCase();
+    const validationCitaId = extractValidationCitaId(payment);
+
     setVerificationModal({
       open: true,
       payment,
-      estado: ['validado', 'verificado', 'rechazado', 'pendiente'].includes(
-        (payment?.estado || '').toLowerCase(),
-      )
-        ? payment.estado
-        : 'validado',
+      estado: normalizedStatus === 'rechazado' ? 'rechazado' : 'validado',
       nota: payment?.nota_verificacion || '',
+      enlaceReunion:
+        validationCitaId && normalizedStatus !== 'rechazado'
+          ? payment?.enlace_reunion || ''
+          : '',
     });
   };
 
@@ -231,6 +233,7 @@ const AdminPayments = () => {
       payment: null,
       estado: 'validado',
       nota: '',
+      enlaceReunion: '',
     });
   };
 
@@ -246,39 +249,15 @@ const AdminPayments = () => {
     try {
       setSubmittingVerification(true);
       const notaVerificacion = verificationModal.nota.trim() || null;
-      const paymentDetail =
-        selectedPayment?.pago_id === pagoId
-          ? selectedPayment
-          : await adminObtenerPago(pagoId);
-      const validationCitaId = extractValidationCitaId(paymentDetail);
-      const isReservationPayment = Boolean(validationCitaId);
+      const enlaceReunion = verificationModal.enlaceReunion.trim() || null;
 
-      await adminVerificarPago(pagoId, {
+      const result = await adminVerificarPago(pagoId, {
         estado: verificationModal.estado,
         notaVerificacion,
+        enlaceReunion,
       });
 
-      if (isReservationPayment) {
-        if (verificationModal.estado === 'validado') {
-          await validarCitaAsesoriaAdmin(validationCitaId, {
-            aprobado: true,
-            notasAdmin: notaVerificacion,
-          });
-        }
-
-        if (verificationModal.estado === 'rechazado') {
-          await validarCitaAsesoriaAdmin(validationCitaId, {
-            aprobado: false,
-            notasAdmin: notaVerificacion,
-          });
-        }
-      }
-
-      toast.success(
-        verificationModal.estado === 'validado' && isReservationPayment
-          ? 'Pago validado. La reunión quedó lista para generar su enlace Meet.'
-          : 'Pago actualizado correctamente',
-      );
+      toast.success(result?.mensaje || 'Pago actualizado correctamente');
       closeVerificationModal();
       await loadPayments();
 
