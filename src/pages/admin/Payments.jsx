@@ -19,6 +19,7 @@ import {
   adminObtenerPago,
   adminVerificarPago,
 } from '../../services/adminService';
+import { crearGoogleMeetAdmin } from '../../services/googleMeetService';
 
 const VERIFICATION_STATUS_OPTIONS = [
   { value: 'validado', label: 'Validado' },
@@ -91,6 +92,72 @@ const extractValidationCitaId = (payment) =>
   payment?.metadata?.reserva_cita_id ||
   payment?.metadata?.reservaCitaId ||
   null;
+
+const extractReunionId = (payload) =>
+  payload?.reunion_id ||
+  payload?.reunionId ||
+  payload?.meeting_id ||
+  payload?.meetingId ||
+  payload?.metadata?.reunion_id ||
+  payload?.metadata?.reunionId ||
+  null;
+
+const buildMeetPayload = (payment, reunionId, notaVerificacion) => {
+  const inicio =
+    payment?.inicio ||
+    payment?.start_at ||
+    payment?.metadata?.inicio ||
+    payment?.metadata?.start_at ||
+    null;
+  const fin =
+    payment?.fin ||
+    payment?.end_at ||
+    payment?.metadata?.fin ||
+    payment?.metadata?.end_at ||
+    null;
+  const advisorName =
+    payment?.asesor_nombre || payment?.metadata?.asesor_nombre || 'Asesor';
+  const studentName =
+    payment?.pagador_nombre ||
+    payment?.estudiante_nombre ||
+    payment?.metadata?.estudiante_nombre ||
+    'Estudiante';
+  const thesisTitle =
+    payment?.tesis_titulo || payment?.metadata?.tesis_titulo || null;
+
+  return {
+    reunion_id: reunionId,
+    pago_id: payment?.pago_id,
+    validation_cita_id: extractValidationCitaId(payment),
+    advisor_id: payment?.asesor_id || payment?.metadata?.advisor_id || null,
+    advisor_name: advisorName,
+    student_id:
+      payment?.pagador_id ||
+      payment?.estudiante_id ||
+      payment?.metadata?.student_id ||
+      null,
+    student_name: studentName,
+    thesis_id: payment?.tesis_id || payment?.metadata?.tesis_id || null,
+    thesis_title: thesisTitle,
+    inicio,
+    fin,
+    motivo:
+      payment?.motivo ||
+      payment?.metadata?.motivo ||
+      thesisTitle ||
+      'Asesoría de tesis',
+    notas: payment?.notas || payment?.metadata?.notas || null,
+    modalidad: payment?.modalidad || payment?.metadata?.modalidad || 'virtual',
+    location: payment?.lugar || payment?.metadata?.lugar || null,
+    title: thesisTitle
+      ? `Asesoría de tesis - ${thesisTitle}`
+      : `Asesoría entre ${advisorName} y ${studentName}`,
+    description:
+      notaVerificacion ||
+      payment?.concepto ||
+      'Reunión creada automáticamente tras validación de pago.',
+  };
+};
 
 const AdminPayments = () => {
   const [payments, setPayments] = useState([]);
@@ -249,15 +316,43 @@ const AdminPayments = () => {
     try {
       setSubmittingVerification(true);
       const notaVerificacion = verificationModal.nota.trim() || null;
-      const enlaceReunion = verificationModal.enlaceReunion.trim() || null;
+
+      const paymentDetail =
+        selectedPayment?.pago_id === pagoId
+          ? selectedPayment
+          : await adminObtenerPago(pagoId);
+      const validationCitaId = extractValidationCitaId(paymentDetail);
+      const isReservationPayment = Boolean(validationCitaId);
 
       const result = await adminVerificarPago(pagoId, {
         estado: verificationModal.estado,
         notaVerificacion,
-        enlaceReunion,
       });
 
-      toast.success(result?.mensaje || 'Pago actualizado correctamente');
+      let meetMessage = null;
+
+      if (verificationModal.estado === 'validado' && isReservationPayment) {
+        const reunionId =
+          extractReunionId(result) || extractReunionId(paymentDetail);
+
+        if (!reunionId) {
+          throw new Error(
+            'El pago fue validado pero no se encontró la reunión creada para generar el Meet',
+          );
+        }
+
+        const meetResult = await crearGoogleMeetAdmin(
+          buildMeetPayload(paymentDetail, reunionId, notaVerificacion),
+        );
+
+        meetMessage = meetResult?.enlace_reunion || null;
+      }
+
+      toast.success(
+        verificationModal.estado === 'validado' && meetMessage
+          ? 'Pago validado y Google Meet creado correctamente'
+          : result?.mensaje || 'Pago actualizado correctamente',
+      );
       closeVerificationModal();
       await loadPayments();
 
