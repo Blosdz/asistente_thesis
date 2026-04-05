@@ -18,12 +18,12 @@ import {
   adminListarPagos,
   adminObtenerPago,
   adminVerificarPago,
+  validarCitaAsesoriaAdmin,
 } from '../../services/adminService';
 
 const VERIFICATION_STATUS_OPTIONS = [
   { value: 'pendiente', label: 'Pendiente' },
-  { value: 'aprobado', label: 'Aprobado' },
-  { value: 'verificado', label: 'Verificado' },
+  { value: 'validado', label: 'Validado' },
   { value: 'rechazado', label: 'Rechazado' },
 ];
 
@@ -32,6 +32,8 @@ const statusBadgeClass = (status) => {
     case 'verificado':
     case 'validado':
       return 'bg-emerald-50 text-emerald-700';
+    case 'voucher_subido':
+      return 'bg-blue-50 text-blue-700';
     case 'aprobado':
     case 'pagado':
       return 'bg-cyan-50 text-cyan-700';
@@ -83,6 +85,15 @@ const formatDateTime = (value) => {
 const formatStatusLabel = (value) =>
   (value || 'sin_estado').replaceAll('_', ' ');
 
+const extractValidationCitaId = (payment) =>
+  payment?.validation_cita_id ||
+  payment?.validationCitaId ||
+  payment?.metadata?.validation_cita_id ||
+  payment?.metadata?.validationCitaId ||
+  payment?.metadata?.reserva_cita_id ||
+  payment?.metadata?.reservaCitaId ||
+  null;
+
 const AdminPayments = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +105,7 @@ const AdminPayments = () => {
   const [verificationModal, setVerificationModal] = useState({
     open: false,
     payment: null,
-    estado: 'aprobado',
+    estado: 'validado',
     nota: '',
   });
   const [submittingVerification, setSubmittingVerification] = useState(false);
@@ -163,7 +174,7 @@ const AdminPayments = () => {
         acc.monto += Number(item.monto || 0);
 
         if (['pendiente'].includes(status)) acc.pendientes += 1;
-        if (['aprobado', 'pagado'].includes(status)) acc.aprobados += 1;
+        if (['voucher_subido'].includes(status)) acc.vouchersSubidos += 1;
         if (['verificado', 'validado'].includes(status)) acc.verificados += 1;
         if (['rechazado', 'fallido'].includes(status)) acc.rechazados += 1;
 
@@ -173,7 +184,7 @@ const AdminPayments = () => {
         total: 0,
         monto: 0,
         pendientes: 0,
-        aprobados: 0,
+        vouchersSubidos: 0,
         verificados: 0,
         rechazados: 0,
       },
@@ -205,11 +216,11 @@ const AdminPayments = () => {
     setVerificationModal({
       open: true,
       payment,
-      estado: ['aprobado', 'verificado', 'rechazado', 'pendiente'].includes(
+      estado: ['validado', 'verificado', 'rechazado', 'pendiente'].includes(
         (payment?.estado || '').toLowerCase(),
       )
         ? payment.estado
-        : 'aprobado',
+        : 'validado',
       nota: payment?.nota_verificacion || '',
     });
   };
@@ -218,7 +229,7 @@ const AdminPayments = () => {
     setVerificationModal({
       open: false,
       payment: null,
-      estado: 'aprobado',
+      estado: 'validado',
       nota: '',
     });
   };
@@ -234,12 +245,40 @@ const AdminPayments = () => {
 
     try {
       setSubmittingVerification(true);
+      const notaVerificacion = verificationModal.nota.trim() || null;
+      const paymentDetail =
+        selectedPayment?.pago_id === pagoId
+          ? selectedPayment
+          : await adminObtenerPago(pagoId);
+      const validationCitaId = extractValidationCitaId(paymentDetail);
+      const isReservationPayment = Boolean(validationCitaId);
+
       await adminVerificarPago(pagoId, {
         estado: verificationModal.estado,
-        notaVerificacion: verificationModal.nota.trim() || null,
+        notaVerificacion,
       });
 
-      toast.success('Pago actualizado correctamente');
+      if (isReservationPayment) {
+        if (verificationModal.estado === 'validado') {
+          await validarCitaAsesoriaAdmin(validationCitaId, {
+            aprobado: true,
+            notasAdmin: notaVerificacion,
+          });
+        }
+
+        if (verificationModal.estado === 'rechazado') {
+          await validarCitaAsesoriaAdmin(validationCitaId, {
+            aprobado: false,
+            notasAdmin: notaVerificacion,
+          });
+        }
+      }
+
+      toast.success(
+        verificationModal.estado === 'validado' && isReservationPayment
+          ? 'Pago validado. La reunión quedó lista para generar su enlace Meet.'
+          : 'Pago actualizado correctamente',
+      );
       closeVerificationModal();
       await loadPayments();
 
@@ -303,13 +342,21 @@ const AdminPayments = () => {
         </Card>
         <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-            Verificados
+            Voucher subido
+          </p>
+          <p className="mt-3 text-3xl font-black text-blue-600">
+            {counters.vouchersSubidos}
+          </p>
+        </Card>
+        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+            Validados
           </p>
           <p className="mt-3 text-3xl font-black text-emerald-600">
             {counters.verificados}
           </p>
         </Card>
-        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6">
+        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6 md:col-span-4">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Monto total
           </p>
@@ -616,6 +663,12 @@ const AdminPayments = () => {
             <p className="mt-1 text-xs text-slate-500">
               {verificationModal.payment?.codigo_operacion || verificationModal.payment?.pago_id}
             </p>
+            {extractValidationCitaId(verificationModal.payment) && (
+              <p className="mt-2 text-xs text-blue-600">
+                Si validas este pago, se intentará crear el Google Meet y
+                confirmar la cita automáticamente.
+              </p>
+            )}
           </div>
 
           <div>

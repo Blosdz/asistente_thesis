@@ -37,3 +37,9 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/encolar-invitacion-signup/deno.json"
 entrypoint = "./functions/encolar-invitacion-signup/index.ts"
+
+[functions.create-meet-link]
+enabled = true
+verify_jwt = true
+import_map = "./functions/create-meet-link/deno.json"
+entrypoint = "./functions/create-meet-link/index.ts"

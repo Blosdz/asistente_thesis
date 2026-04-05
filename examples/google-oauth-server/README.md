@@ -14,6 +14,7 @@ Crea un archivo `.env` en esta carpeta:
 GOOGLE_CLIENT_ID=TU_CLIENT_ID_DEL_JSON
 GOOGLE_CLIENT_SECRET=TU_CLIENT_SECRET_DEL_JSON
 GOOGLE_REDIRECT_URI=http://localhost:3000/oauth2callback
+GOOGLE_OAUTH_SCOPES="https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events"
 ```
 
 Luego ejecuta el script helper (desde `examples/google-oauth-server`):
@@ -37,6 +38,7 @@ client_id=TU_CLIENT_ID&
 redirect_uri=http://localhost:3000/oauth2callback&
 response_type=code&
 scope=https://www.googleapis.com/auth/drive.file&
+scope=https://www.googleapis.com/auth/drive.file%20https://www.googleapis.com/auth/calendar.events&
 access_type=offline&
 prompt=consent
 ```
@@ -76,7 +78,7 @@ Respuesta:
   "access_token": "ya29.a0Af...",
   "expires_in": 3599,
   "refresh_token": "1//0gAbC...",
-  "scope": "https://www.googleapis.com/auth/drive.file",
+  "scope": "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events",
   "token_type": "Bearer"
 }
 ```
@@ -92,7 +94,7 @@ Una vez que obtengas el `refresh_token`:
 1. **Guárdalo en `.env`**
 
 ```bash
-GOOGLE_REFRESH_TOKEN=1//0gAbC...
+GOOGLE_OAUTH_REFRESH_TOKEN=1//0gAbC...
 ```
 
 2. **Arranca el servidor:**

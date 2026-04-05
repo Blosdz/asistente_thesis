@@ -16,8 +16,8 @@ if [ -f .env ]; then
   export $(grep -v '^#' .env | xargs)
 fi
 
-CLIENT_ID="${GOOGLE_CLIENT_ID}"
-CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}"
+CLIENT_ID="${GOOGLE_CLIENT_ID:-$GOOGLE_OAUTH_CLIENT_ID}"
+CLIENT_SECRET="${GOOGLE_CLIENT_SECRET:-$GOOGLE_OAUTH_CLIENT_SECRET}"
 REDIRECT_URI="${GOOGLE_REDIRECT_URI:-http://localhost:3000/google/callback}"
 
 if [ -z "$CLIENT_ID" ] || [ -z "$CLIENT_SECRET" ]; then
@@ -32,9 +32,12 @@ echo "  REDIRECT_URI: $REDIRECT_URI"
 echo ""
 
 # 1. Generar URL de autorización
-SCOPE="https://www.googleapis.com/auth/drive.file"
+SCOPE="${GOOGLE_OAUTH_SCOPES:-https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar.events}"
 ENCODED_REDIRECT=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$REDIRECT_URI'))")
 ENCODED_SCOPE=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$SCOPE'))")
+
+echo "  SCOPE: $SCOPE"
+echo ""
 
 AUTH_URL="https://accounts.google.com/o/oauth2/v2/auth?client_id=$CLIENT_ID&redirect_uri=$ENCODED_REDIRECT&response_type=code&scope=$ENCODED_SCOPE&access_type=offline&prompt=consent"
 
@@ -107,8 +110,8 @@ echo "---"
 echo "Guarda este token en una variable de entorno o archivo seguro (.env, secrets, etc.)"
 echo ""
 echo "Ejemplo de uso en .env:"
-echo "  GOOGLE_REFRESH_TOKEN=$REFRESH_TOKEN"
+echo "  GOOGLE_OAUTH_REFRESH_TOKEN=$REFRESH_TOKEN"
 echo ""
 echo "O como variable en el shell:"
-echo "  export GOOGLE_REFRESH_TOKEN='$REFRESH_TOKEN'"
+echo "  export GOOGLE_OAUTH_REFRESH_TOKEN='$REFRESH_TOKEN'"
 echo ""

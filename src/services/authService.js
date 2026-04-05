@@ -31,6 +31,26 @@ function construirRedirectResetPassword(redirectTo) {
   return `${window.location.origin}/#/reset-password`;
 }
 
+async function obtenerRolDesdePerfil(authUsuarioId) {
+  const { data, error } = await supabase.schema('AT').rpc('obtener_mi_rol');
+
+  if (error) {
+    throw error;
+  }
+
+  const raw = Array.isArray(data) ? (data[0] ?? null) : data;
+
+  if (!raw) {
+    return null;
+  }
+
+  if (authUsuarioId && raw.auth_usuario_id && raw.auth_usuario_id !== authUsuarioId) {
+    return null;
+  }
+
+  return raw.rol ?? null;
+}
+
 export async function registrarEstudiante(email, password, name) {
   try {
     const { data, error } = await supabase.auth.signUp({
@@ -111,7 +131,11 @@ export async function loginUsuario(email, password) {
 
   if (error) throw error;
 
-  const role = data?.user?.user_metadata?.rol || 'estudiante';
+  const role =
+    (await obtenerRolDesdePerfil(data?.user?.id)) ||
+    data?.user?.user_metadata?.rol ||
+    'estudiante';
+
   return { ...data, role };
 }
 
