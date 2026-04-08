@@ -587,11 +587,19 @@ export async function actualizarEstadoSugerenciaAsesor(
 }
 
 export async function crearEspacioLibreAsesor(payload) {
+  const usaBloques = payload.p_usa_bloques ?? true;
+  const duracionBloqueMinutos =
+    Number(payload.p_duracion_bloque_minutos ?? 45) || 45;
+
+  if (usaBloques && duracionBloqueMinutos < 45) {
+    throw new Error('La duración mínima por bloque es de 45 minutos.');
+  }
+
   const rpcPayload = {
     p_inicio: payload.p_inicio,
     p_fin: payload.p_fin,
-    p_usa_bloques: payload.p_usa_bloques ?? true,
-    p_duracion_bloque_minutos: payload.p_duracion_bloque_minutos ?? 30,
+    p_usa_bloques: usaBloques,
+    p_duracion_bloque_minutos: duracionBloqueMinutos,
     p_recurrente: payload.p_recurrente ?? false,
     p_fecha_inicio: payload.p_fecha_inicio ?? null,
     p_fecha_fin: payload.p_fecha_fin ?? null,

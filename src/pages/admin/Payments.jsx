@@ -140,12 +140,22 @@ const buildMeetPayload = (payment, reunionId, notaVerificacion) => {
     validation_cita_id: extractValidationCitaId(payment),
     advisor_id: payment?.asesor_id || payment?.metadata?.advisor_id || null,
     advisor_name: advisorName,
+    advisor_email:
+      payment?.asesor_email ||
+      payment?.asesor_email_publico ||
+      payment?.metadata?.advisor_email ||
+      null,
     student_id:
       payment?.pagador_id ||
       payment?.estudiante_id ||
       payment?.metadata?.student_id ||
       null,
     student_name: studentName,
+    student_email:
+      payment?.pagador_email ||
+      payment?.estudiante_email ||
+      payment?.metadata?.student_email ||
+      null,
     thesis_id: payment?.tesis_id || payment?.metadata?.tesis_id || null,
     thesis_title: thesisTitle,
     inicio,
@@ -158,9 +168,7 @@ const buildMeetPayload = (payment, reunionId, notaVerificacion) => {
     notas: payment?.notas || payment?.metadata?.notas || null,
     modalidad: payment?.modalidad || payment?.metadata?.modalidad || 'virtual',
     location: payment?.lugar || payment?.metadata?.lugar || null,
-    title: thesisTitle
-      ? `Asesoría de tesis - ${thesisTitle}`
-      : `Asesoría entre ${advisorName} y ${studentName}`,
+    title: `Reunion Tesis ${studentName} - ${advisorName}`,
     description:
       notaVerificacion ||
       payment?.concepto ||

@@ -19,6 +19,7 @@ import {
 } from '../../services/advisorService';
 
 const diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const DEFAULT_BLOCK_DURATION_MINUTES = 45;
 const diasSemanaLargos = [
   'Domingo',
   'Lunes',
@@ -120,7 +121,8 @@ function combineDateAndTime(baseDate, timeSource) {
 function expandSpaceToOccurrences(space, rangeStart, rangeEnd) {
   if (!space) return [];
 
-  const duracion = Number(space.duracion_bloque_minutos) || 30;
+  const duracion =
+    Number(space.duracion_bloque_minutos) || DEFAULT_BLOCK_DURATION_MINUTES;
   const usaBloques = space.usa_bloques !== false;
   const inicioBase = new Date(space.inicio);
   const finBase = new Date(space.fin);
@@ -241,7 +243,7 @@ function getDefaultStart() {
 
 function getDefaultEnd() {
   const end = getDefaultStart();
-  end.setMinutes(end.getMinutes() + 30);
+  end.setMinutes(end.getMinutes() + DEFAULT_BLOCK_DURATION_MINUTES);
   return end;
 }
 
@@ -249,7 +251,7 @@ const initialForm = () => ({
   inicio: toDateTimeLocalInputValue(getDefaultStart()),
   fin: toDateTimeLocalInputValue(getDefaultEnd()),
   usaBloques: true,
-  duracionBloqueMinutos: 30,
+  duracionBloqueMinutos: DEFAULT_BLOCK_DURATION_MINUTES,
   recurrente: false,
   diasSemana: [],
   fechaInicio: '',
@@ -577,8 +579,13 @@ export default function AdvisorCalendar() {
       }
     }
 
-    if (Number(form.duracionBloqueMinutos) <= 0) {
-      warnings.push('La duración del bloque debe ser mayor que cero.');
+    if (
+      form.usaBloques &&
+      Number(form.duracionBloqueMinutos) < DEFAULT_BLOCK_DURATION_MINUTES
+    ) {
+      warnings.push(
+        `La duración del bloque debe ser de ${DEFAULT_BLOCK_DURATION_MINUTES} minutos o más.`,
+      );
     }
 
     if (form.recurrente) {
@@ -597,6 +604,7 @@ export default function AdvisorCalendar() {
   }, [
     form.inicio,
     form.fin,
+    form.usaBloques,
     form.duracionBloqueMinutos,
     form.recurrente,
     form.diasSemana,
@@ -622,6 +630,10 @@ export default function AdvisorCalendar() {
 
     if (!form.usaBloques) {
       return `Se publicará una sola franja de ${formatterHora.format(inicio)} a ${formatterHora.format(fin)}.`;
+    }
+
+    if (Number(form.duracionBloqueMinutos) < DEFAULT_BLOCK_DURATION_MINUTES) {
+      return `Cada bloque debe durar al menos ${DEFAULT_BLOCK_DURATION_MINUTES} minutos.`;
     }
 
     if (previewConfig.encajaExacto) {
@@ -767,7 +779,6 @@ export default function AdvisorCalendar() {
             <div className="grid grid-cols-7 gap-2 xl:gap-3">
               {calendarDays.map((day) => {
                 const key = toDayKey(day);
-                const items = espaciosPorDia[key] ?? [];
                 const blocks = bloquesPorDia[key] ?? [];
                 const isCurrentMonth = isSameMonth(day, viewDate);
                 const isSelected = isSameDay(day, selectedDate);
@@ -1082,8 +1093,8 @@ export default function AdvisorCalendar() {
             </label>
             <input
               type="number"
-              min="5"
-              step="5"
+              min={DEFAULT_BLOCK_DURATION_MINUTES}
+              step="15"
               value={form.duracionBloqueMinutos}
               onChange={(e) => handleDuracionChange(e.target.value)}
               className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"

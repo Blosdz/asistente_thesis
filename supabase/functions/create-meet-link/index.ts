@@ -47,6 +47,8 @@ type QueueItem = {
   notas?: string | null;
 };
 
+const MIN_MEETING_DURATION_MINUTES = 45;
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -104,18 +106,164 @@ function resolveDateTime(
   return primary || fallback || null;
 }
 
+function normalizeText(value?: string | null) {
+  const normalized = value?.trim();
+  return normalized ? normalized : null;
+}
+
+function buildFullName(firstName?: string | null, lastName?: string | null) {
+  const fullName = `${firstName ?? ""} ${lastName ?? ""}`.trim();
+  return fullName || null;
+}
+
+function assertMinimumMeetingDuration(startAt: string, endAt: string) {
+  const startDate = new Date(startAt);
+  const endDate = new Date(endAt);
+
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    throw new Error("Las fechas de la reunión no son válidas");
+  }
+
+  if (endDate <= startDate) {
+    throw new Error("La fecha fin debe ser mayor que la fecha inicio");
+  }
+
+  const durationMinutes = Math.round(
+    (endDate.getTime() - startDate.getTime()) / 60000,
+  );
+
+  if (durationMinutes < MIN_MEETING_DURATION_MINUTES) {
+    throw new Error(
+      `La reunión debe durar al menos ${MIN_MEETING_DURATION_MINUTES} minutos`,
+    );
+  }
+}
+
+async function getAuthUserEmail(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  authUserId?: string | null,
+) {
+  if (!authUserId) {
+    return null;
+  }
+
+  const { data, error } = await supabaseAdmin.auth.admin.getUserById(
+    authUserId,
+  );
+
+  if (error) {
+    console.error("No se pudo obtener email del usuario auth", {
+      authUserId,
+      error,
+    });
+    return null;
+  }
+
+  return normalizeText(data.user?.email ?? null);
+}
+
+async function enrichMeetingParticipants(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  payload: MeetRequest,
+) {
+  let advisorName = normalizeText(payload.advisor_name);
+  let advisorEmail = normalizeText(payload.advisor_email);
+  let advisorPublicEmail: string | null = null;
+  let studentName = normalizeText(payload.student_name);
+  let studentEmail = normalizeText(payload.student_email);
+
+  const advisorId = normalizeText(payload.advisor_id);
+  const studentId = normalizeText(payload.student_id);
+
+  const userIds = [advisorId, studentId].filter((value): value is string =>
+    Boolean(value)
+  );
+
+  const authUsersById = new Map<string, string | null>();
+
+  if (userIds.length > 0) {
+    const { data, error } = await supabaseAdmin
+      .schema("AT")
+      .from("usuarios")
+      .select("id, auth_usuario_id")
+      .in("id", userIds);
+
+    if (error) {
+      console.error("No se pudo resolver usuarios para la reunión", error);
+    } else {
+      for (const row of data ?? []) {
+        authUsersById.set(
+          row.id as string,
+          row.auth_usuario_id as string | null,
+        );
+      }
+    }
+  }
+
+  if (advisorId && (!advisorName || !advisorEmail)) {
+    const { data, error } = await supabaseAdmin
+      .schema("AT")
+      .from("perfil_publico_asesor")
+      .select("nombre_mostrar, email_publico")
+      .eq("asesor_id", advisorId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("No se pudo resolver perfil público del asesor", error);
+    } else {
+      advisorName = advisorName || normalizeText(data?.nombre_mostrar ?? null);
+      advisorPublicEmail = normalizeText(data?.email_publico ?? null);
+    }
+  }
+
+  if (studentId && !studentName) {
+    const { data, error } = await supabaseAdmin
+      .schema("AT")
+      .from("perfil_estudiante")
+      .select("nombres, apellidos")
+      .eq("estudiante_id", studentId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("No se pudo resolver perfil del estudiante", error);
+    } else {
+      studentName = buildFullName(
+        data?.nombres ?? null,
+        data?.apellidos ?? null,
+      );
+    }
+  }
+
+  if (!advisorEmail && advisorId) {
+    advisorEmail = await getAuthUserEmail(
+      supabaseAdmin,
+      authUsersById.get(advisorId) ?? null,
+    );
+  }
+
+  advisorEmail = advisorEmail || advisorPublicEmail;
+
+  if (!studentEmail && studentId) {
+    studentEmail = await getAuthUserEmail(
+      supabaseAdmin,
+      authUsersById.get(studentId) ?? null,
+    );
+  }
+
+  return {
+    ...payload,
+    advisor_name: advisorName,
+    advisor_email: advisorEmail,
+    student_name: studentName,
+    student_email: studentEmail,
+  };
+}
+
 function buildSummary(payload: MeetRequest) {
-  if (payload.title?.trim()) return payload.title.trim();
-  if (payload.motivo?.trim()) return payload.motivo.trim();
-  if (payload.thesis_title?.trim()) {
-    return `Asesoria de tesis - ${payload.thesis_title.trim()}`;
-  }
-  if (payload.advisor_name?.trim() && payload.student_name?.trim()) {
-    return `Asesoria entre ${payload.advisor_name.trim()} y ${
-      payload.student_name.trim()
-    }`;
-  }
-  return "Asesoria de tesis";
+  const studentName = normalizeText(payload.student_name) || "Estudiante";
+  const advisorName = normalizeText(payload.advisor_name) || "Asesor";
+
+  return `Reunion Tesis ${studentName} - ${advisorName}`;
 }
 
 function buildDescription(payload: MeetRequest) {
@@ -134,24 +282,67 @@ function buildDescription(payload: MeetRequest) {
     : "Reunion creada automaticamente tras validacion de pago.";
 }
 
+function buildAttendees(payload: MeetRequest) {
+  const attendees = [
+    {
+      email: normalizeText(payload.advisor_email),
+      displayName: normalizeText(payload.advisor_name),
+    },
+    {
+      email: normalizeText(payload.student_email),
+      displayName: normalizeText(payload.student_name),
+    },
+  ].filter((attendee) => attendee.email).map((attendee) => ({
+    email: attendee.email as string,
+    ...(attendee.displayName ? { displayName: attendee.displayName } : {}),
+  }));
+
+  return attendees.filter((attendee, index, collection) =>
+    collection.findIndex((item) => item.email === attendee.email) === index
+  );
+}
+
 async function createGoogleCalendarEvent(
+  supabaseAdmin: ReturnType<typeof createClient>,
   accessToken: string,
   payload: MeetRequest,
 ) {
-  const calendarId = Deno.env.get("GOOGLE_CALENDAR_ID") || "primary";
-  const startAt = resolveDateTime(payload.start_at, payload.inicio);
-  const endAt = resolveDateTime(payload.end_at, payload.fin);
+  const resolvedPayload = await enrichMeetingParticipants(
+    supabaseAdmin,
+    payload,
+  );
+  const preferredCalendarId = normalizeText(resolvedPayload.advisor_email);
+  const defaultCalendarId = normalizeText(Deno.env.get("GOOGLE_CALENDAR_ID")) ||
+    "primary";
+  const startAt = resolveDateTime(
+    resolvedPayload.start_at,
+    resolvedPayload.inicio,
+  );
+  const endAt = resolveDateTime(
+    resolvedPayload.end_at,
+    resolvedPayload.fin,
+  );
 
   if (!startAt || !endAt) {
     throw new Error("Faltan start_at/inicio o end_at/fin para crear el Meet");
   }
 
+  assertMinimumMeetingDuration(startAt, endAt);
+
+  const attendees = buildAttendees(resolvedPayload);
+  const calendarIds = preferredCalendarId &&
+      preferredCalendarId !== defaultCalendarId
+    ? [preferredCalendarId, defaultCalendarId]
+    : [defaultCalendarId];
+
   const eventPayload = {
-    summary: buildSummary(payload),
-    description: buildDescription(payload),
-    location: payload.location || null,
+    summary: buildSummary(resolvedPayload),
+    description: buildDescription(resolvedPayload),
+    location: resolvedPayload.location || null,
     start: { dateTime: startAt },
     end: { dateTime: endAt },
+    attendees,
+    guestsCanSeeOtherGuests: true,
     conferenceData: {
       createRequest: {
         requestId: crypto.randomUUID(),
@@ -160,29 +351,56 @@ async function createGoogleCalendarEvent(
     },
   };
 
-  const res = await fetch(
-    `https://www.googleapis.com/calendar/v3/calendars/${
-      encodeURIComponent(calendarId)
-    }/events?conferenceDataVersion=1&sendUpdates=none`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+  let lastError: Error | null = null;
+
+  for (const calendarId of calendarIds) {
+    const res = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${
+        encodeURIComponent(calendarId)
+      }/events?conferenceDataVersion=1&sendUpdates=${
+        attendees.length > 0 ? "all" : "none"
+      }`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(eventPayload),
       },
-      body: JSON.stringify(eventPayload),
-    },
-  );
+    );
 
-  const json = await res.json();
+    const json = await res.json();
 
-  if (!res.ok) {
-    throw new Error(
-      `Error creando evento en Google Calendar: ${JSON.stringify(json)}`,
+    if (res.ok) {
+      return {
+        eventData: json,
+        calendarIdUsed: calendarId,
+        resolvedPayload,
+      };
+    }
+
+    lastError = new Error(
+      `Error creando evento en Google Calendar (${calendarId}): ${
+        JSON.stringify(json)
+      }`,
+    );
+
+    if (calendarId === defaultCalendarId || calendarIds.length === 1) {
+      throw lastError;
+    }
+
+    console.warn(
+      "No se pudo crear la reunión en el calendario del asesor. Se intentará con el calendario por defecto.",
+      {
+        advisorEmail: preferredCalendarId,
+        fallbackCalendarId: defaultCalendarId,
+        error: json,
+      },
     );
   }
 
-  return json;
+  throw lastError ?? new Error("No se pudo crear el evento en Google Calendar");
 }
 
 function extractMeetUrl(eventData: Record<string, unknown>) {
@@ -253,18 +471,24 @@ async function processQueueItem(
   item: QueueItem,
 ) {
   try {
-    const eventData = await createGoogleCalendarEvent(accessToken, {
-      reunion_id: item.reunion_id,
-      cola_id: item.cola_id,
-      pago_id: item.pago_id,
-      inicio: item.inicio,
-      fin: item.fin,
-      motivo: item.motivo,
-      notas: item.notas,
-      title: item.motivo || "Asesoria de tesis",
-      description:
-        item.notas || "Reunion creada automaticamente tras validacion de pago.",
-    });
+    const { eventData, calendarIdUsed } = await createGoogleCalendarEvent(
+      supabaseAdmin,
+      accessToken,
+      {
+        reunion_id: item.reunion_id,
+        cola_id: item.cola_id,
+        pago_id: item.pago_id,
+        advisor_id: item.asesor_id,
+        student_id: item.estudiante_id,
+        inicio: item.inicio,
+        fin: item.fin,
+        motivo: item.motivo,
+        notas: item.notas,
+        description:
+          item.notas ||
+          "Reunion creada automaticamente tras validacion de pago.",
+      },
+    );
 
     const enlace = extractMeetUrl(eventData);
     const meetCode =
@@ -300,6 +524,7 @@ async function processQueueItem(
       google_event_id: eventData.id ?? null,
       meet_link: enlace,
       meet_codigo: meetCode,
+      calendar_id_used: calendarIdUsed,
     };
   } catch (error) {
     const errorMessage = error instanceof Error
@@ -357,7 +582,8 @@ Deno.serve(async (req) => {
 
     if (isDirectCreationRequest(body)) {
       try {
-        const eventData = await createGoogleCalendarEvent(accessToken, body);
+        const { eventData, calendarIdUsed, resolvedPayload } =
+          await createGoogleCalendarEvent(supabaseAdmin, accessToken, body);
         const meetUrl = extractMeetUrl(eventData);
 
         if (!meetUrl) {
@@ -381,9 +607,13 @@ Deno.serve(async (req) => {
           space_id: null,
           reunion_id: body.reunion_id ?? null,
           event_id: eventData.id ?? null,
+          calendar_id_used: calendarIdUsed,
           meet_link: meetUrl,
           enlace_reunion: meetUrl,
           meetingUri: meetUrl,
+          advisor_email: resolvedPayload.advisor_email ?? null,
+          student_email: resolvedPayload.student_email ?? null,
+          title: buildSummary(resolvedPayload),
           meetingCode:
             (eventData.conferenceData as { conferenceId?: string } | undefined)
               ?.conferenceId ?? null,
