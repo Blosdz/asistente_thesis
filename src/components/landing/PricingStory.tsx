@@ -3,45 +3,42 @@ import { Calculator, FileText, LayoutDashboard, ShieldCheck } from 'lucide-react
 
 import GlassCard from '../ui/GlassCard';
 import SectionHeading from '../ui/SectionHeading';
+import StorySection from './StorySection';
 
 const quoteCards = [
   {
-    title: 'Tu tesis define la cotizacion',
-    description:
-      'AppThesis analiza el tipo de investigacion, el nivel academico, el alcance y las necesidades del trabajo para generar una cotizacion coherente con tu proyecto.',
+    title: 'Precio real',
+    description: 'La tesis define el valor. No una tabla plana.',
     icon: Calculator,
   },
   {
-    title: 'Explicacion clara del resultado',
-    description:
-      'La plataforma no solo muestra un monto estimado: tambien organiza la informacion para que entiendas por que tu tesis requiere ese alcance.',
+    title: 'Sin humo',
+    description: 'Ves por que cuesta eso y que lo mueve.',
     icon: FileText,
   },
   {
-    title: 'Todo queda dentro del mismo flujo',
-    description:
-      'Despues de la cotizacion puedes continuar con organizacion, seguimiento de avances y control de observaciones sin salir de AppThesis.',
+    title: 'Todo unido',
+    description: 'Despues del precio, sigues en el mismo flujo.',
     icon: LayoutDashboard,
   },
   {
-    title: 'Mas claridad desde el inicio',
-    description:
-      'La idea es reducir incertidumbre desde el primer paso para que tomes decisiones con mejor criterio y una ruta de trabajo mas clara.',
+    title: 'Criterio primero',
+    description: 'La decision se siente mas clara desde el inicio.',
     icon: ShieldCheck,
   },
 ];
 
 export default function PricingStory() {
   return (
-    <section id="pricing-story" className="px-4 py-28 sm:px-6 lg:px-8">
+    <StorySection id="pricing-story" className="px-4 py-20 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeading
-          eyebrow="Cotizacion"
-          title="AppThesis genera tu cotizacion de acuerdo con tu tesis."
-          description="Quitamos la complejidad visual y dejamos lo importante: la plataforma estima tu cotizacion segun las caracteristicas de tu investigacion y te permite seguir con orden dentro del mismo entorno."
+          eyebrow="Precio"
+          title="Tu caso define el precio."
+          description="Menos friccion visual. Mas senal para decidir rapido y bien."
         />
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-2">
+        <div className="mt-10 grid gap-5 lg:grid-cols-2">
           {quoteCards.map((card, index) => {
             const Icon = card.icon;
 
@@ -57,7 +54,7 @@ export default function PricingStory() {
                   ease: [0.16, 1, 0.3, 1],
                 }}
               >
-                <GlassCard hover className="h-full p-7 md:p-8">
+                <GlassCard hover className="h-full p-6 md:p-7">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-gradient-to-br from-sky-500/15 to-blue-600/15 text-blue-700">
                       <Icon className="h-6 w-6" />
@@ -67,18 +64,14 @@ export default function PricingStory() {
                     </div>
                   </div>
 
-                  <h3 className="mt-6 text-3xl font-semibold text-slate-950">
-                    {card.title}
-                  </h3>
-                  <p className="mt-4 text-base leading-8 text-slate-600">
-                    {card.description}
-                  </p>
+                  <h3 className="mt-5 text-3xl font-semibold text-slate-950">{card.title}</h3>
+                  <p className="mt-3 text-base leading-7 text-slate-600">{card.description}</p>
                 </GlassCard>
               </motion.div>
             );
           })}
         </div>
       </div>
-    </section>
+    </StorySection>
   );
 }

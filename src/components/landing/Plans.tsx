@@ -4,55 +4,43 @@ import { Crown, Layers3, NotebookPen } from 'lucide-react';
 import GlassCard from '../ui/GlassCard';
 import SectionHeading from '../ui/SectionHeading';
 import { cn } from '../../lib/cn';
+import StorySection from './StorySection';
 
 const plans = [
   {
     title: 'Esencial',
-    description:
-      'Organizacion total de tu tesis, control de avances y observaciones para trabajar con autonomia y orden profesional.',
-    bullets: [
-      'Organizacion total de tu tesis',
-      'Control de avances y observaciones',
-      'Trabajo autonomo con estructura profesional',
-    ],
+    description: 'Orden total para avanzar con autonomia.',
+    bullets: ['Ruta clara', 'Avances visibles', 'Feedback limpio'],
     icon: Layers3,
   },
   {
     title: 'Guiado',
-    description: 'Acompanamiento metodologico cercano para mantener claridad durante el proceso.',
-    bullets: [
-      'Acompanamiento metodologico cercano',
-      'Revision estrategica y mejora del trabajo',
-      'Mayor claridad en tu tesis',
-    ],
+    description: 'Mas acompanamiento. Misma claridad.',
+    bullets: ['Revision cercana', 'Siguiente paso claro', 'Menos bloqueo'],
     icon: NotebookPen,
     featured: true,
-    badge: 'Mas elegido',
+    badge: 'Top',
   },
   {
     title: 'Integral',
-    description: 'Un recorrido de mayor profundidad para sostener la tesis de inicio a fin.',
-    bullets: [
-      'Acompanamiento completo',
-      'Desarrollo solido de inicio a fin',
-      'Preparacion real para sustentacion',
-    ],
+    description: 'Soporte fuerte para cerrar de punta a punta.',
+    bullets: ['Ruta completa', 'Cierre solido', 'Mejor defensa'],
     icon: Crown,
   },
 ];
 
 export default function Plans() {
   return (
-    <section id="plans" className="px-4 py-28 sm:px-6 lg:px-8">
+    <StorySection id="plans" className="px-4 py-20 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeading
           eyebrow="Planes"
-          title="Tres formas de avanzar con AppThesis."
-          description="Cada plan responde a una manera distinta de trabajar tu tesis, desde la autonomia con estructura hasta un acompanamiento mas completo."
+          title="Tres ritmos. Una misma ruta."
+          description="Elige cuanto apoyo necesitas sin perder el hilo del proceso."
           align="center"
         />
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-3">
+        <div className="mt-10 grid gap-5 lg:grid-cols-3">
           {plans.map((plan, index) => {
             const Icon = plan.icon;
 
@@ -71,7 +59,7 @@ export default function Plans() {
                 <GlassCard
                   hover
                   className={cn(
-                    'h-full p-7 md:p-8',
+                    'h-full p-6 md:p-7',
                     plan.featured &&
                       'border-blue-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(239,246,255,0.78))] shadow-[0_26px_72px_rgba(37,99,235,0.14)]',
                   )}
@@ -87,19 +75,15 @@ export default function Plans() {
                     ) : null}
                   </div>
 
-                  <h3 className="mt-6 text-3xl font-semibold text-slate-950">
-                    {plan.title}
-                  </h3>
-                  <p className="mt-4 text-base leading-8 text-slate-600">
-                    {plan.description}
-                  </p>
+                  <h3 className="mt-6 text-3xl font-semibold text-slate-950">{plan.title}</h3>
+                  <p className="mt-3 text-base leading-7 text-slate-600">{plan.description}</p>
 
-                  <div className="mt-8 space-y-3">
+                  <div className="mt-6 space-y-3">
                     {plan.bullets.map((bullet) => (
                       <div
                         key={bullet}
                         className={cn(
-                          'rounded-[22px] border border-white/70 bg-white/70 px-4 py-4 text-sm leading-7 text-slate-700',
+                          'rounded-[22px] border border-white/70 bg-white/70 px-4 py-3.5 text-sm leading-6 text-slate-700',
                           plan.featured && 'bg-gradient-to-r from-slate-50 to-blue-50/80',
                         )}
                       >
@@ -108,17 +92,16 @@ export default function Plans() {
                     ))}
                   </div>
 
-                  <div className="mt-8 rounded-[24px] border border-white/70 bg-slate-950 px-5 py-4 text-white">
+                  <div className="mt-6 rounded-[24px] border border-white/70 bg-slate-950 px-5 py-4 text-white">
                     <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/60">
                       Ideal para
                     </p>
-                    <p className="mt-2 text-sm leading-7 text-white/85">
-                      {plan.title === 'Esencial' &&
-                        'Quien quiere estructura, orden y control claro de entregables.'}
+                    <p className="mt-2 text-sm leading-6 text-white/85">
+                      {plan.title === 'Esencial' && 'Quien quiere foco, orden y autonomia.'}
                       {plan.title === 'Guiado' &&
-                        'Quien necesita acompanamiento frecuente sin perder autonomia.'}
+                        'Quien necesita criterio cerca sin perder autonomia.'}
                       {plan.title === 'Integral' &&
-                        'Quien busca soporte mas profundo y preparacion real para sustentar.'}
+                        'Quien busca soporte profundo hasta el cierre.'}
                     </p>
                   </div>
                 </GlassCard>
@@ -127,6 +110,6 @@ export default function Plans() {
           })}
         </div>
       </div>
-    </section>
+    </StorySection>
   );
 }

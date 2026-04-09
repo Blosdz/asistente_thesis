@@ -620,6 +620,10 @@ body::after {
   min-height: 100vh;
 }
 
+.story-ui-locked {
+  overscroll-behavior: none;
+}
+
 body.landing-page::before,
 body.landing-page::after {
   animation: none;
@@ -653,6 +657,53 @@ html.lenis body {
     linear-gradient(to bottom, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
   background-size: 120px 120px;
   mask-image: radial-gradient(circle at center, black, transparent 86%);
+}
+
+.story-nav-shell {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(241, 245, 249, 0.76));
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(30px) saturate(150%);
+  -webkit-backdrop-filter: blur(30px) saturate(150%);
+}
+
+.story-nav-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0.12) 42%,
+    transparent 70%
+  );
+}
+
+.story-section::before {
+  content: '';
+  position: absolute;
+  inset: 8% 12%;
+  z-index: -1;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.12), transparent 70%);
+  opacity: 0;
+  filter: blur(48px);
+  transition: opacity 320ms ease;
+  pointer-events: none;
+}
+
+.story-section[data-story-state='active']::before {
+  opacity: 0.55;
+}
+
+.story-section[data-story-state='leaving'] {
+  filter: saturate(0.96);
 }
 
 .glass-tag {

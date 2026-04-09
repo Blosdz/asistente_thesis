@@ -9,53 +9,50 @@ import {
 import GlassCard from '../ui/GlassCard';
 import SectionHeading from '../ui/SectionHeading';
 import { cn } from '../../lib/cn';
+import StorySection from './StorySection';
 
 const steps = [
   {
-    title: 'Describe tu investigacion',
-    description:
-      'Empieza con tu tema, enfoque y nivel academico para que el sistema entienda desde donde parte tu tesis.',
-    bullets: ['Tema y objetivo', 'Nivel academico', 'Necesidades metodologicas'],
+    title: 'Cuenta tu caso',
+    description: 'Tema, enfoque y nivel sin rodeos.',
+    bullets: ['Tema', 'Nivel', 'Meta'],
     icon: ScrollText,
   },
   {
-    title: 'Calcula modalidad y alcance',
-    description:
-      'La plataforma traduce tu caso en reglas de cotizacion y te explica donde aparecen recargos, descuentos o evaluaciones particulares.',
-    bullets: ['Tipo de investigacion', 'Variables y estadistica', 'Casos especiales'],
+    title: 'Mide alcance',
+    description: 'El sistema traduce complejidad en precio y plan.',
+    bullets: ['Carga', 'Variables', 'Precio'],
     icon: Calculator,
   },
   {
-    title: 'Organiza avances y observaciones',
-    description:
-      'Centraliza entregables, feedback y tareas pendientes para que el progreso deje de sentirse difuso.',
-    bullets: ['Seguimiento visible', 'Historial de observaciones', 'Pendientes priorizados'],
+    title: 'Ordena avance',
+    description: 'Entregas, feedback y pendientes en un solo tablero.',
+    bullets: ['Entregas', 'Feedback', 'Prioridades'],
     icon: ClipboardList,
   },
   {
-    title: 'Escala con acompanamiento y servicios extra',
-    description:
-      'Cuando la tesis exige mas soporte, puedes activar asesorias, correcciones o preparacion para sustentacion sin perder continuidad.',
-    bullets: ['Planes segun complejidad', 'Extras recomprables', 'Ruta de cierre'],
+    title: 'Escala apoyo',
+    description: 'Activa mas soporte solo cuando de verdad lo necesitas.',
+    bullets: ['Planes', 'Extras', 'Cierre'],
     icon: GitBranchPlus,
   },
 ];
 
 export default function HowItWorks() {
   return (
-    <section id="how-it-works" className="px-4 py-28 sm:px-6 lg:px-8">
+    <StorySection id="how-it-works" className="px-4 py-20 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <SectionHeading
-          eyebrow="Como funciona"
-          title="Un flujo academico claro, explicado paso a paso."
-          description="La experiencia esta pensada como una secuencia natural: entender tu caso, estimar la modalidad adecuada, ordenar el trabajo y escalar el soporte cuando el proyecto lo necesita."
+          eyebrow="Flujo"
+          title="Cuatro pasos. Cero ruido."
+          description="Entiende tu caso, mide el alcance, ordena el trabajo y escala apoyo sin romper el ritmo."
           align="center"
         />
 
-        <div className="relative mt-16">
+        <div className="relative mt-12">
           <div className="absolute left-1/2 top-12 hidden h-[calc(100%-6rem)] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-blue-200 to-transparent md:block" />
 
-          <div className="space-y-8 md:space-y-12">
+          <div className="space-y-6 md:space-y-8">
             {steps.map((step, index) => {
               const Icon = step.icon;
 
@@ -66,7 +63,7 @@ export default function HowItWorks() {
                       'md:w-[calc(50%-1.75rem)]',
                       index % 2 === 0 ? 'md:mr-auto' : 'md:ml-auto',
                     )}
-                    >
+                  >
                     <motion.div
                       initial={{ opacity: 0, y: 22, scale: 0.99 }}
                       whileInView={{ opacity: 1, y: 0, scale: 1 }}
@@ -77,7 +74,7 @@ export default function HowItWorks() {
                         ease: [0.16, 1, 0.3, 1],
                       }}
                     >
-                      <GlassCard hover className="p-7 md:p-8">
+                      <GlassCard hover className="p-6 md:p-7">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-gradient-to-br from-sky-500/15 to-blue-600/15 text-blue-700">
                             <Icon className="h-6 w-6" />
@@ -87,14 +84,10 @@ export default function HowItWorks() {
                           </div>
                         </div>
 
-                        <h3 className="mt-6 text-2xl font-semibold text-slate-950">
-                          {step.title}
-                        </h3>
-                        <p className="mt-4 text-base leading-8 text-slate-600">
-                          {step.description}
-                        </p>
+                        <h3 className="mt-5 text-2xl font-semibold text-slate-950">{step.title}</h3>
+                        <p className="mt-3 text-base leading-7 text-slate-600">{step.description}</p>
 
-                        <div className="mt-6 flex flex-wrap gap-2">
+                        <div className="mt-5 flex flex-wrap gap-2">
                           {step.bullets.map((bullet) => (
                             <div
                               key={bullet}
@@ -116,6 +109,6 @@ export default function HowItWorks() {
           </div>
         </div>
       </div>
-    </section>
+    </StorySection>
   );
 }
