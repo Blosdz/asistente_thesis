@@ -4,6 +4,7 @@ import { ChevronRight, LogIn } from 'lucide-react';
 import Hero from './Hero';
 import GlassCard from '../ui/GlassCard';
 import ScrollProgress from '../ui/ScrollProgress';
+import appIcon from '../../../iconProyect.png';
 
 const AssessmentFunnel = lazy(() => import('./AssessmentFunnel'));
 const Plans = lazy(() => import('./Plans'));
@@ -173,7 +174,7 @@ export default function LandingPage() {
             >
               <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-sky-200/90 bg-blue-300 shadow-[0_14px_34px_rgba(15,23,42,0.12)]">
                 <img
-                  src="/favicon.svg"
+                  src={appIcon}
                   alt="AppThesis"
                   className="h-8 w-8 object-contain"
                   width="32"
