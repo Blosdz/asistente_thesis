@@ -12,8 +12,10 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { Card } from '../../components/ui/card';
+import SubscriptionSummaryCard from '../../components/student/SubscriptionSummaryCard';
 import { obtenerResumenDashboardEstudiante } from '../../services/dashboardService';
 import { vincularmeConAsesorPorCodigo } from '../../services/advisorService';
+import { obtenerMiSuscripcion } from '../../services/suscripcionService';
 import { toast } from 'react-hot-toast';
 
 const formatterFecha = new Intl.DateTimeFormat('es-PE', {
@@ -76,6 +78,8 @@ export default function Dashboard() {
   const [resumen, setResumen] = useState(resumenInicial);
   const [codigoAsesor, setCodigoAsesor] = useState('');
   const [linkingByCode, setLinkingByCode] = useState(false);
+  const [loadingSuscripcion, setLoadingSuscripcion] = useState(true);
+  const [suscripcion, setSuscripcion] = useState(null);
 
   useEffect(() => {
     const cargarResumen = async () => {
@@ -92,6 +96,23 @@ export default function Dashboard() {
     };
 
     cargarResumen();
+  }, []);
+
+  useEffect(() => {
+    const cargarSuscripcion = async () => {
+      try {
+        setLoadingSuscripcion(true);
+        const data = await obtenerMiSuscripcion();
+        setSuscripcion(data ?? null);
+      } catch (error) {
+        console.error('Error cargando suscripción activa:', error);
+        setSuscripcion(null);
+      } finally {
+        setLoadingSuscripcion(false);
+      }
+    };
+
+    cargarSuscripcion();
   }, []);
 
   const handleLinkByCode = async () => {
@@ -353,6 +374,11 @@ export default function Dashboard() {
                 )}
               </div>
             </Card>
+
+            <SubscriptionSummaryCard
+              subscription={suscripcion}
+              loading={loadingSuscripcion}
+            />
 
             <Card className="rounded-[32px] border border-white/70 bg-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">

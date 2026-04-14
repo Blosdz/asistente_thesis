@@ -1,78 +1,36 @@
-import { useEffect, useState } from 'react';
-import { getPlanes, type Plan } from '../services/planes';
-import { iniciarPagoPlan } from '../services/pagosService';
-import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 export default function PlanesList() {
-  const [planes, setPlanes] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [comprandoId, setComprandoId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [ok, setOk] = useState<string | null>(null);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getPlanes();
-        setPlanes(data);
-      } catch (err: any) {
-        setError(err.message || 'No se pudieron cargar los planes');
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
-
-  const handleComprar = async (plan: Plan) => {
-    try {
-      setComprandoId(plan.id);
-      setError(null);
-      setOk(null);
-      await iniciarPagoPlan({
-        planId: plan.id,
-      });
-      setOk(`Se genero la nota de pago del plan "${plan.nombre}".`);
-    } catch (err: any) {
-      setError(err.message || 'No se pudo comprar el plan');
-    } finally {
-      setComprandoId(null);
-    }
-  };
-
-  if (loading) return <p>Cargando planes...</p>;
-  if (error) return <p>Error: {error}</p>;
+  const navigate = useNavigate();
 
   return (
-    <div className="grid gap-4">
-      {ok && <div className="rounded border p-3">{ok}</div>}
-      {planes.map((plan) => (
-        <Card key={plan.id}>
-          <CardHeader>
-            <CardTitle>{plan.nombre}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="font-bold text-lg mb-1">S/ {Number(plan.precio).toFixed(2)}</p>
-            <p className="mb-2">{plan.duracion_dias} dias</p>
-            {Array.isArray(plan.caracteristicas) && (
-              <ul className="mt-2 list-disc pl-5">
-                {plan.caracteristicas.map((item: string, i: number) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
-            )}
-            <button
-              className="mt-4 rounded bg-black px-4 py-2 text-white disabled:opacity-50"
-              onClick={() => handleComprar(plan)}
-              disabled={comprandoId === plan.id}
-            >
-              {comprandoId === plan.id ? 'Procesando...' : 'Comprar plan'}
-            </button>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+    <Card className="max-w-3xl rounded-[28px] border border-white/80 bg-white/80 p-8 shadow-[0_18px_45px_rgba(15,23,42,0.05)]">
+      <CardHeader className="mb-6 space-y-2">
+        <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
+          Flujo unificado
+        </p>
+        <CardTitle className="text-2xl font-black tracking-tight text-slate-900">
+          La cotización del plan ahora vive en Mi Tesis
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-5 text-sm leading-7 text-slate-600">
+        <p>
+          Para evitar pagos duplicados, la selección del plan, el tipo de tesis
+          y el cálculo final del precio se hacen juntos cuando creas tu tesis.
+        </p>
+        <p>
+          Desde allí podrás revisar el desglose completo y pasar directo al pago
+          pendiente con el voucher listo para subir.
+        </p>
+        <button
+          type="button"
+          onClick={() => navigate('/student/my-thesis')}
+          className="inline-flex rounded-2xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+        >
+          Ir a Mi Tesis
+        </button>
+      </CardContent>
+    </Card>
   );
 }

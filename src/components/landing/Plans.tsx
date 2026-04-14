@@ -5,38 +5,55 @@ import GlassCard from '../ui/GlassCard';
 import SectionHeading from '../ui/SectionHeading';
 import { cn } from '../../lib/cn';
 
-const plans = [
+export const planCatalog = [
   {
     title: 'Esencial',
-    description:
-      'Organizacion total de tu tesis, control de avances y observaciones para trabajar con autonomia y orden profesional.',
     bullets: [
-      'Organizacion total de tu tesis',
-      'Control de avances y observaciones',
-      'Trabajo autonomo con estructura profesional',
+      '2 asesorías personalizadas.',
+      'Carga de documentos y reglamentos académicos.',
+      'No incluye acompañamiento continuo.',
+      'Las asesorías adicionales se cobran dentro del sistema.',
+      'El avance depende del estudiante.',
+      'El precio depende del tipo de investigación y del nivel académico.',
     ],
+    idealFor:
+      'Quien necesita una base ordenada, resolver dudas clave y avanzar principalmente por cuenta propia.',
     icon: Layers3,
   },
   {
     title: 'Guiado',
-    description: 'Acompanamiento metodologico cercano para mantener claridad durante el proceso.',
     bullets: [
-      'Acompanamiento metodologico cercano',
-      'Revision estrategica y mejora del trabajo',
-      'Mayor claridad en tu tesis',
+      '6 asesorías personalizadas.',
+      'Acompañamiento metodológico cercano.',
+      'Carga de documentos y reglamentos académicos.',
+      'Revision estrategica del trabajo.',
+      'Las asesorías adicionales se cobran dentro del sistema.',
+      'El avance depende del estudiante.',
+      'El precio depende del tipo de investigación y del nivel académico.',
+      'Las asesorías están distribuidas durante el proceso.',
+      'No incluye asesoría ilimitada.',
     ],
+    idealFor:
+      'Quien busca seguimiento más constante y orientación metodológica sin requerir soporte ilimitado.',
     icon: NotebookPen,
     featured: true,
-    badge: 'Mas elegido',
+    badge: 'Más elegido',
   },
   {
     title: 'Integral',
-    description: 'Un recorrido de mayor profundidad para sostener la tesis de inicio a fin.',
     bullets: [
-      'Acompanamiento completo',
-      'Desarrollo solido de inicio a fin',
-      'Preparacion real para sustentacion',
+      '12 asesorías que cubren tu proceso.',
+      'Revision progresiva de borradores',
+      'Apoyo desde anteproyecto hasta pre sustentación.',
+      'Cobertura más sólida para una investigación exigente.',
+      'Acompañamiento metodológico cercano.',
+      'Carga de documentos y reglamentos académicos.',
+      'Revision estrategica del trabajo.',
+      'Las asesorías adicionales se cobran dentro del sistema.',
+      'Las asesorías están distribuidas durante el proceso.',
     ],
+    idealFor:
+      'Quien necesita un acompañamiento más amplio, con mayor continuidad y respaldo durante casi todo el recorrido.',
     icon: Crown,
   },
 ];
@@ -48,24 +65,24 @@ export default function Plans() {
         <SectionHeading
           eyebrow="Planes"
           title="Tres formas de avanzar con AppThesis."
-          description="Cada plan responde a una manera distinta de trabajar tu tesis, desde la autonomia con estructura hasta un acompanamiento mas completo."
+          description="Cada plan responde a una necesidad distinta: empezar con orden, avanzar con guía distribuida o cubrir todo el proceso con más profundidad."
           align="center"
         />
 
         <div className="mt-14 grid gap-6 lg:grid-cols-3">
-          {plans.map((plan, index) => {
+          {planCatalog.map((plan, index) => {
             const Icon = plan.icon;
 
             return (
               <motion.div
                 key={plan.title}
-                initial={{ opacity: 0, y: 20, scale: 0.992 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.18 }}
                 transition={{
-                  duration: 0.8,
-                  delay: index * 0.08,
-                  ease: [0.16, 1, 0.3, 1],
+                  duration: 0.5,
+                  delay: index * 0.05,
+                  ease: 'easeOut',
                 }}
               >
                 <GlassCard
@@ -90,16 +107,12 @@ export default function Plans() {
                   <h3 className="mt-6 text-3xl font-semibold text-slate-950">
                     {plan.title}
                   </h3>
-                  <p className="mt-4 text-base leading-8 text-slate-600">
-                    {plan.description}
-                  </p>
-
-                  <div className="mt-8 space-y-3">
+                  <div className="mt-5 space-y-3">
                     {plan.bullets.map((bullet) => (
                       <div
                         key={bullet}
                         className={cn(
-                          'rounded-[22px] border border-white/70 bg-white/70 px-4 py-4 text-sm leading-7 text-slate-700',
+                          'rounded-[22px] border border-white/70 bg-white/70  text-sm leading-7 text-slate-700',
                           plan.featured && 'bg-gradient-to-r from-slate-50 to-blue-50/80',
                         )}
                       >
@@ -113,12 +126,7 @@ export default function Plans() {
                       Ideal para
                     </p>
                     <p className="mt-2 text-sm leading-7 text-white/85">
-                      {plan.title === 'Esencial' &&
-                        'Quien quiere estructura, orden y control claro de entregables.'}
-                      {plan.title === 'Guiado' &&
-                        'Quien necesita acompanamiento frecuente sin perder autonomia.'}
-                      {plan.title === 'Integral' &&
-                        'Quien busca soporte mas profundo y preparacion real para sustentar.'}
+                      {plan.idealFor}
                     </p>
                   </div>
                 </GlassCard>

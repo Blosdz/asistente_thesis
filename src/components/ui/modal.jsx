@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
@@ -27,8 +27,8 @@ const widthMap = {
  * - description?: string | JSX
  * - descriptionSize?: 'sm'|'md'|'lg'|'xl'|'xxl'
  * - modalWidth?: 'md'|'lg'|'xl'|'full'
- * - primaryAction?: { label: string; onClick: () => void }
- * - secondaryAction?: { label: string; onClick: () => void }
+ * - primaryAction?: { label: string; onClick: () => void; disabled?: boolean }
+ * - secondaryAction?: { label: string; onClick: () => void; disabled?: boolean }
  * - children?: ReactNode (custom content below description)
  */
 const Modal = ({
@@ -46,12 +46,6 @@ const Modal = ({
   const overlayRef = useRef(null);
   const closeBtnRef = useRef(null);
   const onCloseRef = useRef(onClose);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    return () => setMounted(false);
-  }, []);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -72,7 +66,7 @@ const Modal = ({
     return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
-  if (!open || !mounted) return null;
+  if (!open || typeof document === 'undefined') return null;
 
   const descClass = sizeMap[descriptionSize] || sizeMap.md;
   const modalWidthClass = widthMap[modalWidth] || widthMap.md;
@@ -115,7 +109,8 @@ const Modal = ({
             {secondaryAction && (
               <button
                 onClick={secondaryAction.onClick}
-                className="flex-1 h-12 rounded-2xl border border-slate-200 bg-white/70 text-slate-700 font-semibold hover:bg-white transition-colors"
+                disabled={secondaryAction.disabled}
+                className="flex-1 h-12 rounded-2xl border border-slate-200 bg-white/70 text-slate-700 font-semibold hover:bg-white transition-colors disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {secondaryAction.label}
               </button>
@@ -123,7 +118,8 @@ const Modal = ({
             {primaryAction && (
               <button
                 onClick={primaryAction.onClick}
-                className="flex-1 h-12 rounded-2xl bg-primary text-white font-semibold shadow-[0_10px_25px_-5px_rgba(10,71,238,0.35)] hover:brightness-105 active:scale-[0.99] transition"
+                disabled={primaryAction.disabled}
+                className="flex-1 h-12 rounded-2xl bg-primary text-white font-semibold shadow-[0_10px_25px_-5px_rgba(10,71,238,0.35)] hover:brightness-105 active:scale-[0.99] transition disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100"
               >
                 {primaryAction.label}
               </button>

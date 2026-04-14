@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { CheckCircle2, Clock3, Loader2, Search, XCircle } from 'lucide-react';
 import { Card } from '../../components/ui/card';
+import { crearGoogleMeetAdmin } from '../../services/googleMeetService';
 import {
   obtenerHistorialValidacionesCitaAsesor,
   responderReservaCita,
@@ -40,6 +41,74 @@ const formatDateTime = (value) => {
 const formatStatusLabel = (value) => {
   if (!value) return 'sin estado';
   return value.replaceAll('_', ' ');
+};
+
+const inferServiceType = (item) => {
+  if (item?.tipo_servicio) {
+    return item.tipo_servicio;
+  }
+
+  return String(item?.motivo || '').toLowerCase().includes('pre-sustent')
+    ? 'presustentacion'
+    : 'asesoria';
+};
+
+const serviceTypeLabel = (item) =>
+  inferServiceType(item) === 'presustentacion'
+    ? 'Pre-sustentación'
+    : 'Asesoría';
+
+const shouldCreateMeetForReservation = (item, result) =>
+  result?.accion === 'aceptada_por_plan' &&
+  item?.modalidad === 'virtual' &&
+  Boolean(result?.reunion_id) &&
+  !item?.enlace_reunion;
+
+const buildMeetPayload = (item, result) => ({
+  reunion_id: result?.reunion_id,
+  validation_cita_id: item?.validation_cita_id,
+  advisor_id: item?.advisor_id || null,
+  student_id: item?.estudiante_id || null,
+  student_name: item?.estudiante_nombre || null,
+  thesis_id: item?.tesis_id || null,
+  thesis_title: item?.tesis_titulo || null,
+  start_at: item?.start_at || null,
+  end_at: item?.end_at || null,
+  motivo: item?.motivo || null,
+  notas: item?.notas || null,
+  modalidad: item?.modalidad || 'virtual',
+  location: item?.lugar || null,
+  description:
+    result?.mensaje ||
+    'Reunión creada automáticamente para una cita aprobada con el plan del estudiante.',
+});
+
+const getActionSuccessMessage = (result, accion) => {
+  if (result?.mensaje) {
+    return result.mensaje;
+  }
+
+  if (accion !== 'aceptar') {
+    return 'Solicitud rechazada correctamente';
+  }
+
+  if (result?.accion === 'aceptada_por_plan') {
+    if (typeof result?.asesorias_restantes === 'number') {
+      return `Solicitud aceptada con el plan del estudiante. Quedan ${result.asesorias_restantes} asesoría(s) disponibles.`;
+    }
+
+    if (typeof result?.presustentaciones_restantes === 'number') {
+      return `Solicitud aceptada con el plan del estudiante. Quedan ${result.presustentaciones_restantes} pre-sustentación(es) disponibles.`;
+    }
+
+    return 'Solicitud aceptada con el plan del estudiante, sin pago adicional.';
+  }
+
+  if (result?.accion === 'pendiente_pago') {
+    return 'Solicitud aceptada. El estudiante debe completar el pago para confirmar la cita.';
+  }
+
+  return 'Solicitud aceptada correctamente';
 };
 
 export default function AdvisorReservations() {
@@ -105,16 +174,24 @@ export default function AdvisorReservations() {
     );
   }, [items]);
 
-  const handleAction = async (validationCitaId, accion) => {
+  const handleAction = async (item, accion) => {
     try {
-      setActingId(validationCitaId);
-      const result = await responderReservaCita(validationCitaId, accion);
-      toast.success(
-        result?.mensaje ||
-          (accion === 'aceptar'
-            ? 'Solicitud aceptada correctamente'
-            : 'Solicitud rechazada correctamente'),
-      );
+      setActingId(item.validation_cita_id);
+      const result = await responderReservaCita(item.validation_cita_id, accion);
+
+      let successMessage = getActionSuccessMessage(result, accion);
+
+      if (shouldCreateMeetForReservation(item, result)) {
+        const meetResult = await crearGoogleMeetAdmin(
+          buildMeetPayload(item, result),
+        );
+
+        successMessage = meetResult?.enlace_reunion
+          ? 'Solicitud aceptada con el plan y Google Meet creado correctamente.'
+          : successMessage;
+      }
+
+      toast.success(successMessage);
       await loadItems(statusFilter);
     } catch (error) {
       console.error(error);
@@ -266,6 +343,9 @@ export default function AdvisorReservations() {
                       <p className="mt-1 text-xs text-slate-500">
                         {item.modalidad || 'Sin modalidad'}
                       </p>
+                      <p className="mt-2 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold uppercase text-slate-600">
+                        {serviceTypeLabel(item)}
+                      </p>
                     </td>
                     <td className="px-6 py-5 align-top">
                       <span
@@ -275,6 +355,11 @@ export default function AdvisorReservations() {
                       >
                         {formatStatusLabel(item.status)}
                       </span>
+                      {item.status === 'approved' && !item.payment_id && (
+                        <p className="mt-2 text-xs font-semibold text-cyan-700">
+                          Cubierta por plan, sin pago adicional.
+                        </p>
+                      )}
                     </td>
                     <td className="px-6 py-5 align-top text-xs text-slate-500">
                       <p>Solicitud: {item.validation_cita_id}</p>
@@ -288,9 +373,7 @@ export default function AdvisorReservations() {
                             <button
                               type="button"
                               disabled={actingId === item.validation_cita_id}
-                              onClick={() =>
-                                handleAction(item.validation_cita_id, 'rechazar')
-                              }
+                              onClick={() => handleAction(item, 'rechazar')}
                               className="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:opacity-60"
                             >
                               <XCircle className="w-4 h-4" />
@@ -299,9 +382,7 @@ export default function AdvisorReservations() {
                             <button
                               type="button"
                               disabled={actingId === item.validation_cita_id}
-                              onClick={() =>
-                                handleAction(item.validation_cita_id, 'aceptar')
-                              }
+                              onClick={() => handleAction(item, 'aceptar')}
                               className="inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
                             >
                               <CheckCircle2 className="w-4 h-4" />

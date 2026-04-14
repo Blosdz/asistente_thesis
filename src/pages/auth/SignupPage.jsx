@@ -66,7 +66,7 @@ const SignupPage = () => {
           style={{
             background:
               'radial-gradient(circle, rgba(173, 216, 230, 0.8) 0%, transparent 70%)',
-            animation: 'pastel-move-1 30s infinite alternate ease-in-out',
+            animation: 'none',
           }}
         ></div>
         <div
@@ -83,7 +83,7 @@ const SignupPage = () => {
           style={{
             background:
               'radial-gradient(circle, rgba(255, 182, 193, 0.7) 0%, transparent 70%)',
-            animation: 'pastel-move-1 35s infinite alternate ease-in-out',
+            animation: 'none',
           }}
         ></div>
       </div>

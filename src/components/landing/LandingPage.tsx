@@ -1,56 +1,133 @@
-import { useEffect, useRef } from 'react';
-import Lenis from 'lenis';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { ChevronRight, LogIn } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import projectIcon from '../../../iconProyect.png';
 
 import Hero from './Hero';
-import HowItWorks from './HowItWorks';
-import PricingStory from './PricingStory';
-import Plans from './Plans';
-import AIShowcase from './AIShowcase';
-import TrustSection from './TrustSection';
-import FinalCTA from './FinalCTA';
 import GlassCard from '../ui/GlassCard';
 import ScrollProgress from '../ui/ScrollProgress';
 
+const AssessmentFunnel = lazy(() => import('./AssessmentFunnel'));
+const Plans = lazy(() => import('./Plans'));
+const TrustSection = lazy(() => import('./TrustSection'));
+const FinalCTA = lazy(() => import('./FinalCTA'));
+
 const navItems = [
-  { label: 'Como funciona', id: 'how-it-works' },
-  { label: 'Cotizacion', id: 'pricing-story' },
+  { label: 'Inicio', id: 'hero' },
+  { label: 'Evaluación', id: 'assessment-funnel' },
   { label: 'Planes', id: 'plans' },
-  { label: 'Asistente', id: 'ai-showcase' },
+  { label: 'Valor', id: 'trust' },
 ];
 
+function SectionSkeleton({ className = 'min-h-[360px]' }) {
+  return (
+    <div
+      className={`mx-auto flex w-full max-w-6xl flex-col gap-6 rounded-[36px] border border-white/70 bg-white/55 p-8 shadow-[0_24px_80px_rgba(148,163,184,0.12)] backdrop-blur-xl ${className}`}
+    >
+      <div className="h-4 w-28 animate-pulse rounded-full bg-slate-200/80" />
+      <div className="h-10 w-full max-w-md animate-pulse rounded-full bg-slate-200/80" />
+      <div className="h-4 w-4/5 max-w-2xl animate-pulse rounded-full bg-slate-200/70" />
+
+      <div className="grid flex-1 gap-4 md:grid-cols-3">
+        <div className="h-40 animate-pulse rounded-[28px] bg-white/80 md:col-span-2" />
+        <div className="h-40 animate-pulse rounded-[28px] bg-slate-200/75" />
+        <div className="h-32 animate-pulse rounded-[28px] bg-slate-200/75" />
+        <div className="h-32 animate-pulse rounded-[28px] bg-slate-200/75" />
+        <div className="h-32 animate-pulse rounded-[28px] bg-slate-200/75" />
+      </div>
+    </div>
+  );
+}
+
+function DeferredSection({
+  children,
+  rootMargin = '260px 0px',
+  placeholderClassName,
+}) {
+  const sectionRef = useRef<HTMLDivElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    if (isVisible) return;
+
+    const node = sectionRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin },
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [isVisible, rootMargin]);
+
+  return (
+    <div ref={sectionRef}>
+      {isVisible ? (
+        <Suspense fallback={<SectionSkeleton className={placeholderClassName} />}>
+          {children}
+        </Suspense>
+      ) : (
+        <SectionSkeleton className={placeholderClassName} />
+      )}
+    </div>
+  );
+}
+
 export default function LandingPage() {
-  const lenisRef = useRef(null);
+  const lastScrollYRef = useRef(0);
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     document.body.classList.add('landing-page');
 
-    const lenis = new Lenis({
-      smoothWheel: true,
-      lerp: 0.14,
-      wheelMultiplier: 1,
-      touchMultiplier: 1,
-      syncTouch: false,
-    });
+    let ticking = false;
+    let lastScrolled = -1;
 
-    lenisRef.current = lenis;
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollingDown = currentScrollY > lastScrollYRef.current;
+      const scrollDelta = Math.abs(currentScrollY - lastScrollYRef.current);
 
-    let frameId = 0;
+      // Only update if significant scroll change
+      if (Math.abs(currentScrollY - lastScrolled) >= 10 || currentScrollY <= 24 || currentScrollY > lastScrollYRef.current + 50) {
+        setIsScrolled(currentScrollY > 24);
 
-    const raf = (time) => {
-      lenis.raf(time);
-      frameId = window.requestAnimationFrame(raf);
+        if (currentScrollY <= 24) {
+          setIsNavVisible(true);
+        } else if (scrollDelta > 10) {
+          setIsNavVisible(!scrollingDown);
+        }
+
+        lastScrolled = currentScrollY;
+      }
+
+      lastScrollYRef.current = currentScrollY;
+      ticking = false;
     };
 
-    frameId = window.requestAnimationFrame(raf);
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(handleScroll);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    handleScroll();
 
     return () => {
       document.body.classList.remove('landing-page');
-      window.cancelAnimationFrame(frameId);
-      lenis.destroy();
-      lenisRef.current = null;
+      window.removeEventListener('scroll', onScroll);
     };
   }, []);
 
@@ -60,12 +137,8 @@ export default function LandingPage() {
       return;
     }
 
-    if (lenisRef.current) {
-      lenisRef.current.scrollTo(target, { offset: -24, duration: 1.05 });
-      return;
-    }
-
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const top = target.getBoundingClientRect().top + window.scrollY - 96;
+    window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
   };
 
   return (
@@ -80,22 +153,35 @@ export default function LandingPage() {
         <div className="landing-mesh absolute inset-0 opacity-40" />
       </div>
 
-      <header className="fixed inset-x-0 top-4 z-50 mx-auto w-[min(1120px,calc(100%-1.25rem))]">
-        <GlassCard className="rounded-full px-4 py-3 sm:px-5">
-          <div className="flex items-center justify-between gap-4">
+      <header
+        className={`fixed inset-x-0 top-0 z-50 transition-transform duration-300 ${
+          isNavVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
+        <GlassCard
+          className={`rounded-none border-x-0 border-t-0 px-4 py-3 sm:px-6 ${
+            isScrolled
+              ? 'bg-white/85 shadow-[0_18px_50px_rgba(15,23,42,0.12)]'
+              : 'bg-white/72'
+          }`}
+        >
+          <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4">
             <button
               type="button"
               onClick={() => scrollToSection('hero')}
               className="flex items-center gap-3 text-left"
             >
-              <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-white/70 bg-white/80 shadow-[0_14px_34px_rgba(15,23,42,0.12)]">
-                <img src={projectIcon} alt="AppThesis" className="h-8 w-8 object-contain" />
+              <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-sky-200/90 bg-blue-300 shadow-[0_14px_34px_rgba(15,23,42,0.12)]">
+                <img
+                  src="/favicon.svg"
+                  alt="AppThesis"
+                  className="h-8 w-8 object-contain"
+                  width="32"
+                  height="32"
+                />
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-950">AppThesis</p>
-                <p className="text-xs text-slate-500">
-                  Organizacion, cotizacion y acompanamiento
-                </p>
               </div>
             </button>
 
@@ -113,13 +199,13 @@ export default function LandingPage() {
             </nav>
 
             <div className="flex items-center gap-2">
-              <Link
-                to="/login"
+              <a
+                href="#/login"
                 className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/70 px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-300 hover:bg-white/82"
               >
                 <LogIn className="h-4 w-4" />
                 <span className="hidden sm:inline">Ingresar</span>
-              </Link>
+              </a>
               <button
                 type="button"
                 onClick={() => scrollToSection('plans')}
@@ -135,12 +221,18 @@ export default function LandingPage() {
 
       <main className="relative">
         <Hero onNavigate={scrollToSection} />
-        <HowItWorks />
-        <PricingStory />
-        <Plans />
-        <AIShowcase />
-        <TrustSection />
-        <FinalCTA onNavigate={scrollToSection} />
+        <DeferredSection placeholderClassName="min-h-[720px]">
+          <AssessmentFunnel onNavigate={scrollToSection} />
+        </DeferredSection>
+        <DeferredSection placeholderClassName="min-h-[560px]">
+          <Plans />
+        </DeferredSection>
+        <DeferredSection placeholderClassName="min-h-[520px]">
+          <TrustSection />
+        </DeferredSection>
+        <DeferredSection placeholderClassName="min-h-[420px]">
+          <FinalCTA onNavigate={scrollToSection} />
+        </DeferredSection>
       </main>
     </div>
   );

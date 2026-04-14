@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import {
   AlertCircle,
@@ -10,13 +11,13 @@ import {
   Wallet,
 } from 'lucide-react';
 import { Card } from '../../components/ui/card';
+import SubscriptionSummaryCard from '../../components/student/SubscriptionSummaryCard';
 import Modal from '../../components/ui/modal';
 import {
-  iniciarPagoPlan,
   obtenerMisPagosEstudiante,
-  obtenerPlanesDisponibles,
   subirVoucherPago,
 } from '../../services/pagosService';
+import { obtenerMiSuscripcion } from '../../services/suscripcionService';
 
 const formatCurrency = (value, currency = 'PEN') =>
   new Intl.NumberFormat('es-PE', {
@@ -73,13 +74,146 @@ const meetingStatusStyles = {
 const canUploadVoucher = (pago) =>
   ['pendiente', 'rechazado', 'voucher_subido'].includes(pago.estado_pago);
 
+const getPaymentMetadata = (payment) => {
+  if (payment?.metadata && typeof payment.metadata === 'object') {
+    return payment.metadata;
+  }
+
+  if (typeof payment?.metadata === 'string') {
+    try {
+      return JSON.parse(payment.metadata);
+    } catch {
+      return {};
+    }
+  }
+
+  return {};
+};
+
+const isPlanPayment = (payment) => {
+  const metadata = getPaymentMetadata(payment);
+  const concepto = String(payment?.concepto || '').toLowerCase();
+  const origenPago = String(
+    payment?.origen_pago || metadata?.origen_pago || '',
+  ).toLowerCase();
+
+  return Boolean(
+    payment?.plan_id ||
+      payment?.planId ||
+      metadata?.plan_id ||
+      metadata?.planId ||
+      origenPago === 'tesis_con_plan' ||
+      origenPago === 'plan' ||
+      concepto.startsWith('plan:') ||
+      concepto.includes('plan de tesis'),
+  );
+};
+
+const inferServiceType = (payment) => {
+  const metadata = getPaymentMetadata(payment);
+  const rawType = String(
+    payment?.tipo_servicio || metadata?.tipo_servicio || '',
+  ).toLowerCase();
+
+  if (rawType === 'presustentacion' || rawType === 'asesoria') {
+    return rawType;
+  }
+
+  const searchableText = [
+    payment?.motivo,
+    metadata?.motivo,
+    payment?.concepto,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase();
+
+  return searchableText.includes('pre-sustent') ||
+    searchableText.includes('presustent')
+    ? 'presustentacion'
+    : 'asesoria';
+};
+
+const getPaymentTypeMeta = (payment) => {
+  if (isPlanPayment(payment)) {
+    return {
+      label: 'Plan',
+      className: 'bg-violet-50 text-violet-700',
+    };
+  }
+
+  return inferServiceType(payment) === 'presustentacion'
+    ? {
+        label: 'Pre-sustentación',
+        className: 'bg-cyan-50 text-cyan-700',
+      }
+    : {
+        label: 'Asesoría',
+        className: 'bg-slate-100 text-slate-700',
+      };
+};
+
+const extractValidationCitaId = (payment) => {
+  const metadata = getPaymentMetadata(payment);
+
+  return (
+    payment?.validation_cita_id ||
+    payment?.validationCitaId ||
+    metadata?.validation_cita_id ||
+    metadata?.validationCitaId ||
+    null
+  );
+};
+
+const extractReservationStartAt = (payment) => {
+  const metadata = getPaymentMetadata(payment);
+
+  return (
+    payment?.inicio_reunion ||
+    payment?.reunion_inicio ||
+    payment?.inicio ||
+    payment?.start_at ||
+    metadata?.start_at ||
+    metadata?.inicio ||
+    null
+  );
+};
+
+const getPaymentSubtitle = (payment) => {
+  if (isPlanPayment(payment)) {
+    return 'Compra de plan de tesis';
+  }
+
+  if (payment?.asesor_nombre) {
+    return `Asesor: ${payment.asesor_nombre}`;
+  }
+
+  return inferServiceType(payment) === 'presustentacion'
+    ? 'Solicitud de pre-sustentación'
+    : 'Solicitud de asesoría';
+};
+
+const getScheduleCardMeta = (payment) => {
+  if (isPlanPayment(payment)) {
+    return {
+      label: 'Cobertura',
+      value: 'Plan de tesis, sin reunión asociada',
+    };
+  }
+
+  return {
+    label: inferServiceType(payment) === 'presustentacion'
+      ? 'Pre-sustentación'
+      : 'Asesoría',
+    value: extractReservationStartAt(payment)
+      ? formatDate(extractReservationStartAt(payment))
+      : 'Horario pendiente de confirmación',
+  };
+};
+
 const Payments = () => {
-  const [planes, setPlanes] = useState([]);
-  const [loadingPlanes, setLoadingPlanes] = useState(true);
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [paying, setPaying] = useState(false);
-  const [payModalOpen, setPayModalOpen] = useState(false);
-  const [pagoInfo, setPagoInfo] = useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [pagos, setPagos] = useState([]);
   const [loadingPagos, setLoadingPagos] = useState(true);
@@ -89,19 +223,9 @@ const Payments = () => {
   const [uploadingVoucher, setUploadingVoucher] = useState(false);
   const [previewVoucherOpen, setPreviewVoucherOpen] = useState(false);
   const [previewPago, setPreviewPago] = useState(null);
-
-  const loadPlanes = async () => {
-    try {
-      setLoadingPlanes(true);
-      const data = await obtenerPlanesDisponibles();
-      setPlanes(data || []);
-    } catch (error) {
-      console.error(error);
-      toast.error('No se pudieron cargar los planes');
-    } finally {
-      setLoadingPlanes(false);
-    }
-  };
+  const [consumedRouteState, setConsumedRouteState] = useState(false);
+  const [suscripcion, setSuscripcion] = useState(null);
+  const [loadingSuscripcion, setLoadingSuscripcion] = useState(true);
 
   const loadPagos = async () => {
     try {
@@ -118,9 +242,66 @@ const Payments = () => {
   };
 
   useEffect(() => {
-    loadPlanes();
     loadPagos();
   }, []);
+
+  useEffect(() => {
+    const loadSuscripcion = async () => {
+      try {
+        setLoadingSuscripcion(true);
+        const data = await obtenerMiSuscripcion();
+        setSuscripcion(data ?? null);
+      } catch (error) {
+        console.error('Error cargando suscripción activa:', error);
+        setSuscripcion(null);
+      } finally {
+        setLoadingSuscripcion(false);
+      }
+    };
+
+    loadSuscripcion();
+  }, []);
+
+  useEffect(() => {
+    if (loadingPagos || consumedRouteState) return;
+
+    const targetPagoId = location.state?.pagoId;
+    const targetValidationCitaId = location.state?.validationCitaId;
+    const autoOpenVoucher = location.state?.autoOpenVoucher;
+
+    if ((!targetPagoId && !targetValidationCitaId) || !autoOpenVoucher) return;
+
+    const pago = pagos.find((item) => {
+      if (targetPagoId && item.pago_id === targetPagoId) {
+        return true;
+      }
+
+      if (
+        targetValidationCitaId &&
+        extractValidationCitaId(item) === targetValidationCitaId
+      ) {
+        return true;
+      }
+
+      return false;
+    });
+
+    if (pago && canUploadVoucher(pago)) {
+      abrirModalVoucher(pago);
+    } else if (pago && !canUploadVoucher(pago)) {
+      toast('Ese pago ya no admite carga de voucher.');
+    }
+
+    setConsumedRouteState(true);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [
+    consumedRouteState,
+    loadingPagos,
+    location.pathname,
+    location.state,
+    navigate,
+    pagos,
+  ]);
 
   const resumen = useMemo(() => {
     const pendientes = pagos.filter((pago) =>
@@ -137,32 +318,6 @@ const Payments = () => {
       totalPendiente,
     };
   }, [pagos]);
-
-  const abrirPagoPlan = (plan) => {
-    setSelectedPlan(plan);
-    setPayModalOpen(true);
-  };
-
-  const confirmarPagoPlan = async () => {
-    if (!selectedPlan) return;
-
-    try {
-      setPaying(true);
-      const result = await iniciarPagoPlan({
-        planId: selectedPlan.id,
-      });
-
-      setPagoInfo(result);
-      setPayModalOpen(false);
-      toast.success('Nota de pago creada');
-      await loadPagos();
-    } catch (error) {
-      console.error(error);
-      toast.error(error.message || 'No se pudo iniciar el pago');
-    } finally {
-      setPaying(false);
-    }
-  };
 
   const abrirModalVoucher = (pago) => {
     setSelectedPago(pago);
@@ -257,64 +412,38 @@ const Payments = () => {
                 <div className="flex items-center justify-between mb-6">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
-                      Planes IA
+                      Nuevo flujo
                     </p>
                     <h3 className="text-lg font-bold text-slate-900">
-                      Suscripciones
+                      Cotización y tesis
                     </h3>
                   </div>
                   <Sparkles className="text-primary" size={20} />
                 </div>
 
-                {loadingPlanes ? (
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Cargando planes...
-                  </div>
-                ) : planes.length === 0 ? (
-                  <p className="text-sm text-slate-500">
-                    No hay planes disponibles.
+                <div className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-5 shadow-sm">
+                  <p className="text-sm font-semibold text-slate-800">
+                    La cotización del plan ya no se genera desde esta pantalla.
                   </p>
-                ) : (
-                  <div className="space-y-4">
-                    {planes.map((plan) => (
-                      <div
-                        key={plan.id}
-                        className="p-4 rounded-2xl border border-slate-200 bg-white/70 shadow-sm flex flex-col gap-3"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-bold text-slate-900">
-                              {plan.nombre}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {plan.duracion_dias} días
-                            </p>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-lg font-extrabold text-slate-900">
-                              S/ {plan.precio}
-                            </span>
-                          </div>
-                        </div>
-                        {plan.caracteristicas && (
-                          <p className="text-xs text-slate-600">
-                            {Object.entries(plan.caracteristicas || {})
-                              .map(([key, value]) => `${key}: ${value}`)
-                              .join(' · ')}
-                          </p>
-                        )}
-                        <button
-                          className="w-full py-3 rounded-xl bg-primary text-white font-bold hover:brightness-105 active:scale-95 transition"
-                          onClick={() => abrirPagoPlan(plan)}
-                        >
-                          Generar nota de pago
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                  <p className="mt-2 text-sm leading-6 text-slate-500">
+                    Ahora primero creas tu tesis en <span className="font-semibold text-slate-700">Mi Tesis</span>,
+                    revisas el desglose del precio y desde allí se abre el pago
+                    pendiente listo para subir tu voucher.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/student/my-thesis')}
+                    className="mt-5 inline-flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-white transition hover:brightness-105"
+                  >
+                    Ir a Mi Tesis
+                  </button>
+                </div>
               </Card>
+
+              <SubscriptionSummaryCard
+                subscription={suscripcion}
+                loading={loadingSuscripcion}
+              />
             </section>
 
             <section className="lg:col-span-8 space-y-8">
@@ -349,106 +478,117 @@ const Payments = () => {
 
                   {!loadingPagos &&
                     resumen.pendientes.map((pago) => (
-                      <div
-                        key={pago.pago_id}
-                        className="px-7 py-6 flex flex-col gap-4"
-                      >
-                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                          <div className="flex items-start gap-4">
-                            <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center">
-                              <Receipt className="w-5 h-5 text-primary" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-slate-900">
-                                {pago.concepto || 'Pago'}
-                              </p>
-                              <p className="text-sm text-slate-500">
-                                {pago.asesor_nombre
-                                  ? `Asesor: ${pago.asesor_nombre}`
-                                  : 'Sin asesor asociado'}
-                              </p>
-                              <p className="text-xs text-slate-400 mt-1">
-                                Creado el {formatDate(pago.creado_en)}
-                              </p>
-                            </div>
-                          </div>
+                      (() => {
+                        const paymentTypeMeta = getPaymentTypeMeta(pago);
+                        const scheduleCardMeta = getScheduleCardMeta(pago);
+                        const planPayment = isPlanPayment(pago);
 
-                          <div className="text-left md:text-right">
-                            <p className="text-lg font-black text-slate-900">
-                              {formatCurrency(pago.monto, pago.moneda)}
-                            </p>
-                            <div className="mt-2 flex flex-wrap gap-2 md:justify-end">
-                              <span
-                                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                                  paymentStatusStyles[pago.estado_pago] ||
-                                  'bg-slate-100 text-slate-700'
-                                }`}
-                              >
-                                {pago.estado_pago}
-                              </span>
-                              <span
-                                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                                  meetingStatusStyles[pago.estado_reunion] ||
-                                  'bg-slate-100 text-slate-700'
-                                }`}
-                              >
-                                {pago.estado_reunion || 'sin reunion'}
-                              </span>
+                        return (
+                          <div
+                            key={pago.pago_id}
+                            className="px-7 py-6 flex flex-col gap-4"
+                          >
+                            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                              <div className="flex items-start gap-4">
+                                <div className="w-11 h-11 rounded-2xl bg-slate-100 flex items-center justify-center">
+                                  <Receipt className="w-5 h-5 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-slate-900">
+                                    {pago.concepto || 'Pago'}
+                                  </p>
+                                  <p className="text-sm text-slate-500">
+                                    {getPaymentSubtitle(pago)}
+                                  </p>
+                                  <p className="text-xs text-slate-400 mt-1">
+                                    Creado el {formatDate(pago.creado_en)}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="text-left md:text-right">
+                                <p className="text-lg font-black text-slate-900">
+                                  {formatCurrency(pago.monto, pago.moneda)}
+                                </p>
+                                <div className="mt-2 flex flex-wrap gap-2 md:justify-end">
+                                  <span
+                                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${paymentTypeMeta.className}`}
+                                  >
+                                    {paymentTypeMeta.label}
+                                  </span>
+                                  <span
+                                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                                      paymentStatusStyles[pago.estado_pago] ||
+                                      'bg-slate-100 text-slate-700'
+                                    }`}
+                                  >
+                                    {pago.estado_pago}
+                                  </span>
+                                  {!planPayment && pago.estado_reunion && (
+                                    <span
+                                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                                        meetingStatusStyles[pago.estado_reunion] ||
+                                        'bg-slate-100 text-slate-700'
+                                      }`}
+                                    >
+                                      {pago.estado_reunion}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                              <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50/60">
+                                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                  {scheduleCardMeta.label}
+                                </p>
+                                <p className="mt-2 text-slate-700">
+                                  {scheduleCardMeta.value}
+                                </p>
+                              </div>
+                              <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50/60">
+                                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                  Voucher
+                                </p>
+                                <p className="mt-2 text-slate-700">
+                                  {pago.nombre_archivo_voucher || 'Aún no subido'}
+                                </p>
+                              </div>
+                              <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50/60">
+                                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                  Última actualización
+                                </p>
+                                <p className="mt-2 text-slate-700">
+                                  {formatDate(pago.actualizado_en)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap gap-3">
+                              {pago.url_archivo_drive && (
+                                <button
+                                  onClick={() => abrirPreviewVoucher(pago)}
+                                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                                >
+                                  Ver voucher
+                                </button>
+                              )}
+                              {canUploadVoucher(pago) && (
+                                <button
+                                  onClick={() => abrirModalVoucher(pago)}
+                                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:brightness-105"
+                                >
+                                  <FileUp className="w-4 h-4" />
+                                  {pago.url_archivo_drive
+                                    ? 'Actualizar voucher'
+                                    : 'Subir voucher'}
+                                </button>
+                              )}
                             </div>
                           </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                          <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50/60">
-                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                              Asesoría
-                            </p>
-                            <p className="mt-2 text-slate-700">
-                              {pago.inicio_reunion
-                                ? formatDate(pago.inicio_reunion)
-                                : 'Sin fecha asignada'}
-                            </p>
-                          </div>
-                          <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50/60">
-                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                              Voucher
-                            </p>
-                            <p className="mt-2 text-slate-700">
-                              {pago.nombre_archivo_voucher || 'Aún no subido'}
-                            </p>
-                          </div>
-                          <div className="rounded-2xl border border-slate-200 p-4 bg-slate-50/60">
-                            <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                              Última actualización
-                            </p>
-                            <p className="mt-2 text-slate-700">
-                              {formatDate(pago.actualizado_en)}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap gap-3">
-                          {pago.url_archivo_drive && (
-                            <button
-                              onClick={() => abrirPreviewVoucher(pago)}
-                              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50"
-                            >
-                              Ver voucher
-                            </button>
-                          )}
-                          {canUploadVoucher(pago) && (
-                            <button
-                              onClick={() => abrirModalVoucher(pago)}
-                              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white text-sm font-bold hover:brightness-105"
-                            >
-                              <FileUp className="w-4 h-4" />
-                              {pago.url_archivo_drive
-                                ? 'Actualizar voucher'
-                                : 'Subir voucher'}
-                            </button>
-                          )}
-                        </div>
-                      </div>
+                        );
+                      })()
                     ))}
                 </div>
               </Card>
@@ -491,11 +631,18 @@ const Payments = () => {
                           className="hover:bg-white/70 transition-colors"
                         >
                           <td className="px-7 py-5">
-                            <p className="font-medium text-slate-900">
-                              {pago.concepto || 'Pago'}
-                            </p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium text-slate-900">
+                                {pago.concepto || 'Pago'}
+                              </p>
+                              <span
+                                className={`px-2 py-1 text-[10px] font-bold rounded uppercase ${getPaymentTypeMeta(pago).className}`}
+                              >
+                                {getPaymentTypeMeta(pago).label}
+                              </span>
+                            </div>
                             <p className="text-xs text-slate-500">
-                              {pago.asesor_nombre || 'Sin asesor'}
+                              {getPaymentSubtitle(pago)}
                             </p>
                           </td>
                           <td className="px-7 py-5 text-slate-500">
@@ -536,39 +683,6 @@ const Payments = () => {
           </div>
         </main>
       </div>
-
-      <Modal
-        open={payModalOpen && !!selectedPlan}
-        onClose={() => !paying && setPayModalOpen(false)}
-        title="Confirmar pago de plan"
-        subtitle={selectedPlan ? selectedPlan.nombre : ''}
-        description={
-          selectedPlan
-            ? `Se generará una nota de pago por S/ ${selectedPlan.precio}`
-            : ''
-        }
-        primaryAction={{
-          label: paying ? 'Creando...' : 'Crear nota de pago',
-          onClick: confirmarPagoPlan,
-        }}
-        secondaryAction={{
-          label: 'Cancelar',
-          onClick: () => setPayModalOpen(false),
-        }}
-      />
-
-      <Modal
-        open={!!pagoInfo}
-        onClose={() => setPagoInfo(null)}
-        title="Nota de pago creada"
-        subtitle="Revisa tu bandeja de pagos"
-        description={
-          pagoInfo
-            ? `Pago ID: ${pagoInfo.pago_id}\nEstado: ${pagoInfo.estado}`
-            : ''
-        }
-        primaryAction={{ label: 'Listo', onClick: () => setPagoInfo(null) }}
-      />
 
       <Modal
         open={voucherModalOpen && !!selectedPago}

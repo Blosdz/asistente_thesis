@@ -12,30 +12,30 @@ import SectionHeading from '../ui/SectionHeading';
 const trustCards = [
   {
     value: '01',
-    title: 'Mas claridad metodologica',
+    title: 'Más claridad metodológica',
     description:
-      'La plataforma organiza la informacion de tu tesis para que cada decision tenga mas criterio.',
+      'La plataforma organiza la información de tu tesis para que cada decisión tenga más criterio.',
     icon: ChartNoAxesCombined,
   },
   {
     value: '02',
-    title: 'Mejor organizacion del proceso',
+    title: 'Mejor organización del proceso',
     description:
-      'Entregables, observaciones y tareas quedan dentro de un flujo mas visible y menos disperso.',
+      'Entregables, observaciones y tareas quedan mejor organizados y menos dispersos.',
     icon: ClipboardCheck,
   },
   {
     value: '03',
-    title: 'Seguimiento mas visible',
+    title: 'Seguimiento más visible',
     description:
       'El avance deja de sentirse abstracto porque cada paso se convierte en decisiones y estado concreto.',
     icon: CheckCircle2,
   },
   {
     value: '04',
-    title: 'Preparacion mas real para la sustentacion',
+    title: 'Preparación más real para la sustentación',
     description:
-      'El cierre se apoya con extras y acompanamiento para llegar mejor preparado al momento final.',
+      'El cierre se apoya con extras y acompañamiento para llegar mejor preparado al momento final.',
     icon: ShieldCheck,
   },
 ];
@@ -47,7 +47,7 @@ export default function TrustSection() {
         <SectionHeading
           eyebrow="Valor"
           title="Una experiencia pensada para reducir ruido y aumentar criterio."
-          description="Cada bloque del producto busca que la tesis se sienta mas entendible: menos incertidumbre, mas visibilidad y mejor preparacion para decisiones importantes."
+          description="Cada bloque del producto busca que la tesis se sienta más entendible: menos incertidumbre, más visibilidad y mejor preparación para decisiones importantes."
           align="center"
         />
 
@@ -58,13 +58,13 @@ export default function TrustSection() {
             return (
               <motion.div
                 key={card.title}
-                initial={{ opacity: 0, y: 18, scale: 0.992 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.18 }}
                 transition={{
-                  duration: 0.72,
-                  delay: index * 0.07,
-                  ease: [0.16, 1, 0.3, 1],
+                  duration: 0.5,
+                  delay: index * 0.04,
+                  ease: 'easeOut',
                 }}
               >
                 <GlassCard hover className="h-full p-6">

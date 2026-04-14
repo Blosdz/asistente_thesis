@@ -11,14 +11,13 @@ import {
   BrainCircuit,
   ChevronRight,
   MessageSquareText,
-  Sparkles,
 } from 'lucide-react';
 
 import GlassCard from '../ui/GlassCard';
 import SectionHeading from '../ui/SectionHeading';
 
 const quickChips = [
-  'Entender el flujo',
+  'Entender el siguiente paso',
   'Ver plan recomendado',
   'Revisar avances',
   'Organizar observaciones',
@@ -38,7 +37,6 @@ export default function AIShowcase() {
   });
   const shellY = useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : -18]);
   const glowY = useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : -12]);
-  const chipY = useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : -8]);
 
   return (
     <section
@@ -49,8 +47,8 @@ export default function AIShowcase() {
       <div className="mx-auto max-w-6xl">
         <SectionHeading
           eyebrow="Asistente"
-          title="Un apoyo academico dentro del flujo de AppThesis"
-          description="El asistente ayuda a resolver dudas, orientar el siguiente paso y mantener claridad metodologica mientras organizas tu proceso de tesis."
+          title="Un apoyo académico que acompaña tu tesis"
+          description="El asistente ayuda a resolver dudas, orientar el siguiente paso y mantener claridad metodológica mientras organizas tu avance."
           align="center"
         />
 
@@ -60,26 +58,6 @@ export default function AIShowcase() {
             className="pointer-events-none absolute inset-x-16 top-10 -z-10 h-64 rounded-full bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.16),rgba(14,165,233,0.1)_48%,transparent_72%)] blur-3xl"
             style={{ y: glowY }}
           />
-
-          <motion.div
-            className="pointer-events-none absolute -left-2 top-16 hidden lg:block"
-            style={{ y: chipY }}
-          >
-            <div className="glass-tag">
-              <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-              Revisar avances
-            </div>
-          </motion.div>
-
-          <motion.div
-            className="pointer-events-none absolute -right-2 bottom-16 hidden lg:block"
-            style={{ y: chipY }}
-          >
-            <div className="glass-tag">
-              <Sparkles className="h-3.5 w-3.5 text-blue-500" />
-              Organizar observaciones
-            </div>
-          </motion.div>
 
           <GlassCard className="p-5 sm:p-6 lg:p-8">
             <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
@@ -94,7 +72,7 @@ export default function AIShowcase() {
                         AppThesis Assistant
                       </p>
                       <p className="text-sm text-slate-500">
-                        Guianza metodologica contextual
+                        Guía metodológica contextual
                       </p>
                     </div>
                   </div>
@@ -105,32 +83,32 @@ export default function AIShowcase() {
 
                 <div className="mt-6 space-y-4">
                   <motion.div
-                    initial={{ opacity: 0, y: 14 }}
+                    initial={{ opacity: 0, y: 8 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.3 }}
-                    transition={{ duration: 0.58, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
                     className="ml-auto max-w-[80%] rounded-[24px] rounded-br-md bg-slate-950 px-5 py-4 text-sm leading-7 text-white"
                   >
                     Necesito ordenar mi tesis y revisar mis observaciones pendientes.
                   </motion.div>
 
                   <motion.div
-                    initial={{ opacity: 0, y: 14 }}
+                    initial={{ opacity: 0, y: 8 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.28 }}
-                    transition={{ duration: 0.58, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.4, delay: 0.08, ease: 'easeOut' }}
                     className="max-w-[86%] rounded-[24px] rounded-tl-md border border-white/70 bg-white/80 px-5 py-4 text-sm leading-7 text-slate-700"
                   >
-                    Puedo ayudarte a organizar el flujo, priorizar pendientes y
-                    sugerirte el plan que mejor encaja con el nivel de acompanamiento
+                    Puedo ayudarte a ordenar tu avance, priorizar pendientes y
+                    sugerirte el plan que mejor encaja con el nivel de acompañamiento
                     que buscas.
                   </motion.div>
 
                   <motion.div
-                    initial={{ opacity: 0, y: 12 }}
+                    initial={{ opacity: 0, y: 6 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.25 }}
-                    transition={{ duration: 0.52, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 0.35, delay: 0.16, ease: 'easeOut' }}
                     className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/70 px-4 py-3 text-sm font-medium text-slate-600"
                   >
                     <span className="landing-typing-dot" />
@@ -172,8 +150,8 @@ export default function AIShowcase() {
                         Acciones sugeridas
                       </p>
                       <p className="mt-1 text-sm leading-7 text-slate-600">
-                        Recomendaciones de siguiente paso segun el estado del
-                        proyecto y el nivel de acompanamiento.
+                        Recomendaciones de siguiente paso según el estado del
+                        proyecto y el nivel de acompañamiento.
                       </p>
                     </div>
                   </div>
@@ -205,8 +183,8 @@ export default function AIShowcase() {
                     Una ayuda que orienta el proceso.
                   </p>
                   <p className="mt-4 text-base leading-8 text-slate-600">
-                    El asistente conecta dudas, observaciones y organizacion real del
-                    trabajo para que siempre tengas mas claridad sobre como seguir.
+                    El asistente conecta dudas, observaciones y organización real del
+                    trabajo para que siempre tengas más claridad sobre cómo seguir.
                   </p>
                 </GlassCard>
               </div>

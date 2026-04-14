@@ -46,3 +46,4 @@ supabase/.env_supabase
 
 # opcional
 *.local
+coqui/tts311-env/

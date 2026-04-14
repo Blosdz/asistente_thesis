@@ -18,6 +18,7 @@ import {
   adminListarPagos,
   adminObtenerPago,
   adminVerificarPago,
+  adminVerificarPagoPlan,
 } from '../../services/adminService';
 import { crearGoogleMeetAdmin } from '../../services/googleMeetService';
 
@@ -83,6 +84,49 @@ const formatDateTime = (value) => {
 
 const formatStatusLabel = (value) =>
   (value || 'sin_estado').replaceAll('_', ' ');
+
+const isPlanPayment = (payment) => {
+  const metadata = payment?.metadata || {};
+  const concepto = String(payment?.concepto || '').toLowerCase();
+  const origenPago = String(
+    payment?.origen_pago || metadata?.origen_pago || '',
+  ).toLowerCase();
+
+  return Boolean(
+    payment?.plan_id ||
+      payment?.planId ||
+      metadata?.plan_id ||
+      metadata?.planId ||
+      origenPago === 'tesis_con_plan' ||
+      origenPago === 'plan' ||
+      concepto.startsWith('plan:') ||
+      concepto.includes('plan de tesis'),
+  );
+};
+
+const getPaymentTypeMeta = (payment) => {
+  if (isPlanPayment(payment)) {
+    return {
+      label: 'Plan',
+      className: 'bg-violet-50 text-violet-700',
+    };
+  }
+
+  const motivo = String(payment?.motivo || payment?.metadata?.motivo || '').toLowerCase();
+  const concepto = String(payment?.concepto || '').toLowerCase();
+  const isPresustentacion =
+    motivo.includes('pre-sustent') || concepto.includes('pre-sustent');
+
+  return isPresustentacion
+    ? {
+        label: 'Pre-sustentación',
+        className: 'bg-cyan-50 text-cyan-700',
+      }
+    : {
+        label: 'Asesoría',
+        className: 'bg-slate-100 text-slate-700',
+      };
+};
 
 const extractValidationCitaId = (payment) =>
   payment?.validation_cita_id ||
@@ -338,13 +382,19 @@ const AdminPayments = () => {
         selectedPayment?.pago_id === pagoId
           ? selectedPayment
           : await adminObtenerPago(pagoId);
+      const isPlanFlow = isPlanPayment(paymentDetail);
       const validationCitaId = extractValidationCitaId(paymentDetail);
-      const isReservationPayment = Boolean(validationCitaId);
+      const isReservationPayment = Boolean(validationCitaId) && !isPlanFlow;
 
-      const result = await adminVerificarPago(pagoId, {
-        estado: verificationModal.estado,
-        notaVerificacion,
-      });
+      const result = isPlanFlow
+        ? await adminVerificarPagoPlan(pagoId, {
+            estado: verificationModal.estado,
+            notaVerificacion,
+          })
+        : await adminVerificarPago(pagoId, {
+            estado: verificationModal.estado,
+            notaVerificacion,
+          });
 
       let meetMessage = null;
 
@@ -383,7 +433,9 @@ const AdminPayments = () => {
       toast.success(
         verificationModal.estado === 'validado' && meetMessage
           ? 'Pago validado y Google Meet creado correctamente'
-          : result?.mensaje || 'Pago actualizado correctamente',
+          : isPlanFlow && verificationModal.estado === 'validado'
+            ? 'Pago validado y suscripción del plan actualizada'
+            : result?.mensaje || 'Pago actualizado correctamente',
       );
       closeVerificationModal();
       await loadPayments();
@@ -399,6 +451,12 @@ const AdminPayments = () => {
       setSubmittingVerification(false);
     }
   };
+
+  const verificationPayment = verificationModal.payment;
+  const verificationIsPlan = isPlanPayment(verificationPayment);
+  const verificationHasReservation = Boolean(
+    extractValidationCitaId(verificationPayment),
+  );
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 py-10 text-slate-900">
@@ -546,6 +604,11 @@ const AdminPayments = () => {
                           <p className="mt-1 text-xs text-slate-500">
                             {item.concepto || 'Sin concepto'}
                           </p>
+                          <span
+                            className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${getPaymentTypeMeta(item).className}`}
+                          >
+                            {getPaymentTypeMeta(item).label}
+                          </span>
                           <p className="mt-1 font-mono text-[11px] text-slate-400">
                             {item.codigo_operacion || item.pago_id}
                           </p>
@@ -666,6 +729,11 @@ const AdminPayments = () => {
                 <p className="mt-1 text-xs text-slate-500">
                   {selectedPayment.concepto || 'Sin concepto'}
                 </p>
+                <span
+                  className={`mt-3 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${getPaymentTypeMeta(selectedPayment).className}`}
+                >
+                  {getPaymentTypeMeta(selectedPayment).label}
+                </span>
               </div>
 
               <div className="rounded-2xl border border-slate-200 bg-white p-4">
@@ -769,12 +837,17 @@ const AdminPayments = () => {
             <p className="mt-1 text-xs text-slate-500">
               {verificationModal.payment?.codigo_operacion || verificationModal.payment?.pago_id}
             </p>
-            {extractValidationCitaId(verificationModal.payment) && (
+            {verificationIsPlan ? (
+              <p className="mt-2 text-xs text-emerald-600">
+                Si validas este pago, se activará o renovará la suscripción del
+                plan del estudiante.
+              </p>
+            ) : verificationHasReservation ? (
               <p className="mt-2 text-xs text-blue-600">
                 Si validas este pago, se intentará crear el Google Meet y
                 confirmar la cita automáticamente.
               </p>
-            )}
+            ) : null}
           </div>
 
           <div>

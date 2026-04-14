@@ -18,6 +18,57 @@ export async function crearMiTesis(payload) {
   return data?.[0] ?? null;
 }
 
+export async function obtenerTiposTesisActivos() {
+  const { data, error } = await atSchema().rpc('obtener_tipos_tesis_activos');
+
+  if (error) {
+    console.error('Error obteniendo tipos de tesis:', error);
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function cotizarTesisPlan(payload) {
+  const { data, error } = await atSchema().rpc('cotizar_tesis_plan', {
+    p_plan_id: payload.plan_id,
+    p_tipo_tesis_id: payload.tipo_tesis_id,
+    p_nivel_academico: payload.nivel_academico,
+    p_requiere_analisis_estadistico:
+      payload.requiere_analisis_estadistico ?? true,
+  });
+
+  if (error) {
+    console.error('Error cotizando tesis con plan:', error);
+    throw error;
+  }
+
+  return Array.isArray(data) ? (data[0] ?? null) : data;
+}
+
+export async function crearTesisConPlan(payload) {
+  const { data, error } = await atSchema().rpc('crear_tesis_con_plan', {
+    p_estudiante_id: payload.estudiante_id,
+    p_universidad_id: payload.universidad_id ?? null,
+    p_titulo: payload.titulo,
+    p_descripcion: payload.descripcion ?? null,
+    p_plan_id: payload.plan_id,
+    p_tipo_tesis_id: payload.tipo_tesis_id,
+    p_nivel_academico: payload.nivel_academico,
+    p_requiere_analisis_estadistico:
+      payload.requiere_analisis_estadistico ?? true,
+    p_programa_id: payload.programa_id ?? null,
+    p_estado_tesis: payload.estado_tesis ?? 'borrador',
+  });
+
+  if (error) {
+    console.error('Error creando tesis con plan:', error);
+    throw error;
+  }
+
+  return Array.isArray(data) ? (data[0] ?? null) : data;
+}
+
 // Obtener todas mis tesis
 export async function obtenerMisTesis() {
   const { data, error } = await atSchema().rpc('get_mis_tesis');

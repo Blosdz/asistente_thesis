@@ -446,6 +446,35 @@ async function saveDirectMeetingSuccess(
   }
 }
 
+async function syncValidationCitaMeetingSuccess(
+  supabaseAdmin: ReturnType<typeof createClient>,
+  validationCitaId: string,
+  reunionId: string | null,
+  meetUrl: string,
+) {
+  const now = new Date().toISOString();
+  const payload: Record<string, unknown> = {
+    enlace_reunion: meetUrl,
+    updated_at: now,
+  };
+
+  if (reunionId) {
+    payload.meeting_id = reunionId;
+  }
+
+  payload.status = "confirmed";
+
+  const { error } = await supabaseAdmin
+    .schema("AT")
+    .from("validation_cita")
+    .update(payload)
+    .eq("id", validationCitaId);
+
+  if (error) {
+    throw error;
+  }
+}
+
 async function saveDirectMeetingError(
   supabaseAdmin: ReturnType<typeof createClient>,
   reunionId: string,
@@ -597,6 +626,15 @@ Deno.serve(async (req) => {
             supabaseAdmin,
             body.reunion_id,
             eventData,
+            meetUrl,
+          );
+        }
+
+        if (body.validation_cita_id) {
+          await syncValidationCitaMeetingSuccess(
+            supabaseAdmin,
+            body.validation_cita_id,
+            body.reunion_id ?? null,
             meetUrl,
           );
         }

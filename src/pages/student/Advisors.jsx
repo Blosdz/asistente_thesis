@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Card } from '../../components/ui/card';
 import Modal from '../../components/ui/modal';
+import SubscriptionSummaryCard from '../../components/student/SubscriptionSummaryCard';
 import { Select, SelectItem } from '../../components/ui/select';
 import {
   crearCitaAsesoria,
@@ -10,6 +11,7 @@ import {
   obtenerMisAsesores,
   vincularmeConAsesorPorSlug,
 } from '../../services/advisorService';
+import { obtenerMiSuscripcion } from '../../services/suscripcionService';
 import {
   ArrowRight,
   CalendarDays,
@@ -137,6 +139,8 @@ const Advisors = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [bookingResult, setBookingResult] = useState(null);
+  const [suscripcion, setSuscripcion] = useState(null);
+  const [loadingSuscripcion, setLoadingSuscripcion] = useState(true);
   const pageSize = 3;
 
   const totalPages = Math.max(1, Math.ceil(catalogAdvisors.length / pageSize));
@@ -279,6 +283,23 @@ const Advisors = () => {
 
     loadCatalogAdvisors();
     loadMyAdvisors();
+  }, []);
+
+  useEffect(() => {
+    const loadSuscripcion = async () => {
+      try {
+        setLoadingSuscripcion(true);
+        const data = await obtenerMiSuscripcion();
+        setSuscripcion(data ?? null);
+      } catch (error) {
+        console.error('Error cargando suscripción activa:', error);
+        setSuscripcion(null);
+      } finally {
+        setLoadingSuscripcion(false);
+      }
+    };
+
+    loadSuscripcion();
   }, []);
 
   useEffect(() => {
@@ -430,7 +451,8 @@ const Advisors = () => {
         p_inicio: selectedSlot.inicio_bloque,
         p_fin: selectedSlot.fin_bloque,
         p_tesis_id: null,
-        p_motivo: `Reserva con ${selectedAdvisor.name}`,
+        p_motivo: `Solicitud de asesoría con ${selectedAdvisor.name}`,
+        p_tipo_servicio: 'asesoria',
         p_modalidad: 'virtual',
         p_lugar: null,
         p_enlace_reunion: null,
@@ -688,14 +710,21 @@ const Advisors = () => {
           </section>
 
           <aside className="col-span-12 lg:col-span-5">
+            <SubscriptionSummaryCard
+              subscription={suscripcion}
+              loading={loadingSuscripcion}
+              serviceType="asesoria"
+              className="mb-6 max-w-[480px]"
+            />
+
             <Card className="max-w-[480px] w-full p-8 relative overflow-hidden">
               <header className="relative z-10 mb-6">
                 <h2 className="font-headline text-3xl font-bold tracking-tight text-slate-900 leading-tight mb-2">
                   Separar Citas
                 </h2>
                 <p className="text-slate-600 text-sm font-medium leading-relaxed">
-                  Reserva un bloque libre y genera tu pago pendiente
-                  automáticamente.
+                  Reserva un bloque libre. Si tu plan cubre la asesoría, no se
+                  generará un pago adicional.
                 </p>
               </header>
 
@@ -1010,7 +1039,9 @@ const Advisors = () => {
             Solicitud registrada correctamente
           </div>
           <p>
-            Cuando el asesor la acepte, verás el pago pendiente en tu bandeja.
+            Cuando el asesor la acepte, si tu plan cubre la sesión no se
+            generará un pago. En caso contrario, verás el pago pendiente en tu
+            bandeja.
           </p>
         </div>
       </Modal>

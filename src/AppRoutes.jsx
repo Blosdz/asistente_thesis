@@ -1,11 +1,12 @@
-import React, { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { isAuthenticated } from './services/authService';
+import LoadingSkeleton from './components/ui/LoadingSkeleton';
 
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const SignupPage = lazy(() => import('./pages/auth/SignupPage'));
+const LandingPage = lazy(() => import('./components/landing/LandingPage'));
+const LeadChatLauncher = lazy(() => import('./components/landing/LeadChatLauncher'));
 const StudentLayout = lazy(() => import('./layouts/StudentLayout'));
 const Dashboard = lazy(() => import('./pages/student/Dashboard'));
 const PlanesPage = lazy(() => import('./pages/PlanesPage'));
@@ -30,40 +31,67 @@ const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 const AdminUsers = lazy(() => import('./pages/admin/Users'));
 const AdminPayments = lazy(() => import('./pages/admin/Payments'));
 const Advisors = lazy(() => import('./pages/student/Advisors'));
-const LandingPage = lazy(() => import('./components/landing/LandingPage'));
 
-const RouteFallback = () => (
-  <div className="flex min-h-screen items-center justify-center text-sm font-medium text-slate-500">
-    Cargando experiencia...
-  </div>
+const LandingExperience = () => (
+  <>
+    <LandingPage />
+    <Suspense fallback={null}>
+      <LeadChatLauncher />
+    </Suspense>
+  </>
 );
+
+const getFallbackVariant = () => {
+  const hashPath = window.location.hash.replace(/^#/, '').split('?')[0] || '/';
+
+  if (hashPath === '/') {
+    return 'landing';
+  }
+
+  if (['/login', '/signup', '/reset-password'].includes(hashPath)) {
+    return 'auth';
+  }
+
+  return 'app';
+};
+
+const RouteFallback = () => <LoadingSkeleton variant={getFallbackVariant()} />;
 
 const ProtectedRoute = ({ children }) => {
   const [auth, setAuth] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     const checkAuth = async () => {
       try {
+        const { isAuthenticated } = await import('./services/authService');
         const isAuth = await isAuthenticated();
-        setAuth(isAuth);
+        if (isMounted) {
+          setAuth(isAuth);
+        }
       } catch (error) {
         console.error('Auth check failed:', error);
-        setAuth(false);
+        if (isMounted) {
+          setAuth(false);
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
     checkAuth();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading...
-      </div>
-    );
+    return <LoadingSkeleton variant="app" />;
   }
 
   if (!auth) {
@@ -136,7 +164,7 @@ const AppRoutes = () => {
           <Route path="payments" element={<AdminPayments />} />
         </Route>
 
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<LandingExperience />} />
         <Route path="*" element={<div>404 - Not Found</div>} />
       </Routes>
     </Suspense>
