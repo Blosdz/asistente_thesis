@@ -90,7 +90,7 @@ export default function Plans() {
                   className={cn(
                     'h-full p-7 md:p-8',
                     plan.featured &&
-                      'border-blue-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(239,246,255,0.78))] shadow-[0_26px_72px_rgba(37,99,235,0.14)]',
+                    'border-blue-200/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(239,246,255,0.78))] shadow-[0_26px_72px_rgba(37,99,235,0.14)]',
                   )}
                 >
                   <div className="flex items-start justify-between gap-4">
@@ -107,12 +107,12 @@ export default function Plans() {
                   <h3 className="mt-6 text-3xl font-semibold text-slate-950">
                     {plan.title}
                   </h3>
-                  <div className="mt-5 space-y-3">
+                  <div className="mt-5 space-y-2">
                     {plan.bullets.map((bullet) => (
                       <div
                         key={bullet}
                         className={cn(
-                          'rounded-[22px] border border-white/70 bg-white/70  text-sm leading-7 text-slate-700',
+                          'rounded-[22px] border border-white/70 bg-white/70 px-4 py-2 text-sm leading-6 text-slate-700',
                           plan.featured && 'bg-gradient-to-r from-slate-50 to-blue-50/80',
                         )}
                       >

@@ -13,7 +13,7 @@ import SectionHeading from '../ui/SectionHeading';
 import { cn } from '../../lib/cn';
 import { planCatalog } from './Plans';
 
-type AnswerKey = 'level' | 'stage' | 'complexity' | 'support';
+type AnswerKey = 'level' | 'stage' | 'complexity' | 'support' | 'career';
 type PlanName = 'Esencial' | 'Guiado' | 'Integral';
 
 type QuestionOption = {
@@ -42,13 +42,25 @@ const questions: Question[] = [
     ],
   },
   {
+    key: 'career',
+    title: '¿Qué carrera estudias?',
+    helper: 'Algunas disciplinas requieren evaluación especializada.',
+    options: [
+      { value: 'arquitectura', label: 'Arquitectura' },
+      { value: 'ingenieria', label: 'Ingeniería' },
+      { value: 'administracion', label: 'Administración' },
+      { value: 'psicologia', label: 'Psicología' },
+      { value: 'otros', label: 'Otra carrera' },
+    ],
+  },
+  {
     key: 'stage',
     title: '¿En qué punto está tu tesis?',
     helper: 'La etapa actual cambia mucho el tipo de acompañamiento que conviene.',
     options: [
       { value: 'starting', label: 'Recién empiezo' },
       { value: 'topic', label: 'Ya tengo tema' },
-      { value: 'developing', label: 'Estoy desarrollando' },
+      { value: 'developing', label: 'Tengo observaciones' },
       { value: 'closing', label: 'Estoy cerrando' },
     ],
   },
@@ -80,10 +92,17 @@ const labelsByKey: Record<AnswerKey, Record<string, string>> = {
     maestria: 'Maestría',
     doctorado: 'Doctorado',
   },
+  career: {
+    arquitectura: 'Arquitectura',
+    ingenieria: 'Ingeniería',
+    administracion: 'Administración',
+    psicologia: 'Psicología',
+    otros: 'Otra carrera',
+  },
   stage: {
     starting: 'Recién empiezo',
     topic: 'Ya tengo tema',
-    developing: 'Estoy desarrollando',
+    developing: 'Tengo observaciones',
     closing: 'Estoy cerrando',
   },
   complexity: {
@@ -143,25 +162,20 @@ function getPlanRecommendation(answers: Answers) {
   }
 
   const reasons: Record<PlanName, string> = {
-    Esencial:
-      'Tu escenario apunta a una tesis que necesita estructura, orden y claridad para avanzar con autonomía.',
-    Guiado:
-      'Tu avance ya pide orientación más cercana para sostener decisiones metodológicas y mantener un buen ritmo.',
-    Integral:
-      'Tu caso necesita soporte más profundo para ordenar mejor una tesis exigente o en una etapa sensible.',
+    Esencial: 'Estructura y orden para avanzar con autonomía.',
+    Guiado: 'Orientación cercana para mantener buen ritmo.',
+    Integral: 'Soporte profundo para tesis exigente.',
   };
 
   const signals = [
-    answers.stage === 'closing' ? 'estás en una etapa de cierre' : null,
-    answers.stage === 'developing' ? 'ya estás desarrollando el trabajo' : null,
-    answers.complexity === 'high' ? 'la dificultad metodológica es alta' : null,
-    answers.complexity === 'medium' ? 'la dificultad metodológica es media' : null,
+    answers.stage === 'closing' ? 'en etapa de cierre' : null,
+    answers.stage === 'developing' ? 'tienes observaciones para revisar' : null,
+    answers.complexity === 'high' ? 'dificultad metodológica alta' : null,
+    answers.complexity === 'medium' ? 'dificultad metodológica media' : null,
     answers.support === 'intensive' ? 'necesitas soporte intensivo' : null,
     answers.support === 'guided' ? 'necesitas guía frecuente' : null,
-    answers.level === 'doctorado' ? 'tu nivel académico exige más profundidad' : null,
-    answers.level === 'maestria'
-      ? 'tu nivel académico pide más criterio metodológico'
-      : null,
+    answers.level === 'doctorado' ? 'nivel doctoral requiere profundidad' : null,
+    answers.level === 'maestria' ? 'maestría pide criterio metodológico' : null,
   ].filter(Boolean);
 
   const reasonDetail =
@@ -193,6 +207,14 @@ export default function AssessmentFunnel({ onNavigate }) {
   );
 
   const handleAnswer = (value: string) => {
+    // Si selecciona arquitectura, redireccionar a WhatsApp
+    if (currentQuestion.key === 'career' && value === 'arquitectura') {
+      const phoneNumber = '+51944877217';
+      const message = encodeURIComponent('Hola, estoy interesado en asesoría para mi tesis en Arquitectura.');
+      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+      return;
+    }
+
     const nextAnswers = {
       ...answers,
       [currentQuestion.key]: value,
@@ -232,16 +254,16 @@ export default function AssessmentFunnel({ onNavigate }) {
         >
           <GlassCard className="overflow-hidden rounded-[36px] p-6 sm:p-8 lg:p-10">
             <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="flex flex-col justify-between gap-6">
+              <div className="flex flex-col justify-start gap-6">
                 <div>
                   <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/90 bg-sky-100/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">
                     Asesoría
                   </div>
                   <p className="mt-6 text-3xl font-semibold text-slate-950">
-                    Descubre que plan se acomoda a tu documento Academico
+                    Encuentra el plan ideal para tu tesis
                   </p>
                   <p className="mt-4 text-base leading-8 text-slate-600">
-                    El resultado no reemplaza una evaluación completa, contacta con nuestro equipo para una asesoría personalizada y detallada.
+                    Responde 5 preguntas rápidas para una recomendación personalizada.
                   </p>
                 </div>
 
@@ -255,7 +277,7 @@ export default function AssessmentFunnel({ onNavigate }) {
                     <span>
                       {Math.round(
                         ((isComplete ? totalSteps : stepIndex + 1) / totalSteps) *
-                          100,
+                        100,
                       )}
                       %
                     </span>
@@ -355,7 +377,7 @@ export default function AssessmentFunnel({ onNavigate }) {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex h-full flex-col justify-between rounded-[28px] border border-sky-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(239,246,255,0.8))] p-6 sm:p-7">
+                  <div className="flex min-h-full flex-col justify-between rounded-[28px] border border-sky-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(239,246,255,0.8))] p-6 sm:p-7">
                     <div>
                       <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
                         <CheckCircle2 className="h-4 w-4" />
@@ -375,11 +397,11 @@ export default function AssessmentFunnel({ onNavigate }) {
                         {recommendation?.detail}
                       </p>
 
-                      <div className="mt-8 grid gap-3">
+                      <div className="mt-8 grid gap-2">
                         {recommendation?.bullets.map((bullet) => (
                           <div
                             key={bullet}
-                            className="rounded-[20px] border border-white/80 bg-white/78 px-4 py-4 text-sm leading-7 text-slate-700"
+                            className="rounded-[20px] border border-white/80 bg-white/78 px-4 py-2 text-sm leading-6 text-slate-700"
                           >
                             {bullet}
                           </div>

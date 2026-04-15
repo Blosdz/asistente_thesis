@@ -8,32 +8,23 @@ import {
   Volume2,
 } from 'lucide-react';
 
+const CHAT_START_URL =
+  import.meta.env.VITE_CHAT_START_URL?.trim() ||
+  'http://34.123.45.67:8001/api/chat/start';
+const CHAT_MESSAGE_URL =
+  import.meta.env.VITE_CHAT_MESSAGE_URL?.trim() ||
+  'http://34.123.45.67:8001/api/chat/message';
+const CHAT_END_URL =
+  import.meta.env.VITE_CHAT_END_URL?.trim() ||
+  'http://34.123.45.67:8001/api/chat/end';
 const TTS_API_URL =
-  import.meta.env.VITE_TTS_API_URL?.trim() || 'http://127.0.0.1:8000/api/tts';
+  import.meta.env.VITE_TTS_API_URL?.trim() || 'http://34.123.45.67:8000/api/tts';
+const CHAT_REQUEST_TIMEOUT_MS = 12000;
 const TTS_REQUEST_TIMEOUT_MS = 1800;
 
 const TTS_VOICE = 'coral';
 const TTS_INSTRUCTIONS =
   'Habla en español latino, con tono cálido, natural, conversacional y pausas suaves.';
-
-const BOT_RULES = [
-  {
-    test: (text) =>
-      includesAny(text, ['precio', 'costo', 'cuanto cuesta', 'cotizacion']),
-    reply:
-      'Claro. Puedo ayudarte con una cotización. Primero necesito algunos datos para orientarte mejor.',
-  },
-  {
-    test: (text) => includesAny(text, ['asesoria', 'asesoría', 'asesor']),
-    reply:
-      'Perfecto. Te ayudo con la asesoría. Cuéntame brevemente qué necesitas y luego te pediré tus datos.',
-  },
-  {
-    test: (text) => includesAny(text, ['planes', 'plan']),
-    reply:
-      'Tenemos distintas opciones de atención. Si deseas, te explico los planes y luego te solicito tus datos.',
-  },
-];
 
 const WELCOME_MESSAGE =
   'Hola. Soy el asistente virtual de AppThesis. Cuéntame qué necesitas y te ayudo.';
@@ -51,9 +42,19 @@ function includesAny(text, terms) {
   return terms.some((term) => normalized.includes(normalizeText(term)));
 }
 
-function getBotReply(text) {
-  const matched = BOT_RULES.find((rule) => rule.test(text));
-  if (matched) return matched.reply;
+function getFallbackReply(text) {
+  if (includesAny(text, ['precio', 'costo', 'cuanto cuesta', 'cotizacion'])) {
+    return 'Claro. Puedo ayudarte con una cotización. Primero necesito algunos datos para orientarte mejor.';
+  }
+
+  if (includesAny(text, ['asesoria', 'asesoría', 'asesor'])) {
+    return 'Perfecto. Te ayudo con la asesoría. Cuéntame brevemente qué necesitas y luego te pediré tus datos.';
+  }
+
+  if (includesAny(text, ['planes', 'plan'])) {
+    return 'Tenemos distintas opciones de atención. Si deseas, te explico los planes y luego te solicito tus datos.';
+  }
+
   return 'Gracias por escribir. Estoy listo para ayudarte. Cuéntame qué información necesitas.';
 }
 
@@ -72,6 +73,196 @@ function TypingDots() {
       <span className="h-2.5 w-2.5 animate-bounce rounded-full bg-slate-400" />
     </div>
   );
+}
+
+function readStringCandidate(value) {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed || null;
+  }
+
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const candidate = readStringCandidate(item);
+      if (candidate) return candidate;
+    }
+  }
+
+  if (value && typeof value === 'object') {
+    const priorityKeys = [
+      'response',
+      'reply',
+      'message',
+      'text',
+      'content',
+      'assistant_message',
+      'assistant_response',
+      'output',
+      'answer',
+    ];
+
+    for (const key of priorityKeys) {
+      const candidate = readStringCandidate(value[key]);
+      if (candidate) return candidate;
+    }
+
+    for (const nestedValue of Object.values(value)) {
+      const candidate = readStringCandidate(nestedValue);
+      if (candidate) return candidate;
+    }
+  }
+
+  return null;
+}
+
+function looksLikeBundledSource(text) {
+  if (!text || typeof text !== 'string') return false;
+
+  const sourceMarkers = [
+    'import.meta.hot',
+    '__vite__createHotContext',
+    '/@vite/client',
+    '/@react-refresh',
+    'jsxDEV(',
+    '$RefreshReg$(',
+    'RefreshRuntime',
+  ];
+
+  return sourceMarkers.some((marker) => text.includes(marker));
+}
+
+function extractReplyText(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+
+  const directPaths = [
+    payload.reply,
+    payload.response,
+    payload.message,
+    payload.answer,
+    payload.output_text,
+    payload.assistant_message,
+    payload.assistant_response,
+    payload.data?.reply,
+    payload.data?.response,
+    payload.data?.message,
+    payload.data?.answer,
+    payload.data?.output_text,
+    payload.data?.assistant_message,
+    payload.data?.assistant_response,
+    payload.result?.reply,
+    payload.result?.response,
+    payload.result?.message,
+    payload.result?.answer,
+    payload.result?.output_text,
+    payload.result?.assistant_message,
+    payload.result?.assistant_response,
+  ];
+
+  for (const candidateValue of directPaths) {
+    const candidate = readStringCandidate(candidateValue);
+    if (candidate && !looksLikeBundledSource(candidate)) {
+      return candidate;
+    }
+  }
+
+  const messageCollections = [
+    payload.messages,
+    payload.data?.messages,
+    payload.result?.messages,
+    payload.output,
+    payload.data?.output,
+    payload.result?.output,
+  ];
+
+  for (const collection of messageCollections) {
+    if (!Array.isArray(collection)) continue;
+
+    for (const item of collection) {
+      const candidate =
+        readStringCandidate(item?.content?.text) ||
+        readStringCandidate(item?.text) ||
+        readStringCandidate(item?.message) ||
+        readStringCandidate(item?.content?.[0]?.text) ||
+        readStringCandidate(item?.content?.[0]?.value);
+
+      if (candidate && !looksLikeBundledSource(candidate)) {
+        return candidate;
+      }
+    }
+  }
+
+  return null;
+}
+
+function readSessionId(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+
+  const priorityKeys = [
+    'session_id',
+    'sessionId',
+    'chat_id',
+    'chatId',
+    'conversation_id',
+    'conversationId',
+    'thread_id',
+    'threadId',
+    'id',
+  ];
+
+  for (const key of priorityKeys) {
+    const candidate = readStringCandidate(payload[key]);
+    if (candidate) return candidate;
+  }
+
+  for (const value of Object.values(payload)) {
+    if (value && typeof value === 'object') {
+      const nestedCandidate = readSessionId(value);
+      if (nestedCandidate) return nestedCandidate;
+    }
+  }
+
+  return null;
+}
+
+async function postJson(url, body, timeoutMs) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+      body: JSON.stringify(body),
+    });
+
+    let payload = null;
+
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        readStringCandidate(payload?.error) ||
+          `La solicitud a ${url} falló con estado ${response.status}.`,
+      );
+    }
+
+    return payload;
+  } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw new Error(`La solicitud a ${url} superó ${timeoutMs} ms.`);
+    }
+
+    throw error;
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
 }
 
 export default function LeadChatWidget({ initiallyOpen = false }) {
@@ -99,6 +290,8 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
   const bodyRef = useRef(null);
   const audioRef = useRef(null);
   const replyTimerRef = useRef(null);
+  const chatSessionIdRef = useRef(null);
+  const sessionStartPromiseRef = useRef(null);
 
   useEffect(() => {
     if (!('speechSynthesis' in window)) return;
@@ -137,8 +330,14 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
     return () => {
       clearPendingReplyTimer();
       stopAudio();
+      void terminateChatSession();
     };
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    void initializeChatSession();
+  }, [open]);
 
   const selectedVoice = useMemo(() => {
     return voices.find((v) => v.name === selectedVoiceName) || null;
@@ -302,24 +501,109 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
     ]);
   }
 
-  function handleSend() {
+  async function initializeChatSession() {
+    if (chatSessionIdRef.current) {
+      return chatSessionIdRef.current;
+    }
+
+    if (sessionStartPromiseRef.current) {
+      return sessionStartPromiseRef.current;
+    }
+
+    const startPromise = postJson(
+      CHAT_START_URL,
+      {
+        source: 'landing',
+        channel: 'web',
+      },
+      CHAT_REQUEST_TIMEOUT_MS,
+    )
+      .then((payload) => {
+        const sessionId = readSessionId(payload);
+
+        if (!sessionId) {
+          throw new Error('El endpoint de inicio no devolvió un identificador de sesión.');
+        }
+
+        chatSessionIdRef.current = sessionId;
+        return sessionId;
+      })
+      .finally(() => {
+        sessionStartPromiseRef.current = null;
+      });
+
+    sessionStartPromiseRef.current = startPromise;
+    return startPromise;
+  }
+
+  async function terminateChatSession() {
+    const sessionId = chatSessionIdRef.current;
+    if (!sessionId) return;
+
+    chatSessionIdRef.current = null;
+    sessionStartPromiseRef.current = null;
+
+    try {
+      await postJson(
+        CHAT_END_URL,
+        {
+          session_id: sessionId,
+          sessionId: sessionId,
+          chat_id: sessionId,
+          source: 'landing',
+        },
+        CHAT_REQUEST_TIMEOUT_MS,
+      );
+    } catch (error) {
+      console.warn('No se pudo cerrar la sesión del chat remoto:', error);
+    }
+  }
+
+  async function requestBotReply(text) {
+    const sessionId = await initializeChatSession();
+    const payload = await postJson(
+      CHAT_MESSAGE_URL,
+      {
+        session_id: sessionId,
+        sessionId: sessionId,
+        chat_id: sessionId,
+        message: text,
+        text,
+        user_message: text,
+        source: 'landing',
+        channel: 'web',
+      },
+      CHAT_REQUEST_TIMEOUT_MS,
+    );
+
+    const reply = extractReplyText(payload);
+
+    if (!reply) {
+      throw new Error('El endpoint de mensaje no devolvió una respuesta de texto.');
+    }
+
+    return reply;
+  }
+
+  async function handleSend() {
     const text = input.trim();
     if (!text) return;
 
     addMessage('user', text);
     setInput('');
 
-    const reply = getBotReply(text);
-
-    if (!audioEnabled) {
-      setTimeout(() => {
-        addMessage('bot', reply);
-      }, 300);
-      return;
-    }
-
     startPendingReply();
-    void deliverBotReply(reply);
+
+    try {
+      const reply = await requestBotReply(text);
+      await deliverBotReply(reply);
+    } catch (error) {
+      console.error('Fallo el chat remoto de la landing:', error);
+      setAudioNotice(
+        'No se pudo conectar con el chat remoto. Se usó la respuesta local de respaldo.',
+      );
+      await deliverBotReply(getFallbackReply(text));
+    }
   }
 
   async function deliverBotReply(reply) {
@@ -348,6 +632,11 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
       : `${lastAudioSource} listo`
     : 'Audio apagado';
 
+  function handleClose() {
+    setOpen(false);
+    void terminateChatSession();
+  }
+
   return (
     <>
       <button
@@ -369,7 +658,7 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
           <div className="flex items-center gap-3 bg-slate-900 px-4 py-3 text-white">
             <div className="flex gap-2">
               <button
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
                 className="h-3 w-3 rounded-full bg-rose-400 transition hover:scale-110"
                 aria-label="Cerrar asistente"
                 title="Cerrar"

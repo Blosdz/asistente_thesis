@@ -12,53 +12,44 @@ import SectionHeading from '../ui/SectionHeading';
 const pricingSpecs = [
   {
     title: 'Tipo de investigación',
-    details:
-      'Descriptivo, correlacional, comparativo, predictivo, explicativo, pre experimental, cuasi experimental y exploratorio.',
+    details: 'Descriptivo, correlacional, comparativo, predictivo, explicativo.',
   },
   {
     title: 'Nivel académico',
-    details:
-      'Pregrado sin recargo. Maestría o especialidad +15%. Doctorado +20%.',
+    details: 'Pregrado sin recargo. Maestría +15%. Doctorado +20%.',
   },
   {
     title: 'Variables',
-    details:
-      'Variable principal adicional + S/ 1000. Variables descriptivas simples sin recargo. Variables con análisis técnico se evalúan.',
+    details: 'Variable principal adicional +S/ 1000. Análisis técnico se evalúa.',
   },
   {
     title: 'Estadística',
-    details:
-      'Si no se requiere análisis estadístico, puede aplicarse un descuento de S/ 500 según el caso.',
+    details: 'Defensa con método estadístico se evalúa según caso.',
   },
   {
-    title: 'Casos especiales',
-    details:
-      'Arquitectura y diseño se evalúan de forma particular por sus componentes visuales y técnicos.',
+    title: 'Especiales',
+    details: 'Arquitectura y diseño requieren evaluación personalizada.',
   },
   {
-    title: 'Servicios adicionales',
-    details:
-      'Pre sustentación desde S/ 200, corrección adicional desde S/ 150 y asesorías extra como recomprables.',
+    title: 'Servicios',
+    details: 'Pre sustentación desde S/ 200. Asesorías extras recomprables.',
   },
 ];
 
 const pricingBenefits = [
   {
-    title: 'Claridad del cálculo',
-    description:
-      'Entiendes qué factores impactan el precio antes de elegir un plan o una asesoría.',
+    title: 'Claridad',
+    description: 'Entiendes qué factores impactan el precio.',
     icon: Calculator,
   },
   {
-    title: 'Expectativa realista',
-    description:
-      'El alcance de tu tesis se traduce en una cotización más coherente desde el inicio.',
+    title: 'Realismo',
+    description: 'Tu cotización coherente desde el inicio.',
     icon: FileText,
   },
   {
-    title: 'Menos dudas',
-    description:
-      'Tomas decisiones con mejor criterio porque sabes qué cambia el precio y por qué.',
+    title: 'Criterio',
+    description: 'Sabes qué cambia el precio y por qué.',
     icon: ShieldCheck,
   },
 ];
@@ -69,8 +60,8 @@ export default function PricingStory() {
       <div className="mx-auto max-w-7xl">
         <SectionHeading
           eyebrow="Cotización"
-          title="AppThesis explica cómo se calcula tu cotización."
-          description="Mostramos reglas claras para que entiendas qué impacta el precio, qué casos requieren evaluación y qué beneficios obtienes desde el primer paso."
+          title="Cómo calculamos tu precio."
+          description="Reglas claras: entiendes qué impacta el precio y cómo se evalúa tu tesis."
         />
 
         <div className="mt-14 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
