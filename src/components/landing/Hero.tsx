@@ -90,7 +90,7 @@ export default function Hero({ onNavigate }) {
                     <div className="h-8 w-8 rounded-full border-2 border-white/70 bg-gradient-to-br from-emerald-400 to-teal-500" />
                     <div className="h-8 w-8 rounded-full border-2 border-white/70 bg-gradient-to-br from-violet-400 to-purple-500" />
                   </div>
-                  <span className="text-sm font-medium text-slate-600">5,000+ estudiantes confían en AppThesis</span>
+                  <span className="text-sm font-medium text-slate-600">1,000+ estudiantes confían en AppThesis</span>
                 </div>
               </div>
 
@@ -164,7 +164,8 @@ export default function Hero({ onNavigate }) {
                   playsInline
                   className="absolute inset-0 h-full w-full object-cover"
                 >
-                  <source src="/tesis-video.mp4" type="video/mp4" />
+                <source src="https://www.dropbox.com/scl/fi/0z0f3udo86pex7c96bgde/tesis-video.mp4?rlkey=cze16aczianjh8gerpdmt87qa&st=r2hwqvky&raw=1" type="video/mp4" />
+
                 </video>
 
                 {/* Dark Overlay for better text visibility */}
