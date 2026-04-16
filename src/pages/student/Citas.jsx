@@ -114,6 +114,20 @@ function estadoTexto(estado) {
   return (estado || 'sin_estado').replaceAll('_', ' ');
 }
 
+function inferTipoServicio(cita) {
+  if (cita?.tipo_servicio) {
+    return cita.tipo_servicio;
+  }
+
+  return String(cita?.motivo || '').toLowerCase().includes('pre-sustent')
+    ? 'presustentacion'
+    : 'asesoria';
+}
+
+function tipoServicioTexto(tipoServicio) {
+  return tipoServicio === 'presustentacion' ? 'Pre-sustentación' : 'Asesoría';
+}
+
 export default function Citas() {
   const navigate = useNavigate();
   const [viewDate, setViewDate] = useState(startOfMonth(new Date()));
@@ -501,14 +515,28 @@ export default function Citas() {
                 </div>
               )}
 
+              <div className="rounded-2xl border border-slate-200 p-4">
+                <p className="text-xs uppercase tracking-[0.14em] text-slate-400">
+                  Tipo de servicio
+                </p>
+                <p className="mt-1 text-sm text-slate-700">
+                  {tipoServicioTexto(inferTipoServicio(selectedCita))}
+                </p>
+              </div>
+
               <div className="flex flex-col gap-3 sm:flex-row">
                 {selectedCita.status === 'payment_pending' && (
                   <Link
                     to="/student/payments"
+                    state={{
+                      autoOpenVoucher: true,
+                      pagoId: selectedCita.payment_id || null,
+                      validationCitaId: selectedCita.validation_cita_id,
+                    }}
                     className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-blue-700"
                   >
                     <CreditCard className="h-4 w-4" />
-                    Ir a pagos
+                    Ir a pagos y subir voucher
                   </Link>
                 )}
 
@@ -527,7 +555,9 @@ export default function Citas() {
 
                 {selectedCita.status === 'approved' && (
                   <div className="flex-1 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-center text-sm font-semibold text-cyan-800">
-                    Tu solicitud fue aprobada y está en proceso de confirmación final.
+                    {selectedCita.payment_id
+                      ? 'Tu solicitud fue aprobada y está en proceso de confirmación final.'
+                      : 'Tu solicitud fue aprobada con tu plan. No se generó un pago adicional y está en proceso de confirmación final.'}
                   </div>
                 )}
               </div>

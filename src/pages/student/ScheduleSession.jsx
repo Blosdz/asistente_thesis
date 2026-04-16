@@ -10,10 +10,12 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import Modal from '../../components/ui/modal';
+import SubscriptionSummaryCard from '../../components/student/SubscriptionSummaryCard';
 import { crearCitaAsesoria, obtenerAsesores } from '../../services/advisorService';
 import {
   disponibilidadAsesorSemana,
 } from '../../services/pagosService';
+import { obtenerMiSuscripcion } from '../../services/suscripcionService';
 
 const formatTime = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const formatDate = (iso) => new Date(iso).toLocaleDateString();
@@ -28,6 +30,8 @@ export default function ScheduleSession() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [bookingResult, setBookingResult] = useState(null);
+  const [suscripcion, setSuscripcion] = useState(null);
+  const [loadingSuscripcion, setLoadingSuscripcion] = useState(true);
 
   useEffect(() => {
     const loadAdvisors = async () => {
@@ -43,6 +47,23 @@ export default function ScheduleSession() {
       }
     };
     loadAdvisors();
+  }, []);
+
+  useEffect(() => {
+    const loadSuscripcion = async () => {
+      try {
+        setLoadingSuscripcion(true);
+        const data = await obtenerMiSuscripcion();
+        setSuscripcion(data ?? null);
+      } catch (error) {
+        console.error('Error cargando suscripción activa:', error);
+        setSuscripcion(null);
+      } finally {
+        setLoadingSuscripcion(false);
+      }
+    };
+
+    loadSuscripcion();
   }, []);
 
   useEffect(() => {
@@ -88,7 +109,8 @@ export default function ScheduleSession() {
         p_inicio: selectedSlot.inicio,
         p_fin: selectedSlot.fin,
         p_tesis_id: null,
-        p_motivo: 'Solicitud de sesión',
+        p_motivo: 'Solicitud de asesoría',
+        p_tipo_servicio: 'asesoria',
         p_modalidad: 'virtual',
         p_lugar: null,
         p_enlace_reunion: null,
@@ -210,6 +232,12 @@ export default function ScheduleSession() {
                 </span>
               </div>
             </div>
+
+            <SubscriptionSummaryCard
+              subscription={suscripcion}
+              loading={loadingSuscripcion}
+              serviceType="asesoria"
+            />
           </div>
         </div>
       </div>
@@ -242,7 +270,8 @@ export default function ScheduleSession() {
         }}
       >
         <div className="text-sm text-slate-700 bg-white/70 border border-slate-200 rounded-2xl p-4">
-          El pago se generará solo si el asesor acepta tu solicitud.
+          Si tu plan cubre la sesión, no se generará un pago. En caso
+          contrario, el pago se generará solo si el asesor acepta tu solicitud.
         </div>
       </Modal>
     </div>

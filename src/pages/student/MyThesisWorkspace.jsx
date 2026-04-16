@@ -1,18 +1,16 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
-import { FileText, Plus, X, Sparkles } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { FileText, Loader2, Plus, Sparkles } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from '../../components/ui/card';
+import { Card } from '../../components/ui/card';
 import { Select, SelectItem } from '../../components/ui/select';
 import Modal from '../../components/ui/modal';
 import {
   obtenerMisTesis,
-  crearMiTesis,
+  cotizarTesisPlan,
+  crearTesisConPlan,
   obtenerDocumentosMiTesis,
+  obtenerTiposTesisActivos,
   obtenerSugerenciasMiTesis,
   marcarSugerenciaAplicadaEstudiante,
 } from '../../services/thesisService';
@@ -21,6 +19,8 @@ import {
   obtenerMisAsesores,
   obtenerMisTesisConAsesores,
 } from '../../services/advisorService';
+import { obtenerPlanesDisponibles } from '../../services/pagosService';
+import { obtenerPerfilEstudiante } from '../../services/studentService';
 import { toast } from 'react-hot-toast';
 import {
   canStudentSubmitSuggestion,
@@ -32,7 +32,31 @@ import {
   getSuggestionTypeLabel,
 } from '../../lib/suggestionValidation';
 
+const NIVELES_ACADEMICOS = [
+  { value: 'PREGRADO', label: 'Pregrado' },
+  { value: 'MAESTRIA', label: 'Maestria' },
+  { value: 'ESPECIALIDAD', label: 'Especialidad' },
+  { value: 'DOCTORADO', label: 'Doctorado' },
+];
+
+const initialCreateForm = {
+  titulo: '',
+  descripcion: '',
+  plan_id: '',
+  tipo_tesis_id: '',
+  nivel_academico: 'PREGRADO',
+  requiere_analisis_estadistico: true,
+};
+
+const formatCurrency = (value, currency = 'PEN') =>
+  new Intl.NumberFormat('es-PE', {
+    style: 'currency',
+    currency: currency || 'PEN',
+    minimumFractionDigits: 2,
+  }).format(Number(value || 0));
+
 const MyThesisWorkspace = () => {
+  const navigate = useNavigate();
   const [thesesList, setThesesList] = useState([]);
   const [selectedThesisId, setSelectedThesisId] = useState('');
   const [documents, setDocuments] = useState([]);
@@ -56,9 +80,16 @@ const MyThesisWorkspace = () => {
     useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [newThesisTitle, setNewThesisTitle] = useState('');
-  const [newThesisDesc, setNewThesisDesc] = useState('');
+  const [createForm, setCreateForm] = useState(initialCreateForm);
+  const [quoteData, setQuoteData] = useState(null);
+  const [quoteError, setQuoteError] = useState('');
+  const [quoting, setQuoting] = useState(false);
+  const [planesDisponibles, setPlanesDisponibles] = useState([]);
+  const [tiposTesis, setTiposTesis] = useState([]);
+  const [perfilEstudiante, setPerfilEstudiante] = useState(null);
+  const [loadingCatalogs, setLoadingCatalogs] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [createdPaymentSummary, setCreatedPaymentSummary] = useState(null);
 
   const buildPreviewUrl = useCallback((url) => {
     if (!url) return null;
@@ -167,9 +198,50 @@ const MyThesisWorkspace = () => {
     }
   }, []);
 
+  const cargarCatalogosCreacion = useCallback(async () => {
+    try {
+      setLoadingCatalogs(true);
+      const [planes, tipos, perfil] = await Promise.all([
+        obtenerPlanesDisponibles(),
+        obtenerTiposTesisActivos(),
+        obtenerPerfilEstudiante().catch(() => null),
+      ]);
+
+      setPlanesDisponibles(planes || []);
+      setTiposTesis(tipos || []);
+      setPerfilEstudiante(perfil || null);
+    } catch (error) {
+      console.error('Error loading thesis creation catalogs:', error);
+      toast.error('No se pudieron cargar los catálogos de creación.');
+      setPlanesDisponibles([]);
+      setTiposTesis([]);
+      setPerfilEstudiante(null);
+    } finally {
+      setLoadingCatalogs(false);
+    }
+  }, []);
+
+  const resetCreateFlow = useCallback(() => {
+    setCreateForm(initialCreateForm);
+    setQuoteData(null);
+    setQuoteError('');
+    setQuoting(false);
+  }, []);
+
+  const closeCreateModal = useCallback(() => {
+    if (creating) return;
+    setShowCreateModal(false);
+    resetCreateFlow();
+  }, [creating, resetCreateFlow]);
+
+  const openCreateModal = useCallback(() => {
+    setShowCreateModal(true);
+  }, []);
+
   useEffect(() => {
     fetchTheses();
     fetchMisAsesores();
+    cargarCatalogosCreacion();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -191,29 +263,104 @@ const MyThesisWorkspace = () => {
     }
   }, [selectedThesisId, cargarSugerencias]);
 
+  useEffect(() => {
+    if (!showCreateModal) return;
+
+    if (
+      !createForm.plan_id ||
+      !createForm.tipo_tesis_id ||
+      !createForm.nivel_academico
+    ) {
+      setQuoteData(null);
+      setQuoteError('');
+      setQuoting(false);
+      return;
+    }
+
+    let ignore = false;
+
+    const cotizar = async () => {
+      try {
+        setQuoting(true);
+        setQuoteError('');
+        const data = await cotizarTesisPlan({
+          plan_id: createForm.plan_id,
+          tipo_tesis_id: createForm.tipo_tesis_id,
+          nivel_academico: createForm.nivel_academico,
+          requiere_analisis_estadistico:
+            createForm.requiere_analisis_estadistico,
+        });
+
+        if (!ignore) {
+          setQuoteData(data);
+        }
+      } catch (error) {
+        console.error('Error quoting thesis plan:', error);
+        if (!ignore) {
+          setQuoteData(null);
+          setQuoteError(
+            error.message || 'No se pudo calcular la cotización.',
+          );
+        }
+      } finally {
+        if (!ignore) {
+          setQuoting(false);
+        }
+      }
+    };
+
+    cotizar();
+
+    return () => {
+      ignore = true;
+    };
+  }, [createForm, showCreateModal]);
+
   const handleCreateThesis = async () => {
-    if (!newThesisTitle.trim()) return toast.error('El título es requerido');
+    if (!createForm.titulo.trim()) {
+      toast.error('El título es requerido');
+      return;
+    }
+
+    if (!perfilEstudiante?.estudiante_id) {
+      toast.error('Completa tu perfil de estudiante antes de crear la tesis');
+      return;
+    }
+
+    if (!quoteData) {
+      toast.error('Completa la cotización antes de crear la tesis');
+      return;
+    }
 
     try {
       setCreating(true);
-      const newThesis = await crearMiTesis({
-        titulo: newThesisTitle,
-        descripcion: newThesisDesc,
-        universidad_id: null,
+      const newThesis = await crearTesisConPlan({
+        estudiante_id: perfilEstudiante.estudiante_id,
+        titulo: createForm.titulo.trim(),
+        descripcion: createForm.descripcion.trim() || null,
+        plan_id: createForm.plan_id,
+        tipo_tesis_id: createForm.tipo_tesis_id,
+        nivel_academico: createForm.nivel_academico,
+        requiere_analisis_estadistico:
+          createForm.requiere_analisis_estadistico,
+        universidad_id: perfilEstudiante?.universidad_id || null,
+        programa_id: null,
+        estado_tesis: 'borrador',
       });
 
-      toast.success('Tesis creada con éxito');
+      toast.success('Tesis creada en borrador');
       setShowCreateModal(false);
-      setNewThesisTitle('');
-      setNewThesisDesc('');
+      resetCreateFlow();
 
       await fetchTheses();
-      if (newThesis && newThesis.id) {
-        setSelectedThesisId(newThesis.id);
+      if (newThesis?.tesis_id) {
+        setSelectedThesisId(newThesis.tesis_id);
       }
+
+      setCreatedPaymentSummary(newThesis);
     } catch (err) {
-      console.error('Create error:', err);
-      toast.error(err.message || 'Error al crear la tesis');
+      console.error('Create thesis with plan error:', err);
+      toast.error(err.message || 'Error al crear la tesis con cotización');
     } finally {
       setCreating(false);
     }
@@ -337,6 +484,353 @@ const MyThesisWorkspace = () => {
     return date.toLocaleDateString();
   };
 
+  const selectedPlanMeta = useMemo(
+    () => planesDisponibles.find((plan) => plan.id === createForm.plan_id),
+    [createForm.plan_id, planesDisponibles],
+  );
+
+  const selectedTipoMeta = useMemo(
+    () => tiposTesis.find((tipo) => tipo.id === createForm.tipo_tesis_id),
+    [createForm.tipo_tesis_id, tiposTesis],
+  );
+
+  const canSubmitCreateFlow =
+    !creating &&
+    !quoting &&
+    !loadingCatalogs &&
+    !!perfilEstudiante?.estudiante_id &&
+    !!createForm.titulo.trim() &&
+    !!createForm.plan_id &&
+    !!createForm.tipo_tesis_id &&
+    !!createForm.nivel_academico &&
+    !!quoteData;
+
+  const createThesisModal = (
+    <Modal
+      open={showCreateModal}
+      onClose={closeCreateModal}
+      title="Crear tesis con cotización"
+      subtitle="Completa tus datos, revisa el precio y luego genera el pago pendiente."
+      modalWidth="xl"
+      primaryAction={{
+        label: creating ? 'Creando...' : 'Crear tesis y generar pago',
+        onClick: handleCreateThesis,
+        disabled: !canSubmitCreateFlow,
+      }}
+      secondaryAction={{
+        label: 'Cancelar',
+        onClick: closeCreateModal,
+        disabled: creating,
+      }}
+    >
+      <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <section className="space-y-5">
+          <div className="grid gap-5 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Título de la tesis
+              </label>
+              <input
+                type="text"
+                value={createForm.titulo}
+                onChange={(e) =>
+                  setCreateForm((current) => ({
+                    ...current,
+                    titulo: e.target.value,
+                  }))
+                }
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+                placeholder="Ej: Impacto de la inteligencia artificial en procesos académicos"
+                autoFocus
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Descripción
+              </label>
+              <textarea
+                value={createForm.descripcion}
+                onChange={(e) =>
+                  setCreateForm((current) => ({
+                    ...current,
+                    descripcion: e.target.value,
+                  }))
+                }
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100 resize-none"
+                placeholder="Breve contexto del problema de investigación"
+                rows="4"
+              />
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Plan
+              </label>
+              <Select
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
+                value={createForm.plan_id}
+                onChange={(e) =>
+                  setCreateForm((current) => ({
+                    ...current,
+                    plan_id: e.target.value,
+                  }))
+                }
+              >
+                <SelectItem value="">
+                  {loadingCatalogs ? 'Cargando planes...' : 'Selecciona un plan'}
+                </SelectItem>
+                {planesDisponibles.map((plan) => (
+                  <SelectItem key={plan.id} value={plan.id}>
+                    {plan.nombre}
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Tipo de tesis
+              </label>
+              <Select
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
+                value={createForm.tipo_tesis_id}
+                onChange={(e) =>
+                  setCreateForm((current) => ({
+                    ...current,
+                    tipo_tesis_id: e.target.value,
+                  }))
+                }
+              >
+                <SelectItem value="">
+                  {loadingCatalogs
+                    ? 'Cargando tipos...'
+                    : 'Selecciona un tipo de tesis'}
+                </SelectItem>
+                {tiposTesis.map((tipo) => (
+                  <SelectItem key={tipo.id} value={tipo.id}>
+                    {tipo.nombre}
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Nivel académico
+              </label>
+              <Select
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
+                value={createForm.nivel_academico}
+                onChange={(e) =>
+                  setCreateForm((current) => ({
+                    ...current,
+                    nivel_academico: e.target.value,
+                  }))
+                }
+              >
+                {NIVELES_ACADEMICOS.map((nivel) => (
+                  <SelectItem key={nivel.value} value={nivel.value}>
+                    {nivel.label}
+                  </SelectItem>
+                ))}
+              </Select>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-slate-700">
+                Análisis estadístico
+              </label>
+              <Select
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
+                value={
+                  createForm.requiere_analisis_estadistico ? 'si' : 'no'
+                }
+                onChange={(e) =>
+                  setCreateForm((current) => ({
+                    ...current,
+                    requiere_analisis_estadistico: e.target.value === 'si',
+                  }))
+                }
+              >
+                <SelectItem value="si">Sí, lo requiere</SelectItem>
+                <SelectItem value="no">No, no lo requiere</SelectItem>
+              </Select>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600">
+            <p className="font-semibold text-slate-800">Datos usados al crear</p>
+            <p className="mt-2">
+              Estudiante del perfil:{' '}
+              <span className="font-medium text-slate-700">
+                {perfilEstudiante?.estudiante_id
+                  ? 'Se enviará el estudiante registrado'
+                  : 'No disponible, primero completa tu perfil'}
+              </span>
+            </p>
+            <p className="mt-2">
+              Universidad del perfil:{' '}
+              <span className="font-medium text-slate-700">
+                {perfilEstudiante?.universidad_id
+                  ? 'Se enviará la universidad registrada'
+                  : 'No registrada, se enviará como null'}
+              </span>
+            </p>
+            <p className="mt-1">Programa académico: no aplica en esta versión.</p>
+          </div>
+        </section>
+
+        <aside className="space-y-4">
+          <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
+              Cotización
+            </p>
+            <h3 className="mt-2 text-xl font-black tracking-tight text-slate-900">
+              Resumen del plan
+            </h3>
+
+            {loadingCatalogs ? (
+              <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cargando catálogos...
+              </div>
+            ) : quoting ? (
+              <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Calculando cotización...
+              </div>
+            ) : quoteError ? (
+              <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                {quoteError}
+              </div>
+            ) : quoteData ? (
+              <div className="mt-6 space-y-3 text-sm">
+                <div className="rounded-2xl border border-white bg-white p-4">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                    Configuración
+                  </p>
+                  <p className="mt-2 font-semibold text-slate-900">
+                    {quoteData.plan_nombre || selectedPlanMeta?.nombre || 'Plan'}
+                  </p>
+                  <p className="text-slate-500">
+                    {quoteData.tipo_tesis_nombre ||
+                      selectedTipoMeta?.nombre ||
+                      'Tipo de tesis'}
+                  </p>
+                  <p className="text-slate-500">
+                    Nivel: {quoteData.nivel_academico || createForm.nivel_academico}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white bg-white p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500">Precio base</span>
+                    <span className="font-semibold text-slate-900">
+                      {formatCurrency(quoteData.precio_base, quoteData.moneda)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500">
+                      Recargo por nivel ({quoteData.porcentaje_nivel}%)
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      {formatCurrency(
+                        quoteData.monto_ajuste_nivel,
+                        quoteData.moneda,
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500">
+                      Descuento por no análisis
+                    </span>
+                    <span className="font-semibold text-emerald-700">
+                      -{' '}
+                      {formatCurrency(
+                        quoteData.descuento_analisis_estadistico,
+                        quoteData.moneda,
+                      )}
+                    </span>
+                  </div>
+                  <div className="border-t border-slate-200 pt-3 flex items-center justify-between gap-3">
+                    <span className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+                      Total
+                    </span>
+                    <span className="text-2xl font-black tracking-tight text-slate-900">
+                      {formatCurrency(quoteData.precio_total, quoteData.moneda)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-white/80 p-4 text-sm text-slate-500">
+                Selecciona plan, tipo de tesis y nivel académico para calcular
+                el precio final.
+              </div>
+            )}
+          </div>
+        </aside>
+      </div>
+    </Modal>
+  );
+
+  const paymentSummaryModal = (
+    <Modal
+      open={!!createdPaymentSummary}
+      onClose={() => setCreatedPaymentSummary(null)}
+      title="Tesis creada con pago pendiente"
+      subtitle="Tu cotización ya quedó congelada y el siguiente paso es subir el voucher."
+      primaryAction={{
+        label: 'Ir a Pagos',
+        onClick: () => {
+          const pagoId = createdPaymentSummary?.pago_id;
+          setCreatedPaymentSummary(null);
+          navigate('/student/payments', {
+            state: { pagoId, autoOpenVoucher: true },
+          });
+        },
+      }}
+      secondaryAction={{
+        label: 'Luego',
+        onClick: () => setCreatedPaymentSummary(null),
+      }}
+    >
+      {createdPaymentSummary && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              Tesis
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">
+              Estado: {createdPaymentSummary.estado_tesis}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              ID: {createdPaymentSummary.tesis_id}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              Pago pendiente
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">
+              {formatCurrency(
+                createdPaymentSummary.precio_total,
+                createdPaymentSummary.moneda,
+              )}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Estado: {createdPaymentSummary.estado_pago}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              Pago ID: {createdPaymentSummary.pago_id}
+            </p>
+          </div>
+        </div>
+      )}
+    </Modal>
+  );
+
   if (!loading && thesesList.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in duration-700">
@@ -352,56 +846,15 @@ const MyThesisWorkspace = () => {
             primera tesis.
           </p>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={openCreateModal}
             className="bg-ios-blue text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-ios-blue/20 hover:scale-105 transition-transform active:scale-95 flex items-center gap-2 mx-auto"
           >
             <Plus size={20} />
             Crear Nueva Tesis
           </button>
         </Card>
-
-        <Modal
-          open={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          title="Crear Nueva Tesis"
-          subtitle="Configura el título y una breve descripción para comenzar."
-          primaryAction={{
-            label: creating ? 'Creando...' : 'Crear tesis',
-            onClick: handleCreateThesis,
-          }}
-          secondaryAction={{
-            label: 'Cancelar',
-            onClick: () => setShowCreateModal(false),
-          }}
-        >
-          <div className="space-y-4 text-left">
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Título de la tesis
-              </label>
-              <input
-                type="text"
-                value={newThesisTitle}
-                onChange={(e) => setNewThesisTitle(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                placeholder="Ej: Análisis del impacto..."
-                autoFocus
-              />
-            </div>
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Descripción
-              </label>
-              <textarea
-                value={newThesisDesc}
-                onChange={(e) => setNewThesisDesc(e.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100 resize-none"
-                placeholder="Breve descripción de la investigación"
-                rows="4"
-              />
-            </div>
-          </div>
-        </Modal>
+        {createThesisModal}
+        {paymentSummaryModal}
       </div>
     );
   }
@@ -428,7 +881,7 @@ const MyThesisWorkspace = () => {
           </div>
           <div className="flex gap-3">
             <Button
-              onClick={() => setShowCreateModal(true)}
+              onClick={openCreateModal}
               className="gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-white hover:bg-blue-700"
               title="Crear Nueva Tesis"
             >
@@ -809,49 +1262,8 @@ const MyThesisWorkspace = () => {
           </div>
         </div>
       </Modal>
-
-      <Modal
-        open={showCreateModal && thesesList.length > 0}
-        onClose={() => setShowCreateModal(false)}
-        title="Crear Nueva Tesis"
-        subtitle="Configura el título y una breve descripción para comenzar."
-        primaryAction={{
-          label: creating ? 'Creando...' : 'Crear tesis',
-          onClick: handleCreateThesis,
-        }}
-        secondaryAction={{
-          label: 'Cancelar',
-          onClick: () => setShowCreateModal(false),
-        }}
-      >
-        <div className="space-y-4 text-left">
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Título de la tesis
-            </label>
-            <input
-              type="text"
-              value={newThesisTitle}
-              onChange={(e) => setNewThesisTitle(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-              placeholder="Ej: Análisis del impacto..."
-              autoFocus
-            />
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Descripción
-            </label>
-            <textarea
-              value={newThesisDesc}
-              onChange={(e) => setNewThesisDesc(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100 resize-none"
-              placeholder="Breve descripción de la investigación"
-              rows="4"
-            />
-          </div>
-        </div>
-      </Modal>
+      {createThesisModal}
+      {paymentSummaryModal}
     </div>
   );
 };

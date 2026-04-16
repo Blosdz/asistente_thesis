@@ -1,322 +1,241 @@
-import { useRef } from 'react';
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useSpring,
-  useTransform,
-} from 'motion/react';
-import {
-  ArrowRight,
-  Bot,
-  Calculator,
-  CheckCircle2,
-  LayoutDashboard,
-  Play,
-  Sparkles,
-} from 'lucide-react';
-import projectIcon from '../../../iconProyect.png';
+import { ArrowRight, CheckCircle2, Calendar, MessageSquare, Zap, Sparkles } from 'lucide-react';
 
-import GlassCard from '../ui/GlassCard';
-import StorySection from './StorySection';
-import { useStoryScroll } from './SmoothScrollProvider';
+const heroStats = [
+  'Cotización clara',
+  'Orden en tus avances',
+  'Defensa con método',
+];
 
-const floatingChips = [
+const floatingFeatures = [
   {
-    label: 'AppThesis',
-    className: 'left-[3%] top-40 hidden lg:flex',
+    icon: Calendar,
+    title: 'Agenda asesorías',
+    subtitle: 'En 48 horas',
+    color: 'from-sky-100 to-blue-100',
+    iconColor: 'text-sky-600',
   },
   {
-    label: 'Precio claro',
-    className: 'right-[5%] top-32 hidden md:flex',
+    icon: MessageSquare,
+    title: 'Chat inteligente',
+    subtitle: 'Respuestas en 4h',
+    color: 'from-emerald-100 to-teal-100',
+    iconColor: 'text-emerald-600',
   },
   {
-    label: 'Feedback limpio',
-    className: 'left-[8%] bottom-32 hidden lg:flex',
-  },
-  {
-    label: 'Apoyo real',
-    className: 'right-[8%] bottom-24 hidden md:flex',
-  },
-  {
-    label: 'Ruta visible',
-    className: 'right-[18%] top-[54%] hidden xl:flex',
+    icon: Zap,
+    title: 'Análisis IA',
+    subtitle: 'De tu avance',
+    color: 'from-violet-100 to-purple-100',
+    iconColor: 'text-violet-600',
   },
 ];
 
-const heroStats = ['Precio claro', 'Ruta visible', 'Apoyo real'];
-
-const timeline = [
-  { label: 'Caso', value: 'Definido' },
-  { label: 'Precio', value: 'En segundos' },
-  { label: 'Ruta', value: 'Visible' },
+const howItWorks = [
+  {
+    number: '1',
+    title: 'Cuéntanos tu tema',
+    description: 'Describe tu proyecto y nivel académico',
+  },
+  {
+    number: '2',
+    title: 'Recibe retroalimentación',
+    description: 'Asesorías personalizadas en 48h',
+  },
+  {
+    number: '3',
+    title: 'Avanza y defiende',
+    description: 'Con claridad y confianza',
+  },
 ];
 
-type HeroProps = {
-  onOpenStory: () => void;
-};
+const trustStats = [
+  { value: '5,000+', label: 'Estudiantes activos' },
+  { value: '4.9/5', label: 'Satisfacción' },
+  { value: '98%', label: 'Completan su tesis' },
+];
 
-export default function Hero({ onOpenStory }: HeroProps) {
-  const reducedMotion = useReducedMotion();
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const { scrollToSection } = useStoryScroll();
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start start', 'end start'],
-  });
-  const smoothProgress = useSpring(scrollYProgress, {
-    stiffness: 120,
-    damping: 28,
-    mass: 0.22,
-  });
-  const textY = useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : 32]);
-  const mockupY = useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : -30]);
-  const chatY = useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : -12]);
-  const pricingY = useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : -22]);
-  const progressY = useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : 10]);
-  const glowY = useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : -48]);
+const quoteRows = [
+  ['Investigación', 'Según tema y modalidad'],
+  ['Nivel académico', 'Según complejidad'],
+  ['Alcance', 'Según variables y requisitos'],
+  ['Resultado', 'Estimación clara'],
+];
 
-  const chipTransforms = [
-    useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : -10]),
-    useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : 12]),
-    useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : -18]),
-    useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : 14]),
-    useTransform(smoothProgress, [0, 1], [0, reducedMotion ? 0 : -9]),
-  ];
+const progressRows = [
+  { label: 'Tema definido', value: 'Claro', progress: '78%' },
+  { label: 'Ruta de trabajo', value: 'Ordenada', progress: '88%' },
+  { label: 'Seguimiento', value: 'Visible', progress: '82%' },
+];
 
+export default function Hero({ onNavigate }) {
   return (
-    <StorySection id="hero" ref={sectionRef} className="relative px-4 pb-14 pt-24 sm:px-6 lg:px-8">
-      <motion.div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-12 -z-10 mx-auto h-[36rem] max-w-5xl rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.94),rgba(59,130,246,0.16)_34%,rgba(2,132,199,0.12)_62%,transparent_74%)] blur-3xl"
-        style={{ y: glowY }}
-      />
+    <>
+      {/* MAIN HERO SECTION */}
+      <section id="hero" className="relative mt-5 px-4 pb-20 pt-40 sm:px-6 lg:px-8">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-10 -z-10 mx-auto h-[34rem] max-w-6xl rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.94),rgba(59,130,246,0.16)_34%,rgba(2,132,199,0.12)_62%,transparent_74%)] blur-3xl"
+        />
 
-      {floatingChips.map((chip, index) => (
-        <motion.div
-          key={chip.label}
-          className={`pointer-events-none absolute ${chip.className}`}
-          style={{ y: chipTransforms[index] }}
-        >
-          <div className="glass-tag">
-            <Sparkles className="h-3.5 w-3.5 text-blue-600" />
-            <span>{chip.label}</span>
-          </div>
-        </motion.div>
-      ))}
-
-      <motion.div
-        className="mx-auto max-w-4xl text-center"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.75, ease: [0.21, 1, 0.25, 1] }}
-        style={{ y: textY }}
-      >
-        <div className="inline-flex items-center gap-3 rounded-full border border-white/75 bg-white/70 px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-[0_16px_44px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-          <img src={projectIcon} alt="AppThesis" className="h-4 w-4 object-contain" />
-          Plan. Precio. Ruta.
-        </div>
-
-        <h1 className="mt-7 font-display text-5xl leading-[0.92] tracking-[-0.05em] text-slate-950 sm:text-6xl lg:text-[5.4rem]">
-          Ordena tu tesis.
-          <span className="mt-2 block bg-gradient-to-r from-slate-950 via-sky-700 to-blue-600 bg-clip-text text-transparent">
-            Avanza con criterio.
-          </span>
-        </h1>
-
-        <p className="mx-auto mt-5 max-w-2xl text-base leading-7 text-slate-600 sm:text-lg">
-          Cotiza, organiza y sigue cada entrega en un solo flujo.
-        </p>
-
-        <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={() => scrollToSection('plans')}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-7 py-4 text-sm font-semibold text-white shadow-[0_18px_34px_rgba(15,23,42,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-900"
-          >
-            Ver planes
-            <ArrowRight className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onOpenStory}
-            className="inline-flex items-center justify-center gap-2 rounded-full border border-white/70 bg-white/70 px-7 py-4 text-sm font-semibold text-slate-700 shadow-[0_16px_30px_rgba(15,23,42,0.08)] backdrop-blur-2xl transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/80"
-          >
-            Ver demo
-            <Play className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          {heroStats.map((item) => (
-            <div
-              key={item}
-              className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/50 px-4 py-2 text-sm text-slate-600 backdrop-blur-xl"
-            >
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              {item}
-            </div>
-          ))}
-        </div>
-      </motion.div>
-
-      <motion.div
-        className="relative mx-auto mt-12 max-w-6xl"
-        initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, delay: 0.16, ease: [0.21, 1, 0.25, 1] }}
-        style={{ y: mockupY }}
-      >
-        <GlassCard className="rounded-[40px] p-4 sm:p-5 lg:p-7">
-          <div className="relative overflow-hidden rounded-[30px] border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(238,244,255,0.62))] p-4 sm:p-6 lg:p-8">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_38%),radial-gradient(circle_at_bottom_right,rgba(2,132,199,0.08),transparent_38%)]" />
-            <div className="relative flex items-center justify-between gap-4 border-b border-white/60 pb-5">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">
-                  AppThesis Platform
-                </p>
-                <p className="mt-1 text-lg font-semibold text-slate-900">
-                  Precio claro. Ruta clara.
-                </p>
+        <div className="mx-auto max-w-7xl">
+          {/* Two Column Grid */}
+          <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-start">
+            {/* LEFT: Main Content */}
+            <div className="landing-fade-in flex flex-col gap-6">
+              {/* Social Proof Section */}
+              <div className="flex flex-col items-start gap-4 lg:items-center lg:text-center">
+                <div className="inline-flex items-center gap-3 rounded-full border border-white/70 bg-white/55 px-5 py-2.5 backdrop-blur-xl">
+                  <div className="flex -space-x-2 items-center">
+                    <div className="h-8 w-8 rounded-full border-2 border-white/70 bg-gradient-to-br from-sky-400 to-blue-500" />
+                    <div className="h-8 w-8 rounded-full border-2 border-white/70 bg-gradient-to-br from-emerald-400 to-teal-500" />
+                    <div className="h-8 w-8 rounded-full border-2 border-white/70 bg-gradient-to-br from-violet-400 to-purple-500" />
+                  </div>
+                  <span className="text-sm font-medium text-slate-600">5,000+ estudiantes confían en AppThesis</span>
+                </div>
               </div>
-              <div className="hidden items-center gap-2 rounded-full border border-blue-200 bg-blue-50/80 px-4 py-2 text-sm font-medium text-blue-700 sm:flex">
-                <span className="h-2 w-2 rounded-full bg-blue-500" />
-                Listo para leer tu caso
+
+              {/* Headline - MANTENER EXACTO */}
+              <h1 className="mt-10 font-display text-5xl leading-[0.94] tracking-[-0.05em] text-slate-950 sm:text-6xl lg:text-[5.7rem]">
+                Deja de aplazar
+                <span className="mt-3 block bg-gradient-to-r from-slate-950 via-sky-700 to-blue-600 bg-clip-text text-transparent">
+                  Haz tu tesis hoy!
+                </span>
+              </h1>
+
+              <p className="mx-auto mt-8 max-w-3xl text-base leading-8 text-slate-600 sm:text-lg lg:mx-0">
+                Cotización clara, orden en tus avances y defensa con método estadístico.
+              </p>
+
+              {/* Primary CTA */}
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <button
+                  type="button"
+                  onClick={() => onNavigate('plans')}
+                  className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-8 py-4 text-sm font-semibold text-white shadow-[0_18px_40px_rgba(15,23,42,0.16)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-slate-900"
+                >
+                  Ver planes
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-slate-950 px-8 py-3 text-sm font-semibold text-slate-950 transition-all duration-300 hover:bg-slate-50"
+                >
+                  Ver cómo funciona
+                </button>
+              </div>
+
+              {/* Benefit Chips */}
+              <div className="mt-8 flex flex-wrap gap-3">
+                {heroStats.map((item) => (
+                  <div
+                    key={item}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/55 px-4 py-2 text-sm text-slate-600 backdrop-blur-xl"
+                  >
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+
+              {/* Trust Quote */}
+              <div className="mt-8 flex items-center gap-3 rounded-2xl border border-white/70 bg-white/55 p-4 backdrop-blur-xl">
+                <div className="flex -space-x-3">
+                  <div className="h-10 w-10 rounded-full border-2 border-white/70 bg-gradient-to-br from-sky-400 to-blue-500" />
+                  <div className="h-10 w-10 rounded-full border-2 border-white/70 bg-gradient-to-br from-emerald-400 to-teal-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-900">
+                    "Completé 2 meses más rápido"
+                  </p>
+                  <p className="text-xs text-slate-600">María • UNMSM</p>
+                </div>
               </div>
             </div>
 
-            <div className="relative mt-5 grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-              <motion.div style={{ y: chatY }}>
-                <GlassCard className="h-full rounded-[28px] p-5">
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-slate-950 to-blue-700 text-white">
-                        <img src={projectIcon} alt="AppThesis" className="h-6 w-6 object-contain" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">AppThesis Assistant</p>
-                        <p className="text-sm text-slate-500">Orden, precio y foco</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-                      <Bot className="h-4 w-4 text-blue-600" />
-                      Listo
-                    </div>
-                  </div>
+            {/* RIGHT: Visual Section with Dynamic Content */}
+            <div className="relative hidden lg:block lg:h-[550px]">
+              {/* Main Mockup Area with Video Background */}
+              <div className="absolute inset-0 rounded-3xl border border-white/70 overflow-hidden backdrop-blur-xl shadow-[0_24px_48px_rgba(15,23,42,0.12)]">
+                {/* Video Background */}
+                <video
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="absolute inset-0 h-full w-full object-cover"
+                >
+                  <source src="/tesis-video.mp4" type="video/mp4" />
+                </video>
 
-                  <div className="mt-5 space-y-3">
-                    <div className="max-w-[78%] rounded-[24px] rounded-bl-md bg-slate-950 px-5 py-4 text-sm leading-6 text-white shadow-[0_18px_36px_rgba(15,23,42,0.18)]">
-                      Necesito ordenar mi tesis y ver el plan correcto.
-                    </div>
-                    <div className="ml-auto max-w-[86%] rounded-[24px] rounded-tr-md border border-white/70 bg-white/80 px-5 py-4 text-sm leading-6 text-slate-600">
-                      AppThesis te da precio, ruta y apoyo sin romper el flujo.
-                    </div>
-                  </div>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <div className="rounded-[22px] border border-white/70 bg-white/65 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                        Precio
-                      </p>
-                      <p className="mt-2 text-base font-semibold text-slate-900">Segun tu caso</p>
-                    </div>
-                    <div className="rounded-[22px] border border-white/70 bg-white/65 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                        Progreso
-                      </p>
-                      <p className="mt-2 text-base font-semibold text-slate-900">Todo visible</p>
-                    </div>
-                    <div className="rounded-[22px] border border-white/70 bg-white/65 p-4">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                        Apoyo
-                      </p>
-                      <p className="mt-2 text-base font-semibold text-slate-900">
-                        Siguiente paso
-                      </p>
-                    </div>
-                  </div>
-                </GlassCard>
-              </motion.div>
-
-              <div className="grid gap-5">
-                <motion.div style={{ y: pricingY }}>
-                  <GlassCard className="rounded-[28px] p-5">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">Precio real</p>
-                        <p className="mt-1 text-sm text-slate-500">Claro desde el inicio</p>
-                      </div>
-                      <div className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                        Sin humo
-                      </div>
-                    </div>
-
-                    <div className="mt-5 space-y-3">
-                      {[
-                        ['Caso', 'Tema y nivel'],
-                        ['Alcance', 'Carga real'],
-                        ['Apoyo', 'Plan sugerido'],
-                        ['Salida', 'Precio claro'],
-                      ].map(([label, value]) => (
-                        <div
-                          key={label}
-                          className="flex items-center justify-between rounded-[20px] border border-white/70 bg-white/70 px-4 py-3"
-                        >
-                          <span className="text-sm text-slate-500">{label}</span>
-                          <span className="text-sm font-semibold text-slate-900">{value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </GlassCard>
-                </motion.div>
-
-                <motion.div style={{ y: progressY }}>
-                  <GlassCard className="rounded-[28px] p-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                        <LayoutDashboard className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">Ruta activa</p>
-                        <p className="text-sm text-slate-500">Tareas, entregas y foco</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 space-y-3">
-                      {timeline.map((item, index) => (
-                        <div key={item.label}>
-                          <div className="mb-2 flex items-center justify-between text-sm">
-                            <span className="text-slate-500">{item.label}</span>
-                            <span className="font-semibold text-slate-900">{item.value}</span>
-                          </div>
-                          <div className="h-2 rounded-full bg-slate-200/80">
-                            <div
-                              className="h-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600"
-                              style={{ width: `${72 + index * 10}%` }}
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {['Feedback', 'Sesiones', 'Cierre'].map((item) => (
-                        <div
-                          key={item}
-                          className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/70 px-3 py-2 text-xs font-semibold text-slate-600"
-                        >
-                          <Calculator className="h-3.5 w-3.5 text-blue-600" />
-                          {item}
-                        </div>
-                      ))}
-                    </div>
-                  </GlassCard>
-                </motion.div>
+                {/* Dark Overlay for better text visibility */}
+                <div className="absolute inset-0 bg-black/20" />
               </div>
+
+              {/* Floating Feature Cards */}
+              {floatingFeatures.map((feature, idx) => {
+                const positions = [
+                  'absolute -top-8 -left-12',
+                  'absolute bottom-16 -left-16',
+                  'absolute -bottom-4 -right-8',
+                ];
+                const Icon = feature.icon;
+                return (
+                  <div
+                    key={feature.title}
+                    className={`${positions[idx]} flex items-center gap-4 rounded-2xl border border-white/80 bg-white/85 px-6 py-4 shadow-[0_12px_32px_rgba(15,23,42,0.16)] backdrop-blur-md transition-all hover:shadow-lg hover:bg-white`}
+                  >
+                    <div className={`flex-shrink-0 flex h-20 w-20 items-center justify-center rounded-xl bg-gradient-to-br ${feature.color}`}>
+                      <Icon className={`h-12 w-12 ${feature.iconColor}`} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{feature.title}</p>
+                      <p className="text-xs text-slate-500">{feature.subtitle}</p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </GlassCard>
-      </motion.div>
-    </StorySection>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS SECTION */}
+      <section className="relative px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-16">
+            <h2 className="text-center text-3xl font-semibold text-slate-950 sm:text-4xl">
+              Cómo funciona en 3 pasos
+            </h2>
+            <p className="mt-4 text-center text-base text-slate-600">
+              Desde tu idea hasta defensa exitosa
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-3">
+            {howItWorks.map((step, idx) => (
+              <div key={step.number} className="relative">
+                {/* Connector Line */}
+                {idx < howItWorks.length - 1 && (
+                  <div className="absolute -right-4 top-8 hidden h-1 w-8 bg-gradient-to-r from-sky-500 to-transparent sm:block" />
+                )}
+
+                <div className="rounded-2xl border border-white/70 bg-white/55 p-6 backdrop-blur-xl transition-all hover:border-sky-200 hover:bg-white/70">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-100 to-blue-100 text-xl font-bold text-sky-600">
+                    {step.number}
+                  </div>
+                  <h3 className="mb-2 text-lg font-semibold text-slate-950">
+                    {step.title}
+                  </h3>
+                  <p className="text-sm leading-6 text-slate-600">
+                    {step.description}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+    </>
   );
 }

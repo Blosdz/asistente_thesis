@@ -2,6 +2,53 @@ import { supabase } from '../lib/supabase';
 
 const atSchema = () => supabase.schema('AT');
 
+const isPresent = (value) =>
+  value !== null &&
+  value !== undefined &&
+  !(typeof value === 'string' && value.trim() === '');
+
+const mergePaymentRows = (baseRow, nextRow) => {
+  if (!baseRow) return nextRow;
+  if (!nextRow) return baseRow;
+
+  const merged = { ...baseRow };
+
+  for (const [key, value] of Object.entries(nextRow)) {
+    if (key === 'metadata') {
+      merged.metadata = {
+        ...(baseRow.metadata || {}),
+        ...(nextRow.metadata || {}),
+      };
+      continue;
+    }
+
+    if (!isPresent(merged[key]) && isPresent(value)) {
+      merged[key] = value;
+    }
+  }
+
+  return merged;
+};
+
+const dedupePaymentsById = (rows) => {
+  const paymentMap = new Map();
+
+  for (const row of rows || []) {
+    const paymentId = row?.pago_id || row?.id;
+
+    if (!paymentId) {
+      continue;
+    }
+
+    paymentMap.set(
+      paymentId,
+      mergePaymentRows(paymentMap.get(paymentId), row),
+    );
+  }
+
+  return Array.from(paymentMap.values());
+};
+
 export async function adminListarUsuarios() {
   const { data, error } = await atSchema().rpc('admin_listar_usuarios');
 
@@ -21,7 +68,7 @@ export async function adminListarPagos() {
     throw error;
   }
 
-  return data ?? [];
+  return dedupePaymentsById(data ?? []);
 }
 
 export async function adminObtenerPago(pagoId) {
@@ -54,6 +101,27 @@ export async function adminVerificarPago(
 
   if (error) {
     console.error('Error verificando pago desde admin:', error);
+    throw error;
+  }
+
+  return Array.isArray(data) ? (data[0] ?? null) : data;
+}
+
+export async function adminVerificarPagoPlan(
+  pagoId,
+  {
+    estado,
+    notaVerificacion = null,
+  } = {},
+) {
+  const { data, error } = await atSchema().rpc('admin_verificar_pago_plan', {
+    p_pago_id: pagoId,
+    p_estado: estado,
+    p_nota_verificacion: notaVerificacion,
+  });
+
+  if (error) {
+    console.error('Error verificando pago de plan desde admin:', error);
     throw error;
   }
 

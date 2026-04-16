@@ -2,12 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { Card } from '../../components/ui/card';
 import Modal from '../../components/ui/modal';
+import SubscriptionSummaryCard from '../../components/student/SubscriptionSummaryCard';
 import { Select, SelectItem } from '../../components/ui/select';
 import {
   crearCitaAsesoria,
   obtenerAsesores,
   obtenerHorariosPresustentacionAsesor,
 } from '../../services/advisorService';
+import { obtenerMiSuscripcion } from '../../services/suscripcionService';
 import {
   ArrowRight,
   CalendarDays,
@@ -161,6 +163,8 @@ const Services = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [bookingResult, setBookingResult] = useState(null);
+  const [suscripcion, setSuscripcion] = useState(null);
+  const [loadingSuscripcion, setLoadingSuscripcion] = useState(true);
   const pageSize = 3;
 
   const totalPages = Math.max(1, Math.ceil(advisors.length / pageSize));
@@ -267,6 +271,23 @@ const Services = () => {
     };
 
     loadAdvisors();
+  }, []);
+
+  useEffect(() => {
+    const loadSuscripcion = async () => {
+      try {
+        setLoadingSuscripcion(true);
+        const data = await obtenerMiSuscripcion();
+        setSuscripcion(data ?? null);
+      } catch (error) {
+        console.error('Error cargando suscripción activa:', error);
+        setSuscripcion(null);
+      } finally {
+        setLoadingSuscripcion(false);
+      }
+    };
+
+    loadSuscripcion();
   }, []);
 
   useEffect(() => {
@@ -384,6 +405,7 @@ const Services = () => {
         p_fin: selectedSlot.fin,
         p_tesis_id: null,
         p_motivo: 'Solicitud de pre-sustentación',
+        p_tipo_servicio: 'presustentacion',
         p_modalidad: 'virtual',
         p_lugar: null,
         p_enlace_reunion: null,
@@ -442,6 +464,13 @@ const Services = () => {
         <div className="grid grid-cols-12 gap-8 items-start">
           <section className="col-span-12 lg:col-span-7 space-y-4">
             <Card className="p-6">
+              <SubscriptionSummaryCard
+                subscription={suscripcion}
+                loading={loadingSuscripcion}
+                serviceType="presustentacion"
+                className="mb-6"
+              />
+
               <div className="flex items-center justify-between mb-4">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -848,7 +877,11 @@ const Services = () => {
             <CheckCircle2 className="w-4 h-4" />
             Solicitud registrada correctamente
           </div>
-          <p>Cuando el asesor la acepte, recién verás el pago pendiente.</p>
+          <p>
+            Cuando el asesor la acepte, si tu plan cubre la sesión no se
+            generará un pago. En caso contrario, recién verás el pago
+            pendiente.
+          </p>
         </div>
       </Modal>
     </div>
