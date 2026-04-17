@@ -1,9 +1,13 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { Card } from '../../components/ui/card';
+import { ArrowRight, CalendarDays, CheckCircle2, Users } from 'lucide-react';
+
 import Modal from '../../components/ui/modal';
-import SubscriptionSummaryCard from '../../components/student/SubscriptionSummaryCard';
-import { Select, SelectItem } from '../../components/ui/select';
+import AdvisorsQuickActions from '../../components/student/advisors/AdvisorsQuickActions';
+import AdvisorFiltersBar from '../../components/student/advisors/AdvisorFiltersBar';
+import AdvisorCatalogSection from '../../components/student/advisors/AdvisorCatalogSection';
+import MyAdvisorsSection from '../../components/student/advisors/MyAdvisorsSection';
+import AdvisorScheduleSection from '../../components/student/advisors/AdvisorScheduleSection';
 import {
   crearCitaAsesoria,
   obtenerAsesores,
@@ -13,168 +17,239 @@ import {
 } from '../../services/advisorService';
 import { obtenerMiSuscripcion } from '../../services/suscripcionService';
 import {
-  ArrowRight,
-  CalendarDays,
-  CheckCircle2,
-  Clock3,
-  Loader2,
-} from 'lucide-react';
+  buildSlotKey,
+  canScheduleRelation,
+  formatDateKey,
+  formatDurationMinutes,
+  formatFullDate,
+  getRelationStatusMeta,
+  getSlotDurationMinutes,
+  getSlotRange,
+  getSlotTimeRangeLabel,
+  getUniqueOptions,
+  normalizeCatalogAdvisor,
+  normalizeMyAdvisor,
+} from '../../components/student/advisors/advisors.utils';
 
-const fallbackAvatar =
-  'https://lh3.googleusercontent.com/aida-public/AB6AXuBfY_M1vYqCVJM6C281-xl9p2WF-lRoXoF6XWzZ3OqCcsHuwSRxUQP-xUghy-u2Bub3dY-GFZgtO43We88a02lzg2ET9t9HPW_r-Z2C5pajAgGBthu0_JRhit-K_6qz0OOOJpruPijct0DLYYuXb47wLCaWCYr7D-u0FeS6Otbx5PaPL73ofhNRn8nat3vu10fB-1hEezuYn0ZumKHVMGzcrxLFAxbzHMp4yUlO4jQW9oHWW25bJh9WZflyp94rlf3CjlU01K_QO9u1';
+const PAGE_SIZE = 8;
 
-const PRICE_PEN = 100;
-
-const formatDateKey = (value) => {
-  const date = new Date(value);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(
-    date.getDate(),
-  ).padStart(2, '0')}`;
-};
-
-const formatDayChip = (value) =>
-  new Intl.DateTimeFormat('es-PE', {
-    weekday: 'short',
-    day: '2-digit',
-  }).format(new Date(value));
-
-const formatFullDate = (value) =>
-  new Intl.DateTimeFormat('es-PE', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(new Date(value));
-
-const formatTime = (value) =>
-  new Intl.DateTimeFormat('es-PE', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).format(new Date(value));
-
-const formatDuration = (minutes) => {
-  if (!minutes) return 'No definida';
-  if (minutes % 60 === 0)
-    return `${minutes / 60} hora${minutes === 60 ? '' : 's'}`;
-  return `${minutes} minutos`;
-};
-
-const buildSlotKey = (slot) =>
-  `${slot.disponibilidad_id}-${slot.inicio_bloque}`;
-
-const SLOT_VIEW_OPTIONS = [
-  { value: 'this_week', label: 'Esta semana' },
-  { value: 'next_week', label: 'Siguiente semana' },
-  { value: 'this_month', label: 'Este mes' },
-  { value: 'all', label: 'Todo lo disponible' },
-];
-
-const startOfDay = (date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-  return next;
-};
-
-const endOfDay = (date) => {
-  const next = new Date(date);
-  next.setHours(23, 59, 59, 999);
-  return next;
-};
-
-const getStartOfWeek = (date) => {
-  const next = startOfDay(date);
-  const day = next.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  next.setDate(next.getDate() + diff);
-  return next;
-};
-
-const getEndOfWeek = (date) => {
-  const next = getStartOfWeek(date);
-  next.setDate(next.getDate() + 6);
-  return endOfDay(next);
-};
-
-const getEndOfMonth = (date) => {
-  const next = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-  return endOfDay(next);
-};
-
-const getSlotRange = (view) => {
-  const today = new Date();
-  const rangeStart = startOfDay(today);
-
-  if (view === 'next_week') {
-    const start = getStartOfWeek(today);
-    start.setDate(start.getDate() + 7);
-    return { start, end: getEndOfWeek(start) };
-  }
-
-  if (view === 'this_month') {
-    return { start: rangeStart, end: getEndOfMonth(today) };
-  }
-
-  if (view === 'all') {
-    return { start: null, end: null };
-  }
-
-  return { start: rangeStart, end: getEndOfWeek(today) };
-};
-
-const Advisors = () => {
+export default function Advisors() {
+  const [activeSection, setActiveSection] = useState('browse');
   const [catalogAdvisors, setCatalogAdvisors] = useState([]);
   const [myAdvisors, setMyAdvisors] = useState([]);
-  const [loadingCatalogAdvisors, setLoadingCatalogAdvisors] = useState(true);
+  const [subscription, setSubscription] = useState(null);
+
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [loadingMyAdvisors, setLoadingMyAdvisors] = useState(true);
-  const [linkingAdvisorId, setLinkingAdvisorId] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [selectedAdvisorId, setSelectedAdvisorId] = useState(null);
-  const [searchAdvisor, setSearchAdvisor] = useState('');
-  const [slots, setSlots] = useState([]);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [linkingAdvisorId, setLinkingAdvisorId] = useState(null);
+  const [booking, setBooking] = useState(false);
+
+  const [searchValue, setSearchValue] = useState('');
+  const [selectedUniversity, setSelectedUniversity] = useState('');
+  const [selectedCareer, setSelectedCareer] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [selectedAdvisorId, setSelectedAdvisorId] = useState(null);
+  const [slotView, setSlotView] = useState('this_week');
+  const [slots, setSlots] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
   const [selectedSlotKey, setSelectedSlotKey] = useState(null);
-  const [slotView, setSlotView] = useState('this_week');
-  const [booking, setBooking] = useState(false);
+
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [resultOpen, setResultOpen] = useState(false);
   const [bookingResult, setBookingResult] = useState(null);
-  const [suscripcion, setSuscripcion] = useState(null);
-  const [loadingSuscripcion, setLoadingSuscripcion] = useState(true);
-  const pageSize = 3;
+  const [reservationSummary, setReservationSummary] = useState(null);
 
-  const totalPages = Math.max(1, Math.ceil(catalogAdvisors.length / pageSize));
+  const refreshMyAdvisors = useCallback(async () => {
+    const data = await obtenerMisAsesores();
+    const normalized = (data || [])
+      .map(normalizeMyAdvisor)
+      .filter((advisor) => advisor.id);
 
-  const paginatedAdvisors = useMemo(() => {
-    const start = (currentPage - 1) * pageSize;
-    return catalogAdvisors.slice(start, start + pageSize);
-  }, [catalogAdvisors, currentPage]);
+    setMyAdvisors(normalized);
+    return normalized;
+  }, []);
 
-  const filteredSearch = useMemo(() => {
-    const query = searchAdvisor.trim().toLowerCase();
-    if (!query) return catalogAdvisors.slice(0, 5);
-    return catalogAdvisors
-      .filter((a) =>
-        [a.name, a.role, a.slug]
-          .filter(Boolean)
-          .some((t) => t.toLowerCase().includes(query)),
-      )
-      .slice(0, 5);
-  }, [catalogAdvisors, searchAdvisor]);
+  useEffect(() => {
+    const loadCatalog = async () => {
+      try {
+        setLoadingCatalog(true);
+        const data = await obtenerAsesores();
+        const normalized = (data || [])
+          .map(normalizeCatalogAdvisor)
+          .filter((advisor) => advisor.id);
+        setCatalogAdvisors(normalized);
+      } catch (error) {
+        console.error(error);
+        toast.error('No se pudo cargar el catálogo de asesores');
+      } finally {
+        setLoadingCatalog(false);
+      }
+    };
 
-  const selectedAdvisor = useMemo(() => {
-    return (
-      myAdvisors.find((advisor) => advisor.id === selectedAdvisorId) ||
-      catalogAdvisors.find((advisor) => advisor.id === selectedAdvisorId) ||
-      null
+    loadCatalog();
+  }, []);
+
+  useEffect(() => {
+    const loadMyAdvisorList = async () => {
+      try {
+        setLoadingMyAdvisors(true);
+        await refreshMyAdvisors();
+      } catch (error) {
+        console.error(error);
+        toast.error('No se pudieron cargar tus asesores');
+      } finally {
+        setLoadingMyAdvisors(false);
+      }
+    };
+
+    loadMyAdvisorList();
+  }, [refreshMyAdvisors]);
+
+  useEffect(() => {
+    const loadSubscription = async () => {
+      try {
+        setLoadingSubscription(true);
+        const data = await obtenerMiSuscripcion();
+        setSubscription(data ?? null);
+      } catch (error) {
+        console.error(error);
+        setSubscription(null);
+      } finally {
+        setLoadingSubscription(false);
+      }
+    };
+
+    loadSubscription();
+  }, []);
+
+  useEffect(() => {
+    if (myAdvisors.length === 0) {
+      setSelectedAdvisorId(null);
+      return;
+    }
+
+    const hasSelectedAdvisor = myAdvisors.some(
+      (advisor) => advisor.id === selectedAdvisorId,
     );
-  }, [myAdvisors, catalogAdvisors, selectedAdvisorId]);
 
-  const selectedAdvisorRelation = useMemo(
-    () =>
-      myAdvisors.find((advisor) => advisor.id === selectedAdvisorId) || null,
+    if (!hasSelectedAdvisor) {
+      const nextAdvisor =
+        myAdvisors.find((advisor) => canScheduleRelation(advisor.estado)) ||
+        myAdvisors[0];
+      setSelectedAdvisorId(nextAdvisor.id);
+    }
+  }, [myAdvisors, selectedAdvisorId]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchValue, selectedUniversity, selectedCareer]);
+
+  const relationsByAdvisorId = useMemo(
+    () => new Map(myAdvisors.map((advisor) => [advisor.id, advisor])),
+    [myAdvisors],
+  );
+
+  const selectedAdvisor = useMemo(
+    () => myAdvisors.find((advisor) => advisor.id === selectedAdvisorId) || null,
     [myAdvisors, selectedAdvisorId],
   );
+
+  const selectedAdvisorRelation = selectedAdvisor
+    ? relationsByAdvisorId.get(selectedAdvisor.id) || null
+    : null;
+
+  const universityOptions = useMemo(
+    () => getUniqueOptions(catalogAdvisors, 'university'),
+    [catalogAdvisors],
+  );
+
+  const careerOptions = useMemo(
+    () => getUniqueOptions(catalogAdvisors, 'career'),
+    [catalogAdvisors],
+  );
+
+  const filteredCatalog = useMemo(() => {
+    const query = searchValue.trim().toLowerCase();
+
+    return catalogAdvisors.filter((advisor) => {
+      const matchesSearch =
+        !query ||
+        [advisor.name, advisor.publicCode]
+          .filter(Boolean)
+          .some((value) => value.toLowerCase().includes(query));
+
+      const matchesUniversity =
+        !selectedUniversity || advisor.university === selectedUniversity;
+
+      const matchesCareer = !selectedCareer || advisor.career === selectedCareer;
+
+      return matchesSearch && matchesUniversity && matchesCareer;
+    });
+  }, [catalogAdvisors, searchValue, selectedUniversity, selectedCareer]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCatalog.length / PAGE_SIZE));
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedCatalog = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filteredCatalog.slice(start, start + PAGE_SIZE);
+  }, [currentPage, filteredCatalog]);
+
+  const hasActiveFilters = Boolean(
+    searchValue.trim() || selectedUniversity || selectedCareer,
+  );
+
+  const loadSlotsForAdvisor = useCallback(async (advisor) => {
+    if (!advisor?.id || !canScheduleRelation(advisor.estado)) {
+      setSlots([]);
+      setSelectedDay(null);
+      setSelectedSlotKey(null);
+      return;
+    }
+
+    try {
+      setLoadingSlots(true);
+      const data = await obtenerHorariosDisponiblesAsesor(advisor.id);
+      const normalized = (data || [])
+        .filter((slot) => slot.estado === 'libre')
+        .map((slot) => ({
+          ...slot,
+          slotKey: buildSlotKey(slot),
+        }));
+
+      setSlots(normalized);
+
+      if (normalized.length === 0) {
+        setSelectedDay(null);
+        setSelectedSlotKey(null);
+        return;
+      }
+
+      const firstSlot = normalized[0];
+      setSelectedDay(formatDateKey(firstSlot.inicio_bloque));
+      setSelectedSlotKey(firstSlot.slotKey);
+    } catch (error) {
+      console.error(error);
+      toast.error('No se pudo cargar la disponibilidad del asesor');
+      setSlots([]);
+      setSelectedDay(null);
+      setSelectedSlotKey(null);
+    } finally {
+      setLoadingSlots(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSlotsForAdvisor(selectedAdvisor);
+  }, [loadSlotsForAdvisor, selectedAdvisor]);
 
   const filteredSlots = useMemo(() => {
     const { start, end } = getSlotRange(slotView);
@@ -185,20 +260,23 @@ const Advisors = () => {
       if (end && slotDate > end) return false;
       return true;
     });
-  }, [slots, slotView]);
+  }, [slotView, slots]);
 
   const availableDays = useMemo(() => {
     const uniqueDays = [];
     const seen = new Set();
 
     filteredSlots.forEach((slot) => {
-      const key = formatDateKey(slot.inicio_bloque);
-      if (seen.has(key)) return;
-      seen.add(key);
+      const dayKey = formatDateKey(slot.inicio_bloque);
+      if (!dayKey || seen.has(dayKey)) return;
+
+      seen.add(dayKey);
       uniqueDays.push({
-        key,
-        value: slot.inicio_bloque,
-        label: formatDayChip(slot.inicio_bloque),
+        key: dayKey,
+        label: new Intl.DateTimeFormat('es-PE', {
+          weekday: 'short',
+          day: '2-digit',
+        }).format(new Date(slot.inicio_bloque)),
         fullLabel: formatFullDate(slot.inicio_bloque),
       });
     });
@@ -208,150 +286,16 @@ const Advisors = () => {
 
   const slotsForSelectedDay = useMemo(() => {
     if (!selectedDay) return [];
+
     return filteredSlots.filter(
       (slot) => formatDateKey(slot.inicio_bloque) === selectedDay,
     );
   }, [filteredSlots, selectedDay]);
 
   const selectedSlot = useMemo(
-    () =>
-      filteredSlots.find((slot) => buildSlotKey(slot) === selectedSlotKey) ||
-      null,
+    () => filteredSlots.find((slot) => slot.slotKey === selectedSlotKey) || null,
     [filteredSlots, selectedSlotKey],
   );
-
-  useEffect(() => {
-    const loadCatalogAdvisors = async () => {
-      try {
-        setLoadingCatalogAdvisors(true);
-        const data = await obtenerAsesores();
-        const mapped = (data || []).map((item) => ({
-          id: item.asesor_id || item.id,
-          slug: item.slug || null,
-          name:
-            item.nombre_mostrar ||
-            [item.nombres, item.apellidos].filter(Boolean).join(' ') ||
-            'Asesor',
-          role: item.carrera || item.rol || 'Asesoría de tesis',
-          avatar: item.foto_url || fallbackAvatar,
-          tags: [
-            item.especialidad || item.nivel_academico || item.carrera,
-          ].filter(Boolean),
-        }));
-
-        setCatalogAdvisors(mapped);
-      } catch (error) {
-        console.error(error);
-        toast.error('No se pudo cargar el catálogo de asesores');
-        setCatalogAdvisors([]);
-      } finally {
-        setLoadingCatalogAdvisors(false);
-      }
-    };
-
-    const loadMyAdvisors = async () => {
-      try {
-        setLoadingMyAdvisors(true);
-        const data = await obtenerMisAsesores();
-        const mapped = (data || []).map((item) => ({
-          id: item.asesor_id,
-          relacionId: item.relacion_id,
-          slug: item.slug || null,
-          name: item.nombre_mostrar || 'Asesor',
-          role: item.carrera || 'Asesoría de tesis',
-          avatar: item.foto_url || fallbackAvatar,
-          tieneTesis: Boolean(item.tiene_tesis),
-          estado: item.estado || 'activo',
-          thesisTitle: item.tesis_titulo || null,
-          tags: [item.carrera, item.tiene_tesis ? 'Tesis activa' : null].filter(
-            Boolean,
-          ),
-        }));
-
-        setMyAdvisors(mapped);
-        if (mapped.length > 0) {
-          setSelectedAdvisorId((current) => current || mapped[0].id);
-        }
-      } catch (error) {
-        console.error(error);
-        toast.error('No se pudieron cargar tus asesores');
-        setMyAdvisors([]);
-      } finally {
-        setLoadingMyAdvisors(false);
-      }
-    };
-
-    loadCatalogAdvisors();
-    loadMyAdvisors();
-  }, []);
-
-  useEffect(() => {
-    const loadSuscripcion = async () => {
-      try {
-        setLoadingSuscripcion(true);
-        const data = await obtenerMiSuscripcion();
-        setSuscripcion(data ?? null);
-      } catch (error) {
-        console.error('Error cargando suscripción activa:', error);
-        setSuscripcion(null);
-      } finally {
-        setLoadingSuscripcion(false);
-      }
-    };
-
-    loadSuscripcion();
-  }, []);
-
-  useEffect(() => {
-    const loadSlots = async () => {
-      if (!selectedAdvisorId) {
-        setSlots([]);
-        setSelectedDay(null);
-        setSelectedSlotKey(null);
-        return;
-      }
-
-      try {
-        setLoadingSlots(true);
-        if (!selectedAdvisorRelation) {
-          setSlots([]);
-          setSelectedDay(null);
-          setSelectedSlotKey(null);
-          return;
-        }
-        const data = await obtenerHorariosDisponiblesAsesor(selectedAdvisorId);
-        const normalizedSlots = (data || []).map((slot) => ({
-          ...slot,
-          slotKey: buildSlotKey(slot),
-        }));
-
-        setSlots(normalizedSlots);
-
-        if (normalizedSlots.length > 0) {
-          const firstDay = formatDateKey(normalizedSlots[0].inicio_bloque);
-          setSelectedDay(firstDay);
-          setSelectedSlotKey(normalizedSlots[0].slotKey);
-        } else {
-          setSelectedDay(null);
-          setSelectedSlotKey(null);
-        }
-      } catch (error) {
-        console.error(error);
-        toast.error(error.message || 'No se pudo cargar la disponibilidad');
-        setSlots([]);
-        setSelectedDay(null);
-        setSelectedSlotKey(null);
-      } finally {
-        setLoadingSlots(false);
-      }
-    };
-
-    loadSlots();
-  }, [selectedAdvisorId, selectedAdvisorRelation]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchAdvisor]);
 
   useEffect(() => {
     if (filteredSlots.length === 0) {
@@ -360,98 +304,122 @@ const Advisors = () => {
       return;
     }
 
-    const currentDayStillVisible =
+    const nextDay =
       selectedDay &&
       filteredSlots.some(
         (slot) => formatDateKey(slot.inicio_bloque) === selectedDay,
-      );
-
-    const nextDay = currentDayStillVisible
-      ? selectedDay
-      : formatDateKey(filteredSlots[0].inicio_bloque);
+      )
+        ? selectedDay
+        : formatDateKey(filteredSlots[0].inicio_bloque);
 
     if (nextDay !== selectedDay) {
       setSelectedDay(nextDay);
     }
 
-    const currentSlotStillVisible =
+    const visibleSlot =
       selectedSlotKey &&
-      filteredSlots.some((slot) => buildSlotKey(slot) === selectedSlotKey);
+      filteredSlots.some((slot) => slot.slotKey === selectedSlotKey);
 
-    if (!currentSlotStillVisible) {
-      const firstSlotForDay = filteredSlots.find(
+    if (!visibleSlot) {
+      const nextSlot = filteredSlots.find(
         (slot) => formatDateKey(slot.inicio_bloque) === nextDay,
       );
-      setSelectedSlotKey(firstSlotForDay ? buildSlotKey(firstSlotForDay) : null);
+      setSelectedSlotKey(nextSlot?.slotKey || null);
     }
   }, [filteredSlots, selectedDay, selectedSlotKey]);
 
-  const handleSelectAdvisor = (advisorId, advisorName = '') => {
-    setSelectedAdvisorId(advisorId);
-    if (advisorName) {
-      setSearchAdvisor(advisorName);
-    }
-  };
+  const readyForMeetingCount = useMemo(
+    () => myAdvisors.filter((advisor) => canScheduleRelation(advisor.estado)).length,
+    [myAdvisors],
+  );
 
-  const handleLinkAdvisor = async (advisor) => {
-    if (!advisor?.slug) {
-      toast.error('Este asesor no tiene slug público disponible');
+  const quickActionCounts = useMemo(
+    () => ({
+      browse: filteredCatalog.length,
+      'my-advisors': myAdvisors.length,
+      meeting: readyForMeetingCount,
+    }),
+    [filteredCatalog.length, myAdvisors.length, readyForMeetingCount],
+  );
+
+  const handleClearFilters = useCallback(() => {
+    setSearchValue('');
+    setSelectedUniversity('');
+    setSelectedCareer('');
+  }, []);
+
+  const handleContactAdvisor = useCallback(
+    async (advisor) => {
+      if (!advisor?.slug) {
+        toast.error('Este asesor no tiene acceso público disponible');
+        return;
+      }
+
+      try {
+        setLinkingAdvisorId(advisor.id);
+        await vincularmeConAsesorPorSlug(advisor.slug);
+        const nextMyAdvisors = await refreshMyAdvisors();
+        const linkedAdvisor = nextMyAdvisors.find((item) => item.id === advisor.id);
+
+        if (linkedAdvisor) {
+          setSelectedAdvisorId(linkedAdvisor.id);
+        }
+
+        setActiveSection('my-advisors');
+        toast.success('Asesor contactado correctamente');
+      } catch (error) {
+        console.error(error);
+        toast.error(error.message || 'No se pudo contactar al asesor');
+      } finally {
+        setLinkingAdvisorId(null);
+      }
+    },
+    [refreshMyAdvisors],
+  );
+
+  const handleSelectAdvisor = useCallback((advisorId) => {
+    setSelectedAdvisorId(advisorId);
+  }, []);
+
+  const handleSelectDay = useCallback(
+    (dayKey) => {
+      setSelectedDay(dayKey);
+      const nextSlot = filteredSlots.find(
+        (slot) => formatDateKey(slot.inicio_bloque) === dayKey,
+      );
+      setSelectedSlotKey(nextSlot?.slotKey || null);
+    },
+    [filteredSlots],
+  );
+
+  const handleReserve = useCallback(async () => {
+    if (!selectedAdvisor || !selectedSlot) {
+      toast.error('Selecciona un horario disponible');
       return;
     }
 
-    try {
-      setLinkingAdvisorId(advisor.id);
-      const result = await vincularmeConAsesorPorSlug(advisor.slug);
-      toast.success(result?.mensaje || 'Solicitud de vinculación enviada');
-
-      const data = await obtenerMisAsesores();
-      const mapped = (data || []).map((item) => ({
-        id: item.asesor_id,
-        relacionId: item.relacion_id,
-        slug: item.slug || null,
-        name: item.nombre_mostrar || 'Asesor',
-        role: item.carrera || 'Asesoría de tesis',
-        avatar: item.foto_url || fallbackAvatar,
-        tieneTesis: Boolean(item.tiene_tesis),
-        estado: item.estado || 'activo',
-        thesisTitle: item.tesis_titulo || null,
-        tags: [item.carrera, item.tiene_tesis ? 'Tesis activa' : null].filter(
-          Boolean,
-        ),
-      }));
-      setMyAdvisors(mapped);
-      setSelectedAdvisorId(advisor.id);
-    } catch (error) {
-      console.error(error);
-      toast.error(error.message || 'No se pudo crear la vinculación');
-    } finally {
-      setLinkingAdvisorId(null);
-    }
-  };
-
-  const handleSelectDay = (dayKey) => {
-    setSelectedDay(dayKey);
-    const firstSlotForDay = filteredSlots.find(
-      (slot) => formatDateKey(slot.inicio_bloque) === dayKey,
-    );
-    setSelectedSlotKey(firstSlotForDay ? buildSlotKey(firstSlotForDay) : null);
-  };
-
-  const handleReserve = async () => {
-    if (!selectedAdvisor || !selectedSlot) {
-      toast.error('Selecciona un asesor y un horario');
+    if (!canScheduleRelation(selectedAdvisor.estado)) {
+      toast.error('Solo puedes reservar con asesores ya conectados');
       return;
     }
 
     try {
       setBooking(true);
+      setReservationSummary({
+        advisorName: selectedAdvisor.name,
+        fullDate: formatFullDate(selectedSlot.inicio_bloque),
+        timeRange: getSlotTimeRangeLabel(selectedSlot),
+        duration: formatDurationMinutes(getSlotDurationMinutes(selectedSlot)),
+        status: getRelationStatusMeta(selectedAdvisor.estado).label,
+      });
+
       const result = await crearCitaAsesoria({
         p_asesor_id: selectedAdvisor.id,
         p_disponibilidad_id: selectedSlot.disponibilidad_id,
         p_inicio: selectedSlot.inicio_bloque,
         p_fin: selectedSlot.fin_bloque,
         p_tesis_id: null,
-        p_motivo: `Solicitud de asesoría con ${selectedAdvisor.name}`,
+        p_motivo: 'Solicitud de asesoría',
         p_tipo_servicio: 'asesoria',
         p_modalidad: 'virtual',
         p_lugar: null,
@@ -462,591 +430,271 @@ const Advisors = () => {
       setBookingResult(result || null);
       setConfirmOpen(false);
       setResultOpen(true);
-      toast.success('Solicitud enviada al asesor');
-
-      const refreshedSlots = await obtenerHorariosDisponiblesAsesor(
-        selectedAdvisor.id,
-      );
-      const normalizedSlots = (refreshedSlots || []).map((slot) => ({
-        ...slot,
-        slotKey: buildSlotKey(slot),
-      }));
-      setSlots(normalizedSlots);
-
-      if (normalizedSlots.length > 0) {
-        const nextDay = normalizedSlots.some(
-          (slot) => formatDateKey(slot.inicio_bloque) === selectedDay,
-        )
-          ? selectedDay
-          : formatDateKey(normalizedSlots[0].inicio_bloque);
-        setSelectedDay(nextDay);
-
-        const nextSlot = normalizedSlots.find(
-          (slot) => formatDateKey(slot.inicio_bloque) === nextDay,
-        );
-        setSelectedSlotKey(nextSlot ? buildSlotKey(nextSlot) : null);
-      } else {
-        setSelectedDay(null);
-        setSelectedSlotKey(null);
-      }
+      toast.success('Solicitud enviada correctamente');
+      await loadSlotsForAdvisor(selectedAdvisor);
     } catch (error) {
       console.error(error);
-      toast.error(error.message || 'No se pudo crear la cita');
+      toast.error(error.message || 'No se pudo solicitar la reunión');
     } finally {
       setBooking(false);
     }
-  };
+  }, [loadSlotsForAdvisor, selectedAdvisor, selectedSlot]);
+
+  const selectedAdvisorStatus = selectedAdvisor
+    ? getRelationStatusMeta(selectedAdvisor.estado)
+    : null;
 
   return (
-    <div className="relative w-full px-4 sm:px-6 lg:px-10 py-12 animate-in fade-in duration-700 text-slate-900">
-      <div className="max-w-[1400px] mx-auto flex flex-col gap-8">
-        <div className="grid grid-cols-12 gap-8 items-start">
-          <section className="col-span-12 lg:col-span-7 space-y-4">
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                    Catálogo de asesores
-                  </p>
-                  <h3 className="text-xl font-bold">
-                    Busca y vincúlate con un asesor
-                  </h3>
-                </div>
-                <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-600">
-                  {catalogAdvisors.length} disponibles
-                </span>
-              </div>
-
-              <div className="mb-4">
-                <input
-                  value={searchAdvisor}
-                  onChange={(event) => setSearchAdvisor(event.target.value)}
-                  placeholder="Busca por nombre, carrera o slug"
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                />
-              </div>
-
+    <div className="relative w-full px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
+      <div className="mx-auto flex max-w-[1480px] flex-col gap-6">
+        <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.16),_transparent_35%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.96))] p-6 shadow-[0_24px_70px_-54px_rgba(15,23,42,0.45)] sm:p-8">
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.9fr)]">
+            <div className="space-y-4">
+              <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
+                Asesorías
+              </span>
               <div className="space-y-3">
-                {loadingCatalogAdvisors && (
-                  <p className="text-sm text-slate-500">Cargando catálogo...</p>
-                )}
-                {!loadingCatalogAdvisors && paginatedAdvisors.length === 0 && (
-                  <p className="text-sm text-slate-500">
-                    No hay asesores disponibles.
-                  </p>
-                )}
-                {paginatedAdvisors.map((advisor) => (
-                  <Card
-                    key={advisor.id}
-                    className={`p-4 flex items-start gap-4 border-slate-200 transition ${
-                      selectedAdvisorId === advisor.id
-                        ? 'border-blue-200 bg-blue-50/40'
-                        : 'hover:border-blue-100'
-                    }`}
-                  >
-                    <div className="relative">
-                      <img
-                        src={advisor.avatar}
-                        alt={advisor.name}
-                        className="w-14 h-14 rounded-full object-cover border border-white/60"
-                      />
-                      <span className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-bold text-slate-900">
-                            {advisor.name}
-                          </p>
-                          <p className="text-[12px] text-slate-500 font-semibold">
-                            {advisor.role}
-                          </p>
-                          {advisor.slug && (
-                            <p className="text-[11px] text-slate-400 mt-1">
-                              @{advisor.slug}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {advisor.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-2 py-1 bg-blue-50 text-blue-600 text-[11px] font-bold rounded-full"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2 min-w-[120px]">
-                      <button
-                        className="text-xs font-bold text-blue-600 hover:underline"
-                        onClick={() =>
-                          handleSelectAdvisor(advisor.id, advisor.name)
-                        }
-                      >
-                        {selectedAdvisorId === advisor.id
-                          ? 'Seleccionado'
-                          : 'Seleccionar'}
-                      </button>
-                      <button
-                        className="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800 disabled:opacity-60"
-                        onClick={() => handleLinkAdvisor(advisor)}
-                        disabled={
-                          linkingAdvisorId === advisor.id || !advisor.slug
-                        }
-                      >
-                        {linkingAdvisorId === advisor.id
-                          ? 'Vinculando...'
-                          : 'Hacer link'}
-                      </button>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between pt-4 mt-4 border-t border-slate-200/60">
-                <p className="text-sm text-slate-500">
-                  Página {currentPage} de {totalPages}
+                <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+                  Busca asesores y agenda con tus vínculos activos
+                </h1>
+                <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+                  Explora perfiles, contacta asesores y solicita reuniones solo
+                  desde asesores ya conectados.
                 </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-2 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-slate-50"
-                  >
-                    Anterior
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-2 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed bg-white hover:bg-slate-50"
-                  >
-                    Siguiente
-                  </button>
-                </div>
               </div>
-            </Card>
+            </div>
 
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
-                    Mis asesores
-                  </p>
-                  <h3 className="text-xl font-bold">
-                    Selecciona uno para separar citas
-                  </h3>
-                </div>
-                <span className="text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700">
-                  {myAdvisors.length} vinculados
-                </span>
+            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+              <div className="rounded-2xl border border-white/90 bg-white/80 p-4 backdrop-blur-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Catálogo
+                </p>
+                <p className="mt-2 text-lg font-semibold tracking-tight text-slate-950">
+                  {catalogAdvisors.length}
+                </p>
               </div>
-
-              <div className="space-y-3">
-                {loadingMyAdvisors && (
-                  <p className="text-sm text-slate-500">
-                    Cargando mis asesores...
-                  </p>
-                )}
-                {!loadingMyAdvisors && myAdvisors.length === 0 && (
-                  <p className="text-sm text-slate-500">
-                    Aún no tienes asesores vinculados. Usa la tarjeta superior
-                    para solicitar vínculo.
-                  </p>
-                )}
-                {myAdvisors.map((advisor) => (
-                  <Card
-                    key={advisor.relacionId || advisor.id}
-                    className={`p-4 flex items-start gap-4 border-slate-200 transition ${
-                      selectedAdvisorId === advisor.id
-                        ? 'border-blue-200 bg-blue-50/40'
-                        : 'hover:border-blue-100'
-                    }`}
-                  >
-                    <img
-                      src={advisor.avatar}
-                      alt={advisor.name}
-                      className="w-12 h-12 rounded-full object-cover border border-white/60"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-900">
-                        {advisor.name}
-                      </p>
-                      <p className="text-[12px] text-slate-500 font-semibold">
-                        {advisor.role}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        <span
-                          className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-                            advisor.estado === 'activo'
-                              ? 'bg-emerald-100 text-emerald-700'
-                              : advisor.estado === 'pendiente'
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-slate-100 text-slate-700'
-                          }`}
-                        >
-                          {advisor.estado}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      className="text-xs font-bold text-blue-600 hover:underline"
-                      onClick={() =>
-                        handleSelectAdvisor(advisor.id, advisor.name)
-                      }
-                    >
-                      {selectedAdvisorId === advisor.id
-                        ? 'Seleccionado'
-                        : 'Seleccionar'}
-                    </button>
-                  </Card>
-                ))}
+              <div className="rounded-2xl border border-white/90 bg-white/80 p-4 backdrop-blur-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Mis asesores
+                </p>
+                <p className="mt-2 text-lg font-semibold tracking-tight text-slate-950">
+                  {myAdvisors.length}
+                </p>
               </div>
-            </Card>
-          </section>
+              <div className="rounded-2xl border border-white/90 bg-white/80 p-4 backdrop-blur-sm">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Listos para reunión
+                </p>
+                <p className="mt-2 text-lg font-semibold tracking-tight text-slate-950">
+                  {readyForMeetingCount}
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-          <aside className="col-span-12 lg:col-span-5">
-            <SubscriptionSummaryCard
-              subscription={suscripcion}
-              loading={loadingSuscripcion}
-              serviceType="asesoria"
-              className="mb-6 max-w-[480px]"
+        <AdvisorsQuickActions
+          activeSection={activeSection}
+          onChange={setActiveSection}
+          counts={quickActionCounts}
+        />
+
+        {activeSection === 'browse' ? (
+          <div className="space-y-5">
+            <AdvisorFiltersBar
+              searchValue={searchValue}
+              onSearchChange={setSearchValue}
+              selectedUniversity={selectedUniversity}
+              onUniversityChange={setSelectedUniversity}
+              selectedCareer={selectedCareer}
+              onCareerChange={setSelectedCareer}
+              universityOptions={universityOptions}
+              careerOptions={careerOptions}
+              resultCount={filteredCatalog.length}
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={handleClearFilters}
             />
 
-            <Card className="max-w-[480px] w-full p-8 relative overflow-hidden">
-              <header className="relative z-10 mb-6">
-                <h2 className="font-headline text-3xl font-bold tracking-tight text-slate-900 leading-tight mb-2">
-                  Separar Citas
-                </h2>
-                <p className="text-slate-600 text-sm font-medium leading-relaxed">
-                  Reserva un bloque libre. Si tu plan cubre la asesoría, no se
-                  generará un pago adicional.
-                </p>
-              </header>
+            <AdvisorCatalogSection
+              loading={loadingCatalog}
+              advisors={paginatedCatalog}
+              selectedAdvisorId={selectedAdvisorId}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              linkedCount={myAdvisors.length}
+              linkingAdvisorId={linkingAdvisorId}
+              relationsByAdvisorId={relationsByAdvisorId}
+              onSelectAdvisor={handleSelectAdvisor}
+              onContactAdvisor={handleContactAdvisor}
+              onOpenMyAdvisors={() => setActiveSection('my-advisors')}
+              onPrevPage={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              onNextPage={() =>
+                setCurrentPage((page) => Math.min(totalPages, page + 1))
+              }
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={handleClearFilters}
+            />
+          </div>
+        ) : null}
 
-              <div className="space-y-8 relative z-10">
-                <section>
-                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                    <h3 className="font-headline text-sm font-bold uppercase tracking-widest text-blue-600/80">
-                      Seleccionar fecha
-                    </h3>
-                    <div className="min-w-[180px]">
-                      <Select
-                        value={slotView}
-                        onChange={(event) => setSlotView(event.target.value)}
-                        className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-600"
-                      >
-                        {SLOT_VIEW_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </Select>
-                    </div>
-                    <span className="text-xs font-semibold text-slate-500">
-                      {selectedAdvisor
-                        ? 'Próximos bloques libres'
-                        : 'Selecciona un asesor'}
-                    </span>
-                  </div>
-                  <p className="mb-4 text-xs text-slate-500">
-                    {selectedAdvisor
-                      ? `Vista de bloques para ${
-                          SLOT_VIEW_OPTIONS.find(
-                            (option) => option.value === slotView,
-                          )?.label.toLowerCase() || 'la agenda'
-                        }.`
-                      : 'Selecciona un asesor para ver su agenda por semana o por mes.'}
-                  </p>
-                  <div className="grid grid-cols-7 gap-1 text-center">
-                    {selectedAdvisor &&
-                      !selectedAdvisorRelation &&
-                      !loadingSlots && (
-                        <div className="col-span-7 rounded-lg border border-dashed border-amber-200 bg-amber-50 px-4 py-6 text-sm text-amber-700">
-                          Debes hacer link con este asesor para ver sus horarios
-                          disponibles.
-                        </div>
-                      )}
-                    {loadingSlots && (
-                      <div className="col-span-7 flex items-center justify-center gap-2 rounded-lg border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Cargando fechas...
-                      </div>
-                    )}
-                    {!loadingSlots &&
-                      selectedAdvisorRelation &&
-                      availableDays.length === 0 && (
-                        <div className="col-span-7 rounded-lg border border-dashed border-slate-200 px-4 py-6 text-sm text-slate-500">
-                          No hay fechas libres en esta vista. Prueba con otra
-                          semana o con este mes.
-                        </div>
-                      )}
-                    {!loadingSlots &&
-                      selectedAdvisorRelation &&
-                      availableDays.map((day) => (
-                        <button
-                          key={day.key}
-                          onClick={() => handleSelectDay(day.key)}
-                          className={`p-2 text-xs rounded-lg transition-colors ${
-                            selectedDay === day.key
-                              ? 'font-bold text-white bg-blue-600 shadow-lg shadow-blue-200'
-                              : 'text-slate-700 hover:bg-slate-100'
-                          }`}
-                          title={day.fullLabel}
-                        >
-                          {day.label}
-                        </button>
-                      ))}
-                  </div>
-                </section>
+        {activeSection === 'my-advisors' ? (
+          <MyAdvisorsSection
+            loading={loadingMyAdvisors}
+            advisors={myAdvisors}
+            selectedAdvisorId={selectedAdvisorId}
+            onSelectAdvisor={handleSelectAdvisor}
+            onOpenBrowse={() => setActiveSection('browse')}
+          />
+        ) : null}
 
-                <section>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-headline text-sm font-bold uppercase tracking-widest text-blue-600/80">
-                      Seleccionar hora
-                    </h3>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {selectedAdvisor &&
-                      !selectedAdvisorRelation &&
-                      !loadingSlots && (
-                        <div className="col-span-3 rounded-lg border border-dashed border-amber-200 bg-amber-50 px-4 py-6 text-center text-sm text-amber-700">
-                          Vincúlate primero para habilitar la agenda de citas.
-                        </div>
-                      )}
-                    {loadingSlots && (
-                      <div className="col-span-3 rounded-lg border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
-                        Buscando horarios...
-                      </div>
-                    )}
-                    {!loadingSlots &&
-                      selectedAdvisorRelation &&
-                      slotsForSelectedDay.length === 0 && (
-                        <div className="col-span-3 rounded-lg border border-dashed border-slate-200 px-4 py-6 text-center text-sm text-slate-500">
-                          No hay horas disponibles para la fecha seleccionada.
-                        </div>
-                      )}
-                    {!loadingSlots &&
-                      selectedAdvisorRelation &&
-                      slotsForSelectedDay.map((slot) => {
-                        const slotKey = buildSlotKey(slot);
-                        const isSelected = selectedSlotKey === slotKey;
-                        return (
-                          <button
-                            key={slotKey}
-                            onClick={() => setSelectedSlotKey(slotKey)}
-                            className={`py-3 rounded-lg text-xs font-semibold transition-all border ${
-                              isSelected
-                                ? 'bg-blue-100 text-blue-700 border-blue-200 shadow-sm shadow-blue-200'
-                                : 'bg-white/60 text-slate-700 border-slate-200 hover:border-blue-200'
-                            }`}
-                          >
-                            <span className="block">
-                              {formatTime(slot.inicio_bloque)}
-                            </span>
-                            <span className="block text-[10px] opacity-70">
-                              hasta {formatTime(slot.fin_bloque)}
-                            </span>
-                          </button>
-                        );
-                      })}
-                  </div>
-                </section>
-
-                <section>
-                  {filteredSearch.length > 0 && (
-                    <div className="mt-3 bg-white border border-slate-200 rounded-lg shadow-sm max-h-52 overflow-y-auto">
-                      {filteredSearch.map((item) => (
-                        <button
-                          type="button"
-                          key={item.id}
-                          onClick={() => {
-                            handleSelectAdvisor(item.id, item.name);
-                          }}
-                          className="w-full text-left px-4 py-3 hover:bg-blue-50 flex items-center gap-3"
-                        >
-                          <img
-                            src={item.avatar || fallbackAvatar}
-                            alt={item.name}
-                            className="w-9 h-9 rounded-full object-cover border border-white/60"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-slate-900 truncate">
-                              {item.name}
-                            </p>
-                            <p className="text-[11px] text-slate-500 truncate">
-                              {item.role}
-                            </p>
-                          </div>
-                          <span className="text-[11px] font-bold text-slate-700">
-                            {item.slug ? `@${item.slug}` : 'Asesor'}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </section>
-
-                <section className="flex items-center justify-between p-4 bg-white/60 rounded-lg border border-slate-200/60">
-                  <div className="flex items-center space-x-3">
-                    <div className="relative">
-                      <img
-                        alt="Advisor"
-                        className="w-12 h-12 rounded-full object-cover border border-white/60"
-                        src={selectedAdvisor?.avatar || fallbackAvatar}
-                      />
-                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-bold text-blue-600/80 uppercase tracking-tighter">
-                        Asesor
-                      </p>
-                      <h4 className="text-sm font-bold text-slate-900">
-                        {selectedAdvisor?.name || 'Selecciona un asesor'}
-                      </h4>
-                      <p className="text-[11px] text-slate-500">
-                        {selectedAdvisor?.role || 'Sin carrera registrada'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center bg-slate-50 px-3 py-1 rounded-full border border-slate-200/60 text-[11px] font-bold text-slate-600">
-                    {!selectedAdvisorRelation
-                      ? 'Haz link para agendar'
-                      : selectedSlot
-                        ? 'Listo para reservar'
-                        : 'Selecciona un horario'}
-                  </div>
-                </section>
-
-                <section className="pt-4 border-t border-slate-200/50">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                        Inversión
-                      </p>
-                      <div className="flex items-baseline">
-                        <span className="text-lg font-headline font-medium text-slate-900 mr-1">
-                          S/
-                        </span>
-                        <span className="text-4xl font-headline font-bold text-slate-900 tracking-tighter">
-                          {PRICE_PEN.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                        Duración
-                      </p>
-                      <p className="text-sm font-bold text-slate-900">
-                        {selectedSlot
-                          ? formatDuration(selectedSlot.duracion_minutos)
-                          : 'Selecciona un bloque'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mb-4 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600">
-                    {selectedSlot ? (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <CalendarDays className="w-4 h-4 text-blue-600" />
-                          <span className="capitalize">
-                            {formatFullDate(selectedSlot.inicio_bloque)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock3 className="w-4 h-4 text-blue-600" />
-                          <span>
-                            {formatTime(selectedSlot.inicio_bloque)} -{' '}
-                            {formatTime(selectedSlot.fin_bloque)}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <p>
-                        {selectedAdvisorRelation
-                          ? 'Elige primero un bloque libre para generar tu cita y su pago pendiente.'
-                          : 'Selecciona un asesor vinculado o haz link desde el catálogo para habilitar la agenda.'}
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => setConfirmOpen(true)}
-                    disabled={
-                      !selectedAdvisor ||
-                      !selectedAdvisorRelation ||
-                      !selectedSlot ||
-                      booking
-                    }
-                    className="w-full py-5 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-500 text-white font-headline font-bold text-base shadow-[0_10px_30px_rgba(10,71,238,0.25)] hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center space-x-2 disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100"
-                  >
-                    <span>Solicitar reserva</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
-                  <p className="text-center text-[10px] text-slate-500 mt-4 font-medium">
-                    El asesor validará tu solicitud antes de generar el pago.
-                  </p>
-                </section>
-              </div>
-            </Card>
-          </aside>
-        </div>
+        {activeSection === 'meeting' ? (
+          <AdvisorScheduleSection
+            advisors={myAdvisors}
+            loadingMyAdvisors={loadingMyAdvisors}
+            selectedAdvisor={selectedAdvisor}
+            selectedAdvisorRelation={selectedAdvisorRelation}
+            loadingSlots={loadingSlots}
+            slotView={slotView}
+            onSlotViewChange={setSlotView}
+            availableDays={availableDays}
+            selectedDay={selectedDay}
+            onSelectDay={handleSelectDay}
+            slotsForSelectedDay={slotsForSelectedDay}
+            selectedSlotKey={selectedSlotKey}
+            onSelectSlot={setSelectedSlotKey}
+            selectedSlot={selectedSlot}
+            booking={booking}
+            onOpenConfirm={() => setConfirmOpen(true)}
+            onOpenBrowse={() => setActiveSection('browse')}
+            onSelectAdvisor={handleSelectAdvisor}
+            subscription={subscription}
+            loadingSubscription={loadingSubscription}
+          />
+        ) : null}
       </div>
 
       <Modal
-        open={confirmOpen && !!selectedSlot && !!selectedAdvisor}
-        onClose={() => !booking && setConfirmOpen(false)}
-        title="Confirmar reserva"
-        subtitle="La solicitud quedará pendiente de validación"
-        description={
-          selectedSlot && selectedAdvisor
-            ? `${selectedAdvisor.name} · ${formatFullDate(selectedSlot.inicio_bloque)} · ${formatTime(
-                selectedSlot.inicio_bloque,
-              )} - ${formatTime(selectedSlot.fin_bloque)}`
-            : ''
-        }
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Confirmar solicitud"
+        subtitle="Asesorías"
+        description="Revisa los datos antes de enviar tu solicitud al asesor seleccionado."
+        modalWidth="lg"
         primaryAction={{
-          label: booking ? 'Enviando...' : 'Solicitar reserva',
+          label: booking ? 'Enviando...' : 'Confirmar solicitud',
           onClick: handleReserve,
+          disabled: booking || !selectedAdvisor || !selectedSlot,
         }}
         secondaryAction={{
           label: 'Cancelar',
           onClick: () => setConfirmOpen(false),
+          disabled: booking,
         }}
-      />
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              Asesor
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-950">
+              {selectedAdvisor?.name || 'Sin selección'}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              {selectedAdvisorStatus?.label || 'Sin vínculo'}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+              Horario
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-950">
+              {selectedSlot ? getSlotTimeRangeLabel(selectedSlot) : 'Sin selección'}
+            </p>
+            <p className="mt-1 text-xs text-slate-500">
+              {selectedSlot
+                ? formatDurationMinutes(getSlotDurationMinutes(selectedSlot))
+                : 'Selecciona un bloque'}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+            Fecha
+          </p>
+          <p className="mt-2 text-sm text-slate-700">
+            {selectedSlot
+              ? formatFullDate(selectedSlot.inicio_bloque)
+              : 'Selecciona primero un horario disponible'}
+          </p>
+        </div>
+      </Modal>
 
       <Modal
         open={resultOpen}
         onClose={() => setResultOpen(false)}
-        title="Solicitud creada"
-        subtitle="Ahora debes esperar la respuesta del asesor"
-        description={
-          bookingResult
-            ? `Solicitud ID: ${bookingResult.validation_cita_id}\nEstado: ${bookingResult.estado || 'pending'}`
-            : ''
-        }
+        title="Solicitud enviada"
+        subtitle="Asesorías"
+        description="Tu solicitud ya fue enviada al asesor. Te avisaremos cuando cambie de estado."
+        modalWidth="lg"
         primaryAction={{
-          label: 'Listo',
+          label: 'Entendido',
           onClick: () => setResultOpen(false),
         }}
       >
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-left text-sm text-emerald-800">
-          <div className="mb-2 flex items-center gap-2 font-semibold">
-            <CheckCircle2 className="w-4 h-4" />
-            Solicitud registrada correctamente
+        <div className="grid gap-4">
+          <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-700">
+            <CheckCircle2 className="h-5 w-5" />
+            <p className="text-sm font-medium">
+              {bookingResult?.status || bookingResult?.estado
+                ? `Estado actual: ${bookingResult.status || bookingResult.estado}`
+                : 'La solicitud quedó registrada correctamente.'}
+            </p>
           </div>
-          <p>
-            Cuando el asesor la acepte, si tu plan cubre la sesión no se
-            generará un pago. En caso contrario, verás el pago pendiente en tu
-            bandeja.
-          </p>
+
+          {reservationSummary ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-slate-950">
+                    {reservationSummary.advisorName}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {reservationSummary.fullDate}
+                  </p>
+                </div>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">
+                  {reservationSummary.duration}
+                </span>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+                <div className="flex items-center gap-2 text-slate-600">
+                  <CalendarDays className="h-4 w-4" />
+                  <span className="text-sm">{reservationSummary.timeRange}</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-600">
+                  <Users className="h-4 w-4" />
+                  <span className="text-sm">{reservationSummary.status}</span>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={() => {
+              setResultOpen(false);
+              setActiveSection('meeting');
+            }}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Volver a la agenda
+            <ArrowRight className="h-4 w-4" />
+          </button>
         </div>
       </Modal>
     </div>
   );
-};
-
-export default Advisors;
+}

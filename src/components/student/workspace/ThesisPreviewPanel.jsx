@@ -2,6 +2,8 @@ import { ExternalLink, FileText } from 'lucide-react';
 
 import { Card } from '../../ui/card';
 
+const PREVIEW_PANEL_HEIGHT = 'h-[920px]';
+
 export default function ThesisPreviewPanel({
   selectedThesis,
   currentVersion,
@@ -11,7 +13,9 @@ export default function ThesisPreviewPanel({
     currentVersion?.url_google_doc || currentVersion?.url_archivo_drive || null;
 
   return (
-    <Card className="flex min-h-[920px] flex-col overflow-hidden rounded-[32px] border-none bg-white p-0 shadow-[0_36px_80px_-56px_rgba(15,23,42,0.42)]">
+    <Card
+      className={`flex ${PREVIEW_PANEL_HEIGHT} flex-col overflow-hidden rounded-[32px] border-none bg-white p-0 shadow-[0_36px_80px_-56px_rgba(15,23,42,0.42)]`}
+    >
       <div className="flex flex-col gap-4 border-b border-slate-200/80 px-6 py-5 lg:flex-row lg:items-center lg:justify-between lg:px-8">
         <div className="min-w-0">
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
@@ -38,18 +42,18 @@ export default function ThesisPreviewPanel({
         ) : null}
       </div>
 
-      <div className="flex-1 bg-slate-50/70 p-4 lg:p-6">
+      <div className="min-h-0 flex-1 bg-slate-50/70 p-4 lg:p-6">
         {previewUrl ? (
-          <div className="h-full min-h-[820px] overflow-hidden rounded-[28px] border border-slate-200 bg-white">
+          <div className="h-full overflow-hidden rounded-[28px] border border-slate-200 bg-white">
             <iframe
               src={previewUrl}
-              className="h-[calc(100vh-220px)] min-h-[820px] w-full"
+              className="h-full w-full"
               title="Vista previa de tesis"
               allow="fullscreen"
             />
           </div>
         ) : (
-          <div className="flex h-full min-h-[820px] flex-col items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-white px-8 text-center">
+          <div className="flex h-full flex-col items-center justify-center rounded-[28px] border border-dashed border-slate-200 bg-white px-8 text-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-500">
               <FileText className="h-6 w-6" />
             </div>
