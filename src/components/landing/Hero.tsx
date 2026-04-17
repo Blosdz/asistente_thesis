@@ -1,4 +1,11 @@
-import { ArrowRight, CheckCircle2, Calendar, MessageSquare, Zap, Sparkles } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Calendar,
+  MessageSquare,
+  UserRound,
+  Zap,
+} from 'lucide-react';
 
 const heroStats = [
   'Cotización clara',
@@ -48,23 +55,31 @@ const howItWorks = [
   },
 ];
 
-const trustStats = [
-  { value: '5,000+', label: 'Estudiantes activos' },
-  { value: '4.9/5', label: 'Satisfacción' },
-  { value: '98%', label: 'Completan su tesis' },
-];
-
-const quoteRows = [
-  ['Investigación', 'Según tema y modalidad'],
-  ['Nivel académico', 'Según complejidad'],
-  ['Alcance', 'Según variables y requisitos'],
-  ['Resultado', 'Estimación clara'],
-];
-
-const progressRows = [
-  { label: 'Tema definido', value: 'Claro', progress: '78%' },
-  { label: 'Ruta de trabajo', value: 'Ordenada', progress: '88%' },
-  { label: 'Seguimiento', value: 'Visible', progress: '82%' },
+const userFeedback = [
+  {
+    name: 'Tesista anónima',
+    stage: 'Asesoría metodológica',
+    comment:
+      'Me ayudaron a ordenar mi tesis desde el inicio y por fin avancé con claridad.',
+  },
+  {
+    name: 'Tesista anónimo',
+    stage: 'Pre sustentación',
+    comment:
+      'Llegué a mi pre sustentación con una estructura mucho más sólida y segura.',
+  },
+  {
+    name: 'Tesista anónima',
+    stage: 'Sustentación final',
+    comment:
+      'Resolví mis observaciones y defendí mi trabajo con mucha más seguridad.',
+  },
+  {
+    name: 'Tesista anónimo',
+    stage: 'Asesoría y cierre',
+    comment:
+      'Sentí acompañamiento real en cada avance y mi cierre fue mucho más ordenado.',
+  },
 ];
 
 export default function Hero({ onNavigate }) {
@@ -90,7 +105,7 @@ export default function Hero({ onNavigate }) {
                     <div className="h-8 w-8 rounded-full border-2 border-white/70 bg-gradient-to-br from-emerald-400 to-teal-500" />
                     <div className="h-8 w-8 rounded-full border-2 border-white/70 bg-gradient-to-br from-violet-400 to-purple-500" />
                   </div>
-                  <span className="text-sm font-medium text-slate-600">1,000+ estudiantes confían en AppThesis</span>
+                  <span className="text-sm font-medium text-slate-600">1000 usuarios confían en AppThesis</span>
                 </div>
               </div>
 
@@ -137,19 +152,6 @@ export default function Hero({ onNavigate }) {
                 ))}
               </div>
 
-              {/* Trust Quote */}
-              <div className="mt-8 flex items-center gap-3 rounded-2xl border border-white/70 bg-white/55 p-4 backdrop-blur-xl">
-                <div className="flex -space-x-3">
-                  <div className="h-10 w-10 rounded-full border-2 border-white/70 bg-gradient-to-br from-sky-400 to-blue-500" />
-                  <div className="h-10 w-10 rounded-full border-2 border-white/70 bg-gradient-to-br from-emerald-400 to-teal-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-900">
-                    "Completé 2 meses más rápido"
-                  </p>
-                  <p className="text-xs text-slate-600">María • UNMSM</p>
-                </div>
-              </div>
             </div>
 
             {/* RIGHT: Visual Section with Dynamic Content */}
@@ -164,7 +166,7 @@ export default function Hero({ onNavigate }) {
                   playsInline
                   className="absolute inset-0 h-full w-full object-cover"
                 >
-                <source src="https://www.dropbox.com/scl/fi/0z0f3udo86pex7c96bgde/tesis-video.mp4?rlkey=cze16aczianjh8gerpdmt87qa&st=r2hwqvky&raw=1" type="video/mp4" />
+                  <source src="https://www.dropbox.com/scl/fi/0z0f3udo86pex7c96bgde/tesis-video.mp4?rlkey=cze16aczianjh8gerpdmt87qa&st=r2hwqvky&raw=1" type="video/mp4" />
 
                 </video>
 
@@ -196,6 +198,48 @@ export default function Hero({ onNavigate }) {
                 );
               })}
             </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* AREA DE FEEDBACK DE USUARIOS*/}
+      {/* INSTRUCCIONES PARA AGENTES DE IA TODO ESTE APARTADO DE COMENTARIOS DE USUARIOS TIENE QUE SER UN CARD AMPLIO DE TODO EL WIDTH DE LA PANTALLA EN AL QUE SE MUESTRA COMO MINIMO 4 COMENTARIOS POSITIVOS SOBRE LOS ASESORSES SUSTENATAICONES Y PRES SUSTENTACIONES EL ESTILO DE LA CARTA ES UN CARD CON UN ICONO DEL USUARIO MASCULINO O FEMENINO EN ANONIMATO UN lucide icon de  <UserRound />*/}
+      <section className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 px-4 py-16 sm:px-6 lg:px-8">
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0.62),rgba(239,246,255,0.88))]"
+        />
+
+        <div className="relative mx-auto max-w-7xl border-y border-white/70 py-12">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+              Testimonios
+            </p>
+            <h3 className="mt-4 text-3xl font-semibold text-slate-950 sm:text-4xl">
+              1000 usuarios, una experiencia más clara para avanzar tu tesis
+            </h3>
+          </div>
+
+          <div className="mt-12 grid gap-10 sm:grid-cols-2 xl:grid-cols-4">
+            {userFeedback.map((item, index) => (
+              <article
+                key={`${item.name}-${item.stage}-${index}`}
+                className="flex flex-col items-center text-center"
+              >
+                <div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/80 bg-white/82 text-sky-700 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md">
+                  <UserRound className="h-8 w-8" />
+                </div>
+
+                <p className="mt-5 text-sm font-semibold text-slate-950">{item.name}</p>
+                <p className="mt-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
+                  {item.stage}
+                </p>
+                <p className="mt-4 max-w-[17rem] text-sm leading-7 text-slate-600">
+                  {item.comment}
+                </p>
+              </article>
+            ))}
           </div>
         </div>
       </section>

@@ -170,12 +170,13 @@ export default function LandingPage() {
               className="flex items-center gap-3 text-left"
             >
               <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-sky-200/90 bg-blue-300 shadow-[0_14px_34px_rgba(15,23,42,0.12)]">
+                {/* ICON MAS GRANDE !  */}
                 <img
                   src={appIcon}
                   alt="AppThesis"
-                  className="h-10 w-10 object-contain"
-                  width="40"
-                  height="40"
+                  className="h-25 w-25 object-contain"
+                  width="50"
+                  height="50"
                 />
               </div>
               <div>

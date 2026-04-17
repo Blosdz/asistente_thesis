@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   ArrowRight,
+  BookOpenCheck,
   CheckCircle2,
   ChevronLeft,
+  MessagesSquare,
   RotateCcw,
   Sparkles,
 } from 'lucide-react';
@@ -19,10 +21,12 @@ type PlanName = 'Esencial' | 'Guiado' | 'Integral';
 type QuestionOption = {
   value: string;
   label: string;
+  description: string;
 };
 
 type Question = {
   key: AnswerKey;
+  shortLabel: string;
   title: string;
   helper: string;
   options: QuestionOption[];
@@ -33,55 +37,132 @@ type Answers = Partial<Record<AnswerKey, string>>;
 const questions: Question[] = [
   {
     key: 'level',
+    shortLabel: 'Nivel',
     title: '¿Cuál es tu nivel académico?',
-    helper: 'Esto nos ayuda a estimar el nivel general de exigencia de tu tesis.',
+    helper: 'Estimamos la exigencia general.',
     options: [
-      { value: 'pregrado', label: 'Pregrado' },
-      { value: 'maestria', label: 'Maestría' },
-      { value: 'doctorado', label: 'Doctorado' },
+      {
+        value: 'pregrado',
+        label: 'Pregrado',
+        description: 'Ruta base',
+      },
+      {
+        value: 'maestria',
+        label: 'Maestría',
+        description: 'Mayor exigencia',
+      },
+      {
+        value: 'doctorado',
+        label: 'Doctorado',
+        description: 'Máxima profundidad',
+      },
     ],
   },
   {
     key: 'career',
+    shortLabel: 'Carrera',
     title: '¿Qué carrera estudias?',
-    helper: 'Algunas disciplinas requieren evaluación especializada.',
+    helper: 'Adaptamos el enfoque a tu carrera.',
     options: [
-      { value: 'arquitectura', label: 'Arquitectura' },
-      { value: 'ingenieria', label: 'Ingeniería' },
-      { value: 'administracion', label: 'Administración' },
-      { value: 'psicologia', label: 'Psicología' },
-      { value: 'otros', label: 'Otra carrera' },
+      {
+        value: 'arquitectura',
+        label: 'Arquitectura',
+        description: 'Atención especializada',
+      },
+      {
+        value: 'ingenieria',
+        label: 'Ingeniería',
+        description: 'Enfoque técnico',
+      },
+      {
+        value: 'administracion',
+        label: 'Administración',
+        description: 'Enfoque aplicado',
+      },
+      {
+        value: 'psicologia',
+        label: 'Psicología',
+        description: 'Diseño y análisis',
+      },
+      {
+        value: 'otros',
+        label: 'Otra carrera',
+        description: 'Asesoría adaptable',
+      },
     ],
   },
   {
     key: 'stage',
+    shortLabel: 'Etapa',
     title: '¿En qué punto está tu tesis?',
-    helper: 'La etapa actual cambia mucho el tipo de acompañamiento que conviene.',
+    helper: 'La etapa define el tipo de apoyo.',
     options: [
-      { value: 'starting', label: 'Recién empiezo' },
-      { value: 'topic', label: 'Ya tengo tema' },
-      { value: 'developing', label: 'Tengo observaciones' },
-      { value: 'closing', label: 'Estoy cerrando' },
+      {
+        value: 'starting',
+        label: 'Recién empiezo',
+        description: 'Punto de partida',
+      },
+      {
+        value: 'topic',
+        label: 'Ya tengo tema',
+        description: 'Base definida',
+      },
+      {
+        value: 'developing',
+        label: 'Tengo observaciones',
+        description: 'Ajustes pendientes',
+      },
+      {
+        value: 'closing',
+        label: 'Estoy cerrando',
+        description: 'Fase final',
+      },
     ],
   },
   {
     key: 'complexity',
+    shortLabel: 'Dificultad',
     title: '¿Cómo sientes la dificultad metodológica?',
-    helper: 'Piensa en variables, enfoque, estructura y exigencia técnica.',
+    helper: 'Mide la exigencia metodológica.',
     options: [
-      { value: 'low', label: 'Baja' },
-      { value: 'medium', label: 'Media' },
-      { value: 'high', label: 'Alta' },
+      {
+        value: 'low',
+        label: 'Baja',
+        description: 'Manejable',
+      },
+      {
+        value: 'medium',
+        label: 'Media',
+        description: 'Requiere guía',
+      },
+      {
+        value: 'high',
+        label: 'Alta',
+        description: 'Alta exigencia',
+      },
     ],
   },
   {
     key: 'support',
+    shortLabel: 'Soporte',
     title: '¿Qué nivel de acompañamiento necesitas?',
-    helper: 'No se trata solo de avanzar; también de cuánto apoyo quieres en el proceso.',
+    helper: 'Define cuánta guía necesitas.',
     options: [
-      { value: 'order', label: 'Solo orden' },
-      { value: 'guided', label: 'Guía frecuente' },
-      { value: 'intensive', label: 'Soporte intensivo' },
+      {
+        value: 'order',
+        label: 'Solo orden',
+        description: 'Más autonomía',
+      },
+      {
+        value: 'guided',
+        label: 'Guía frecuente',
+        description: 'Seguimiento cercano',
+      },
+      {
+        value: 'intensive',
+        label: 'Soporte intensivo',
+        description: 'Acompañamiento amplio',
+      },
     ],
   },
 ];
@@ -201,6 +282,9 @@ export default function AssessmentFunnel({ onNavigate }) {
   const currentQuestion = questions[stepIndex];
   const isComplete =
     totalSteps > 0 && questions.every((question) => answers[question.key]);
+  const progressStep = isComplete ? totalSteps : stepIndex + 1;
+  const completionPercent = Math.round((progressStep / totalSteps) * 100);
+  const answeredCount = questions.filter((question) => answers[question.key]).length;
   const recommendation = useMemo(
     () => (isComplete ? getPlanRecommendation(answers) : null),
     [answers, isComplete],
@@ -238,10 +322,11 @@ export default function AssessmentFunnel({ onNavigate }) {
 
   return (
     <section id="assessment-funnel" className="px-4 py-28 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto ">
         <SectionHeading
           eyebrow="Asesoría"
           title="¿Necesitas asesoría para tu tesis?"
+          description="5 preguntas. 1 recomendación clara."
           align="center"
         />
 
@@ -252,88 +337,120 @@ export default function AssessmentFunnel({ onNavigate }) {
           transition={{ duration: 0.5, ease: 'easeOut' }}
           className="mt-14"
         >
-          <GlassCard className="overflow-hidden rounded-[36px] p-6 sm:p-8 lg:p-10">
-            <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="flex flex-col justify-start gap-6">
-                <div>
-                  <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/90 bg-sky-100/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">
-                    Asesoría
+          <GlassCard className="overflow-hidden rounded-[40px] border-white/80 p-3 sm:p-4">
+            <div className="grid gap-3 lg:grid-cols-[0.94fr_1.06fr]">
+              <div className="rounded-[32px] bg-[linear-gradient(145deg,rgba(15,23,42,0.97),rgba(30,41,59,0.95),rgba(14,116,144,0.84))] p-6 text-white shadow-[0_24px_60px_rgba(15,23,42,0.24)] sm:p-7 lg:p-8">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/80">
+                    <Sparkles className="h-4 w-4 text-cyan-300" />
+                    Plan assessment
                   </div>
-                  <p className="mt-6 text-3xl font-semibold text-slate-950">
-                    Encuentra el plan ideal para tu tesis
+                  <div className="rounded-full border border-white/12 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+                    {isComplete ? 'Listo' : '3 min'}
+                  </div>
+                </div>
+
+                <div className="mt-6">
+                  <p className="text-3xl font-semibold leading-tight text-white sm:text-[2.2rem]">
+                    Tu plan ideal, en 5 respuestas.
                   </p>
-                  <p className="mt-4 text-base leading-8 text-slate-600">
-                    Responde 5 preguntas rápidas para una recomendación personalizada.
+                  <p className="mt-4 max-w-xl text-sm leading-7 text-white/72 sm:text-base">
+                    Rápido, claro y enfocado en tu etapa real.
                   </p>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between text-sm text-slate-500">
+                <div className="mt-8 rounded-[28px] border border-white/12 bg-white/10 p-5">
+                  <div className="flex items-center justify-between text-sm text-white/80">
                     <span>
                       {isComplete
-                        ? 'Resultado listo'
+                        ? 'Evaluación terminada'
                         : `Paso ${stepIndex + 1} de ${totalSteps}`}
                     </span>
-                    <span>
-                      {Math.round(
-                        ((isComplete ? totalSteps : stepIndex + 1) / totalSteps) *
-                        100,
-                      )}
-                      %
-                    </span>
+                    <span>{completionPercent}%</span>
                   </div>
 
-                  <div className="h-2 rounded-full bg-slate-200/80">
+                  <div className="mt-4 h-2 rounded-full bg-white/10">
                     <div
-                      className="h-2 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 transition-all duration-300"
-                      style={{
-                        width: `${((isComplete ? totalSteps : stepIndex + 1) / totalSteps) * 100}%`,
-                      }}
+                      className="h-2 rounded-full bg-gradient-to-r from-cyan-300 via-sky-400 to-blue-500 transition-all duration-300"
+                      style={{ width: `${completionPercent}%` }}
                     />
                   </div>
 
-                  <div className="grid gap-2 sm:grid-cols-2">
+                  <div className="mt-4 flex items-center justify-between text-xs text-white/60">
+                    <span>{answeredCount} respuestas registradas</span>
+                    <span>
+                      {isComplete
+                        ? 'Recomendación desbloqueada'
+                        : 'Tu plan se calcula al final'}
+                    </span>
+                  </div>
+
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
                     {questions.map((question, index) => (
                       <div
                         key={question.key}
                         className={cn(
-                          'rounded-[18px] border px-4 py-3 text-sm transition-colors duration-300',
+                          'rounded-[20px] border px-4 py-3 text-sm transition-all duration-300',
                           answers[question.key]
-                            ? 'border-sky-200 bg-sky-50/80 text-slate-700'
+                            ? 'border-cyan-300/30 bg-white/14 text-white'
                             : index === stepIndex && !isComplete
-                              ? 'border-slate-300 bg-white/72 text-slate-900'
-                              : 'border-white/70 bg-white/55 text-slate-500',
+                              ? 'border-white/25 bg-white/18 text-white'
+                              : 'border-white/10 bg-white/[0.06] text-white/55',
                         )}
                       >
-                        <p className="font-semibold">{question.title}</p>
-                        <p className="mt-1 text-xs leading-6">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-white/50">
+                          Paso {index + 1}
+                        </p>
+                        <p className="mt-2 font-semibold leading-6">
+                          {question.shortLabel}
+                        </p>
+                        <p className="mt-2 text-xs leading-5 text-white/72">
                           {answers[question.key]
                             ? labelsByKey[question.key][answers[question.key] as string]
-                            : 'Pendiente'}
+                            : index === stepIndex && !isComplete
+                              ? 'En curso'
+                              : 'Pendiente'}
                         </p>
                       </div>
                     ))}
                   </div>
                 </div>
+                <div className="mt-6 inline-flex w-fit items-center gap-2 rounded-full border border-white/12 bg-white/10 px-4 py-2 text-xs font-medium text-white/75">
+                  <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+                  Menos ruido, mejor recomendación.
+                </div>
               </div>
 
-              <div className="min-h-[28rem]">
+              <div className="min-h-[34rem]">
                 {!isComplete ? (
-                  <div className="flex h-full flex-col justify-between rounded-[28px] border border-white/75 bg-white/70 p-6 sm:p-7">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                        Pregunta activa
-                      </p>
-                      <h3 className="mt-4 text-3xl font-semibold text-slate-950">
-                        {currentQuestion.title}
-                      </h3>
-                      <p className="mt-3 max-w-xl text-base leading-8 text-slate-600">
-                        {currentQuestion.helper}
-                      </p>
+                  <div className="flex h-full flex-col justify-between rounded-[32px] border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.95),rgba(248,250,252,0.88))] p-6 sm:p-7 lg:p-8">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="inline-flex items-center gap-2 rounded-full border border-sky-200/90 bg-sky-100/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-sky-700">
+                          <BookOpenCheck className="h-4 w-4" />
+                          Pregunta activa
+                        </p>
+                        <h3 className="mt-5 text-3xl font-semibold leading-tight text-slate-950">
+                          {currentQuestion.title}
+                        </h3>
+                        <p className="mt-3 max-w-xl text-sm leading-7 text-slate-600 sm:text-base">
+                          {currentQuestion.helper}
+                        </p>
+                      </div>
+
+                      <div className="hidden h-16 w-16 items-center justify-center rounded-[22px] bg-gradient-to-br from-sky-100 to-blue-100 text-blue-700 sm:flex">
+                        <Sparkles className="h-7 w-7" />
+                      </div>
                     </div>
 
-                    <div className="mt-8 grid gap-3">
-                      {currentQuestion.options.map((option) => {
+                    {currentQuestion.key === 'career' ? (
+                      <div className="mt-6 rounded-[24px] border border-amber-200/80 bg-amber-50/90 px-4 py-4 text-sm leading-7 text-amber-900">
+                        Arquitectura te lleva a atención directa por WhatsApp.
+                      </div>
+                    ) : null}
+
+                    <div className="mt-8 grid gap-4">
+                      {currentQuestion.options.map((option, index) => {
                         const isSelected = answers[currentQuestion.key] === option.value;
 
                         return (
@@ -342,20 +459,48 @@ export default function AssessmentFunnel({ onNavigate }) {
                             type="button"
                             onClick={() => handleAnswer(option.value)}
                             className={cn(
-                              'flex items-center justify-between rounded-[20px] border px-4 py-4 text-left text-sm font-medium transition-all duration-300',
+                              'group flex items-center justify-between gap-4 rounded-[24px] border px-4 py-4 text-left transition-all duration-300',
                               isSelected
-                                ? 'border-sky-200 bg-sky-50 text-slate-900'
-                                : 'border-white/70 bg-white/78 text-slate-700 hover:bg-white',
+                                ? 'border-sky-200 bg-sky-50 shadow-[0_18px_40px_rgba(37,99,235,0.08)]'
+                                : 'border-white/80 bg-white/88 hover:-translate-y-0.5 hover:border-sky-200 hover:bg-white hover:shadow-[0_18px_40px_rgba(15,23,42,0.08)]',
                             )}
                           >
-                            <span>{option.label}</span>
-                            <ArrowRight className="h-4 w-4 text-blue-600" />
+                            <div className="flex items-start gap-4">
+                              <div
+                                className={cn(
+                                  'flex h-12 w-12 shrink-0 items-center justify-center rounded-[18px] border text-sm font-semibold transition-colors duration-300',
+                                  isSelected
+                                    ? 'border-sky-200 bg-gradient-to-br from-sky-500 to-blue-600 text-white'
+                                    : 'border-slate-200 bg-slate-50 text-slate-600 group-hover:border-sky-200 group-hover:text-sky-700',
+                                )}
+                              >
+                                {String(index + 1).padStart(2, '0')}
+                              </div>
+
+                              <div>
+                                <p className="text-base font-semibold text-slate-900">
+                                  {option.label}
+                                </p>
+                                <p className="mt-1 text-sm leading-6 text-slate-500">
+                                  {option.description}
+                                </p>
+                              </div>
+                            </div>
+
+                            <ArrowRight
+                              className={cn(
+                                'h-5 w-5 shrink-0 transition-all duration-300',
+                                isSelected
+                                  ? 'text-blue-600'
+                                  : 'text-slate-400 group-hover:translate-x-0.5 group-hover:text-blue-600',
+                              )}
+                            />
                           </button>
                         );
                       })}
                     </div>
 
-                    <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mt-auto flex flex-col gap-3 pt-8 sm:flex-row sm:items-center sm:justify-between">
                       <button
                         type="button"
                         onClick={handleBack}
@@ -372,49 +517,87 @@ export default function AssessmentFunnel({ onNavigate }) {
                       </button>
 
                       <p className="text-sm text-slate-500">
-                        Responde una opción para continuar.
+                        Elige la opción más cercana a tu caso.
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex min-h-full flex-col justify-between rounded-[28px] border border-sky-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.82),rgba(239,246,255,0.8))] p-6 sm:p-7">
+                  <div className="flex min-h-full flex-col justify-between rounded-[32px] border border-sky-200/90 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(239,246,255,0.94))] p-6 shadow-[0_22px_60px_rgba(37,99,235,0.10)] sm:p-7 lg:p-8">
                     <div>
-                      <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
-                        <CheckCircle2 className="h-4 w-4" />
-                        Recomendación lista
+                      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="max-w-2xl">
+                          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">
+                            <CheckCircle2 className="h-4 w-4" />
+                            Recomendación lista
+                          </div>
+
+                          <p className="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                            Plan recomendado
+                          </p>
+                          <h3 className="mt-3 text-4xl font-semibold text-slate-950">
+                            {recommendation?.plan}
+                          </h3>
+                          <p className="mt-4 text-base leading-8 text-slate-700">
+                            {recommendation?.reason}
+                          </p>
+                        </div>
+
+                        <div className="rounded-[26px] border border-sky-200/80 bg-white/90 px-5 py-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                            Evaluación
+                          </p>
+                          <p className="mt-2 text-3xl font-semibold text-slate-950">
+                            {completionPercent}%
+                          </p>
+                          <p className="text-sm text-slate-500">completada</p>
+                        </div>
                       </div>
 
-                      <p className="mt-6 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
-                        Plan recomendado
-                      </p>
-                      <h3 className="mt-3 text-4xl font-semibold text-slate-950">
-                        {recommendation?.plan}
-                      </h3>
-                      <p className="mt-4 text-base leading-8 text-slate-700">
-                        {recommendation?.reason}
-                      </p>
-                      <p className="mt-3 text-sm leading-7 text-slate-600">
-                        {recommendation?.detail}
-                      </p>
-
-                      <div className="mt-8 grid gap-2">
-                        {recommendation?.bullets.map((bullet) => (
+                      <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                        {recommendation?.bullets.slice(0, 4).map((bullet) => (
                           <div
                             key={bullet}
-                            className="rounded-[20px] border border-white/80 bg-white/78 px-4 py-2 text-sm leading-6 text-slate-700"
+                            className="flex items-start gap-3 rounded-[24px] border border-white/80 bg-white/88 px-4 py-4 text-sm leading-6 text-slate-700 shadow-[0_10px_28px_rgba(15,23,42,0.04)]"
                           >
-                            {bullet}
+                            <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                              <CheckCircle2 className="h-4 w-4" />
+                            </div>
+                            <span>{bullet}</span>
                           </div>
                         ))}
                       </div>
 
-                      <div className="mt-6 rounded-[22px] border border-slate-200/70 bg-white/70 px-4 py-4">
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                          Ideal para
-                        </p>
-                        <p className="mt-2 text-sm leading-7 text-slate-700">
-                          {recommendation?.idealFor}
-                        </p>
+                      <div className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+                        <div className="rounded-[26px] border border-slate-900/5 bg-slate-950 px-5 py-5 text-white">
+                          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/60">
+                            Ideal para
+                          </p>
+                          <p className="mt-3 text-sm leading-7 text-white/86">
+                            {recommendation?.idealFor}
+                          </p>
+                        </div>
+
+                        <div className="rounded-[26px] border border-white/80 bg-white/84 px-5 py-5">
+                          <div className="flex items-center gap-2 text-slate-500">
+                            <MessagesSquare className="h-4 w-4 text-sky-600" />
+                            <p className="text-xs font-semibold uppercase tracking-[0.22em]">
+                              Señales detectadas
+                            </p>
+                          </div>
+
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {questions.map((question) =>
+                              answers[question.key] ? (
+                                <div
+                                  key={question.key}
+                                  className="rounded-full border border-sky-200/80 bg-sky-50/90 px-3 py-2 text-xs font-medium text-slate-700"
+                                >
+                                  {labelsByKey[question.key][answers[question.key] as string]}
+                                </div>
+                              ) : null,
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
