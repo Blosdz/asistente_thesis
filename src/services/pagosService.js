@@ -70,7 +70,12 @@ export async function registrarVoucherPago({
   return Array.isArray(data) ? data[0] : data;
 }
 
-export async function subirVoucherPago({ pagoId, file }) {
+export async function subirVoucherPago({
+  pagoId,
+  file,
+  paymentMethod = null,
+  operationCode = null,
+}) {
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -82,6 +87,12 @@ export async function subirVoucherPago({ pagoId, file }) {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('pago_id', pagoId);
+  if (paymentMethod) {
+    formData.append('payment_method', paymentMethod);
+  }
+  if (operationCode) {
+    formData.append('operation_code', operationCode);
+  }
 
   const response = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/subir-vouchers`,

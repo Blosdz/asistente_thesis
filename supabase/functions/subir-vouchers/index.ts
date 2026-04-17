@@ -266,6 +266,16 @@ Deno.serve(async (req) => {
     const formData = await req.formData();
     const pagoId = formData.get("pago_id")?.toString();
     const file = formData.get("file");
+    const paymentMethodRaw = formData.get("payment_method")?.toString().trim();
+    const operationCodeRaw = formData.get("operation_code")?.toString().trim();
+    const paymentMethod =
+      paymentMethodRaw &&
+      ["yape", "plin", "transferencia"].includes(paymentMethodRaw)
+        ? paymentMethodRaw
+        : null;
+    const operationCode = operationCodeRaw
+      ? operationCodeRaw.slice(0, 120)
+      : null;
 
     if (!pagoId || !(file instanceof File)) {
       return new Response(
@@ -304,7 +314,7 @@ Deno.serve(async (req) => {
     const { data: pago, error: pagoError } = await supabaseAdmin
       .schema("AT")
       .from("pagos")
-      .select("id, pagador_id, concepto, estado")
+      .select("id, pagador_id, concepto, estado, codigo_operacion, metadata")
       .eq("id", pagoId)
       .maybeSingle();
 
@@ -370,6 +380,15 @@ Deno.serve(async (req) => {
     const nowIso = new Date().toISOString();
     const voucherUrl =
       driveFile.webViewLink ?? driveFile.webContentLink ?? null;
+    const currentMetadata =
+      pago.metadata && typeof pago.metadata === "object" && !Array.isArray(pago.metadata)
+        ? pago.metadata
+        : {};
+    const nextMetadata = {
+      ...currentMetadata,
+      ...(paymentMethod ? { metodo_pago: paymentMethod } : {}),
+      ...(operationCode ? { codigo_operacion_referencia: operationCode } : {}),
+    };
 
     const { error: updatePagoError } = await supabaseAdmin
       .schema("AT")
@@ -380,6 +399,8 @@ Deno.serve(async (req) => {
         nombre_archivo_voucher: file.name,
         tipo_mime_voucher: file.type || driveFile.mimeType || null,
         tamano_bytes_voucher: file.size,
+        codigo_operacion: operationCode || pago.codigo_operacion || null,
+        metadata: nextMetadata,
         subido_en: nowIso,
         estado: "voucher_subido",
         actualizado_en: nowIso,
@@ -406,6 +427,8 @@ Deno.serve(async (req) => {
         message: "Voucher subido correctamente",
         pago_id: pago.id,
         estado: "voucher_subido",
+        payment_method: paymentMethod,
+        operation_code: operationCode || pago.codigo_operacion || null,
         folder: {
           id: studentFolder.id,
           name: studentFolder.name,

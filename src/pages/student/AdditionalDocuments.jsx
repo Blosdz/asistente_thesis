@@ -26,6 +26,12 @@ const docTypes = [
   { value: 'fuente', label: 'Fuente', icon: Database },
 ];
 
+const allDocumentsFilter = {
+  value: 'todos',
+  label: 'Todos los documentos',
+  icon: FileText,
+};
+
 const AdditionalDocuments = () => {
   const [thesesList, setThesesList] = useState([]);
   const [selectedThesisId, setSelectedThesisId] = useState('');
@@ -42,7 +48,10 @@ const AdditionalDocuments = () => {
       setThesesList(theses || []);
 
       if (theses && theses.length > 0) {
-        if (!selectedThesisId || !theses.find((t) => t.id === selectedThesisId)) {
+        if (
+          !selectedThesisId ||
+          !theses.find((t) => t.id === selectedThesisId)
+        ) {
           setSelectedThesisId(theses[0].id);
         }
       } else {
@@ -137,6 +146,36 @@ const AdditionalDocuments = () => {
     );
   }, [documents, activeFilter]);
 
+  const helperFilterOptions = useMemo(
+    () => [
+      {
+        ...allDocumentsFilter,
+        count: documents.length,
+      },
+      ...docTypes.map((type) => ({
+        ...type,
+        count: docTypeCounts[type.value] || 0,
+      })),
+    ],
+    [docTypeCounts, documents.length],
+  );
+
+  const activeFilterMeta = useMemo(
+    () =>
+      helperFilterOptions.find((option) => option.value === activeFilter) ||
+      helperFilterOptions[0],
+    [activeFilter, helperFilterOptions],
+  );
+
+  const highlightedHelperTypes = useMemo(
+    () =>
+      helperFilterOptions
+        .filter((option) => option.value !== 'todos' && option.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 4),
+    [helperFilterOptions],
+  );
+
   const getDocumentTypeLabel = useCallback((doc) => {
     const key = doc.tipo || doc.tipo_documento;
     const match = docTypes.find((type) => type.value === key);
@@ -170,14 +209,13 @@ const AdditionalDocuments = () => {
   return (
     <div className="relative w-full flex-1 px-4 sm:px-6 lg:px-10 py-12 animate-fade-in text-slate-900">
       <div className="max-w-7xl mx-auto flex flex-col gap-8">
-
         {loading ? (
           <div className="flex justify-center items-center py-24">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-300 border-t-transparent shadow-lg shadow-blue-200/40"></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <aside className="lg:col-span-4 flex flex-col gap-6">
+            <aside className="lg:col-span-4 flex flex-col gap-4">
               <Card className="p-6">
                 <h3 className="text-xs font-bold uppercase tracking-[0.35em] text-blue-500 mb-4">
                   Thesis Selection
@@ -207,77 +245,79 @@ const AdditionalDocuments = () => {
               </Card>
 
               <Card className="p-6">
-                <h3 className="text-xs font-bold uppercase tracking-[0.35em] text-blue-500 mb-6">
+                <h3 className="text-xs font-bold uppercase tracking-[0.35em] text-blue-500 mb-4">
                   Helper Document Categories
                 </h3>
-                <div className="flex flex-col gap-3">
-                  {docTypes.map((type) => {
-                    const Icon = type.icon;
-                    const isActive = activeFilter === type.value;
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                          Filtro activo
+                        </p>
+                        <p className="mt-1 truncate text-sm font-semibold text-slate-900">
+                          {activeFilterMeta?.label || allDocumentsFilter.label}
+                        </p>
+                      </div>
+                      <span className="rounded-full border border-blue-100 bg-white px-2.5 py-1 text-xs font-bold text-blue-600">
+                        {activeFilterMeta?.count || 0}
+                      </span>
+                    </div>
 
-                    return (
-                      <button
-                        key={type.value}
-                        type="button"
-                        onClick={() => setActiveFilter(type.value)}
-                        className={`flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 ${
-                          isActive
-                            ? 'border-blue-200 text-slate-900 shadow-lg shadow-blue-100/60'
-                            : 'border-transparent text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <span
-                            className={`w-10 h-10 rounded-xl flex items-center justify-center border ${
-                              isActive
-                                ? 'border-blue-100 text-blue-500'
-                                : 'border-slate-200 text-slate-400'
-                            }`}
-                          >
-                            <Icon className="w-5 h-5" />
-                          </span>
-                          <span className="text-sm font-semibold">
-                            {type.label}
-                          </span>
-                        </div>
-                        <span
-                          className={`text-xs font-bold px-2 py-1 rounded-full ${
-                            isActive
-                              ? 'text-blue-600'
-                              : 'text-slate-500'
-                          }`}
-                        >
-                          {docTypeCounts[type.value] || 0}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveFilter('todos')}
-                  className={`mt-4 w-full rounded-2xl border px-4 py-3 text-sm font-semibold transition ${
-                    activeFilter === 'todos'
-                      ? 'border-blue-200 text-slate-900 shadow-lg shadow-blue-100/60'
-                      : 'border-slate-200 text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  Ver todas las categorías
-                </button>
-              </Card>
+                    <Select
+                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
+                      value={activeFilter}
+                      onChange={(e) => setActiveFilter(e.target.value)}
+                    >
+                      {helperFilterOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label} ({option.count})
+                        </SelectItem>
+                      ))}
+                    </Select>
+                  </div>
 
-              <Card className="p-6">
-                <div className="flex items-start gap-4">
-                  <span className="w-10 h-10 rounded-2xl flex items-center justify-center text-blue-500 shadow-sm">
-                    <Sparkles className="w-5 h-5" />
-                  </span>
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    <span className="text-blue-600 font-semibold block mb-1">
-                      Tip de organizacion
-                    </span>
-                    Mantener tus referencias ordenadas acelera el proceso de revision
-                    y sintesis al final de cada iteracion.
-                  </p>
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        Vista rápida
+                      </p>
+                      <span className="text-xs font-medium text-slate-400">
+                        {documents.length} archivo(s)
+                      </span>
+                    </div>
+
+                    {highlightedHelperTypes.length > 0 ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {highlightedHelperTypes.map((type) => {
+                          const Icon = type.icon;
+
+                          return (
+                            <button
+                              key={type.value}
+                              type="button"
+                              onClick={() => setActiveFilter(type.value)}
+                              className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                                activeFilter === type.value
+                                  ? 'border-blue-200 bg-blue-50 text-blue-700'
+                                  : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                              }`}
+                            >
+                              <Icon className="h-3.5 w-3.5" />
+                              <span>{type.label}</span>
+                              <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-500">
+                                {type.count}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="mt-3 text-sm text-slate-500">
+                        Cuando subas documentos aparecerán aquí las categorías más usadas.
+                      </p>
+                    )}
+                  </div>
                 </div>
               </Card>
             </aside>
@@ -293,7 +333,8 @@ const AdditionalDocuments = () => {
                       Suelta para comenzar la carga
                     </h3>
                     <p className="text-slate-500 text-sm mb-6">
-                      Sube reglamentos, instrumentos, rúbricas y demás documentos de apoyo.
+                      Sube reglamentos, instrumentos, rúbricas y demás
+                      documentos de apoyo.
                     </p>
                     <div className="w-full max-w-sm mb-6 text-left">
                       <label className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500 block mb-2">
@@ -354,7 +395,8 @@ const AdditionalDocuments = () => {
                     <div className="flex flex-col gap-3">
                       {filteredDocuments.map((doc) => {
                         const fileName = getDocumentName(doc);
-                        const fileUrl = doc.url_google_doc || doc.url_archivo_drive;
+                        const fileUrl =
+                          doc.url_google_doc || doc.url_archivo_drive;
 
                         return (
                           <div
@@ -385,40 +427,15 @@ const AdditionalDocuments = () => {
                                 <ExternalLink className="w-3.5 h-3.5" />
                               </a>
                             ) : (
-                              <span className="text-xs text-slate-400">Sin URL</span>
+                              <span className="text-xs text-slate-400">
+                                Sin URL
+                              </span>
                             )}
                           </div>
                         );
                       })}
                     </div>
                   )}
-                </div>
-              </Card>
-
-              <Card className="p-8 flex flex-col md:flex-row items-center gap-8">
-                <div className="flex-1">
-                  <span className="text-xs font-bold text-blue-500 uppercase tracking-[0.3em] mb-2 block">
-                    Synthesizing Status
-                  </span>
-                  <h2 className="text-5xl font-bold tracking-tight text-slate-900">
-                    {processingProgress}%
-                  </h2>
-                  <p className="text-slate-600 mt-2 text-sm">
-                    El asistente analiza temas clave segun los ultimos documentos.
-                  </p>
-                </div>
-                <div className="w-full md:w-1/3 h-24 rounded-2xl border border-slate-200 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                    <Sparkles className="w-12 h-12 text-blue-500" />
-                  </div>
-                  <div className="relative flex flex-col items-center">
-                    <span className="text-xs font-bold text-slate-800">
-                      {Math.max(documents.length * 8, 0)} insights
-                    </span>
-                    <span className="text-[10px] text-blue-500 font-bold uppercase tracking-tight mt-1">
-                      Hoy
-                    </span>
-                  </div>
                 </div>
               </Card>
             </article>

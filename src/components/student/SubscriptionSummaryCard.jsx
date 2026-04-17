@@ -41,6 +41,7 @@ export default function SubscriptionSummaryCard({
   subscription,
   loading = false,
   serviceType = null,
+  compact = false,
   className = '',
 }) {
   const asesoriasDisponibles = toNumber(subscription?.asesorias_disponibles);
@@ -59,18 +60,32 @@ export default function SubscriptionSummaryCard({
 
   return (
     <div
-      className={`rounded-[28px] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-6 shadow-[0_14px_40px_rgba(15,23,42,0.05)] ${className}`}
+      className={`border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 shadow-[0_14px_40px_rgba(15,23,42,0.05)] ${
+        compact ? 'rounded-3xl p-4' : 'rounded-[28px] p-6'
+      } ${className}`}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div
+        className={`flex items-start justify-between ${
+          compact ? 'gap-3' : 'gap-4'
+        }`}
+      >
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
             Plan Activo
           </p>
-          <h3 className="mt-2 text-lg font-bold text-slate-900">
-            Beneficios disponibles
+          <h3
+            className={`font-bold text-slate-900 ${
+              compact ? 'mt-1 text-base' : 'mt-2 text-lg'
+            }`}
+          >
+            {compact ? 'Cobertura disponible' : 'Beneficios disponibles'}
           </h3>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
+        <div
+          className={`flex items-center justify-center rounded-2xl bg-blue-100 text-blue-700 ${
+            compact ? 'h-10 w-10' : 'h-11 w-11'
+          }`}
+        >
           {loading ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
@@ -80,14 +95,16 @@ export default function SubscriptionSummaryCard({
       </div>
 
       {loading ? (
-        <p className="mt-4 text-sm text-slate-500">
+        <p className={`text-slate-500 ${compact ? 'mt-3 text-xs' : 'mt-4 text-sm'}`}>
           Cargando tu suscripción activa...
         </p>
       ) : subscription ? (
         <>
           {coverageMeta && (
             <div
-              className={`mt-4 rounded-2xl border px-4 py-3 text-sm font-semibold ${
+              className={`rounded-2xl border font-semibold ${
+                compact ? 'mt-3 px-3 py-2 text-xs' : 'mt-4 px-4 py-3 text-sm'
+              } ${
                 coverageMeta.available > 0
                   ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
                   : 'border-amber-200 bg-amber-50 text-amber-800'
@@ -99,46 +116,75 @@ export default function SubscriptionSummaryCard({
             </div>
           )}
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+          <div
+            className={`grid gap-3 sm:grid-cols-2 ${
+              compact ? 'mt-4' : 'mt-5'
+            }`}
+          >
+            <div
+              className={`rounded-2xl border border-slate-200 bg-white/80 ${
+                compact ? 'p-3' : 'p-4'
+              }`}
+            >
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                 Asesorías
               </p>
-              <p className="mt-2 text-2xl font-black text-slate-900">
+              <p
+                className={`font-black text-slate-900 ${
+                  compact ? 'mt-1.5 text-xl' : 'mt-2 text-2xl'
+                }`}
+              >
                 {asesoriasDisponibles}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className={`text-xs text-slate-500 ${compact ? 'mt-0.5' : 'mt-1'}`}>
                 {asesoriasUsadas} usadas de {asesoriasIncluidas}
               </p>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white/80 p-4">
+            <div
+              className={`rounded-2xl border border-slate-200 bg-white/80 ${
+                compact ? 'p-3' : 'p-4'
+              }`}
+            >
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                 Pre-sustentaciones
               </p>
-              <p className="mt-2 text-2xl font-black text-slate-900">
+              <p
+                className={`font-black text-slate-900 ${
+                  compact ? 'mt-1.5 text-xl' : 'mt-2 text-2xl'
+                }`}
+              >
                 {presustentacionesDisponibles}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className={`text-xs text-slate-500 ${compact ? 'mt-0.5' : 'mt-1'}`}>
                 {presustentacionesUsadas} usadas de {presustentacionesIncluidas}
               </p>
             </div>
           </div>
 
-          <div className="mt-4 flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/70 px-4 py-3 text-sm text-slate-600">
+          <div
+            className={`flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/70 text-slate-600 ${
+              compact ? 'mt-3 px-3 py-2 text-xs' : 'mt-4 px-4 py-3 text-sm'
+            }`}
+          >
             <CalendarClock className="h-4 w-4 text-blue-600" />
             Vence el {formatDate(subscription.expira_en)}
           </div>
         </>
       ) : (
-        <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-white/70 px-4 py-4 text-sm text-slate-600">
+        <div
+          className={`rounded-2xl border border-dashed border-slate-200 bg-white/70 text-slate-600 ${
+            compact ? 'mt-3 px-3 py-3 text-xs' : 'mt-4 px-4 py-4 text-sm'
+          }`}
+        >
           <div className="flex items-center gap-2 font-semibold text-slate-800">
             <CheckCircle2 className="h-4 w-4 text-slate-500" />
-            No tienes un plan activo
+            {compact ? 'Sin plan activo' : 'No tienes un plan activo'}
           </div>
-          <p className="mt-2 leading-6">
-            Las solicitudes que no estén cubiertas por un plan seguirán el flujo
-            normal de pago cuando el asesor las acepte.
+          <p className={compact ? 'mt-1.5 leading-5' : 'mt-2 leading-6'}>
+            {compact
+              ? 'Tus solicitudes seguirán el flujo normal de pago.'
+              : 'Las solicitudes que no estén cubiertas por un plan seguirán el flujo normal de pago cuando el asesor las acepte.'}
           </p>
         </div>
       )}

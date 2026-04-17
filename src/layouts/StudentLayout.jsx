@@ -162,19 +162,6 @@ const StudentLayout = () => {
 
             <div className="flex items-center gap-4 relative" ref={menuRef}>
               <button
-                className="p-2 hover:bg-white/10 rounded-full text-slate-800"
-                aria-label="Notifications"
-              >
-                {' '}
-                <Bell size={18} />{' '}
-              </button>
-              <button
-                className="p-2 hover:bg-white/10 rounded-full text-slate-800"
-                aria-label="Settings"
-              >
-                <Settings size={18} />
-              </button>
-              <button
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
                 className="w-10 h-10 rounded-full border border-outline-variant/30 bg-white flex items-center justify-center text-slate-900 shadow-sm hover:shadow-md transition-shadow"

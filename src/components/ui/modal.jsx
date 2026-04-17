@@ -14,7 +14,7 @@ const widthMap = {
   md: 'max-w-xl',
   lg: 'max-w-3xl',
   xl: 'max-w-5xl',
-  full: 'max-w-[min(96vw,1200px)]',
+  full: 'max-w-[min(96vw,1320px)]',
 };
 
 /**
@@ -41,6 +41,12 @@ const Modal = ({
   modalWidth = 'md',
   primaryAction,
   secondaryAction,
+  showDefaultHeader = true,
+  showDefaultActions = true,
+  panelClassName = '',
+  contentClassName = '',
+  closeButtonClassName = '',
+  closeIconClassName = '',
   children,
 }) => {
   const overlayRef = useRef(null);
@@ -70,6 +76,8 @@ const Modal = ({
 
   const descClass = sizeMap[descriptionSize] || sizeMap.md;
   const modalWidthClass = widthMap[modalWidth] || widthMap.md;
+  const defaultContentClass =
+    'flex max-h-[min(88vh,960px)] flex-col gap-6 overflow-y-auto p-6 text-center sm:p-8 lg:p-10';
   const modalContent = (
     <div
       ref={overlayRef}
@@ -82,22 +90,26 @@ const Modal = ({
     >
       <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-[8px]" />
       <div
-        className={`relative z-10 w-full ${modalWidthClass} overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg animate-in fade-in zoom-in-95 duration-300`}
+        className={`relative z-10 w-full ${modalWidthClass} overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg animate-in fade-in zoom-in-95 duration-300 ${panelClassName}`}
       >
         <button
           ref={closeBtnRef}
           onClick={onClose}
-          className="absolute top-5 right-5 w-10 h-10 flex items-center justify-center rounded-full hover:bg-black/5 transition-colors"
+          className={`absolute top-5 right-5 z-20 flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-black/5 ${closeButtonClassName}`}
           aria-label="Cerrar"
         >
-          <X className="h-5 w-5 text-slate-500" />
+          <X className={`h-5 w-5 text-slate-500 ${closeIconClassName}`} />
         </button>
 
-        <div className="flex max-h-[min(88vh,960px)] flex-col gap-6 overflow-y-auto p-6 text-center sm:p-8 lg:p-10">
-          <div className="space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">{title}</h2>
-            {subtitle && <p className="text-sm font-semibold text-slate-500">{subtitle}</p>}
-          </div>
+        <div className={`${defaultContentClass} ${contentClassName}`.trim()}>
+          {showDefaultHeader && (
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">{title}</h2>
+              {subtitle && (
+                <p className="text-sm font-semibold text-slate-500">{subtitle}</p>
+              )}
+            </div>
+          )}
 
           {description && (
             <p className={`${descClass} text-slate-700 leading-relaxed max-w-xl`}>{description}</p>
@@ -105,26 +117,28 @@ const Modal = ({
 
           {children && <div className="w-full text-left">{children}</div>}
 
-          <div className="w-full flex flex-col sm:flex-row gap-3 mt-2">
-            {secondaryAction && (
-              <button
-                onClick={secondaryAction.onClick}
-                disabled={secondaryAction.disabled}
-                className="flex-1 h-12 rounded-2xl border border-slate-200 bg-white/70 text-slate-700 font-semibold hover:bg-white transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {secondaryAction.label}
-              </button>
-            )}
-            {primaryAction && (
-              <button
-                onClick={primaryAction.onClick}
-                disabled={primaryAction.disabled}
-                className="flex-1 h-12 rounded-2xl bg-primary text-white font-semibold shadow-[0_10px_25px_-5px_rgba(10,71,238,0.35)] hover:brightness-105 active:scale-[0.99] transition disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100"
-              >
-                {primaryAction.label}
-              </button>
-            )}
-          </div>
+          {showDefaultActions && (primaryAction || secondaryAction) && (
+            <div className="mt-2 flex w-full flex-col gap-3 sm:flex-row">
+              {secondaryAction && (
+                <button
+                  onClick={secondaryAction.onClick}
+                  disabled={secondaryAction.disabled}
+                  className="h-12 flex-1 rounded-2xl border border-slate-200 bg-white/70 font-semibold text-slate-700 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {secondaryAction.label}
+                </button>
+              )}
+              {primaryAction && (
+                <button
+                  onClick={primaryAction.onClick}
+                  disabled={primaryAction.disabled}
+                  className="h-12 flex-1 rounded-2xl bg-primary font-semibold text-white shadow-[0_10px_25px_-5px_rgba(10,71,238,0.35)] transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100"
+                >
+                  {primaryAction.label}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

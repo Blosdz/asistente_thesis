@@ -121,7 +121,8 @@ const LoginPage = () => {
             Accede a tu cuenta
           </h1>
           <p className="text-sm text-slate-500">
-            Ingresa para revisar avances, observaciones y tu cotización académica.
+            Ingresa para revisar avances, observaciones y tu cotización
+            académica.
           </p>
         </div>
 
@@ -161,7 +162,9 @@ const LoginPage = () => {
                 onClick={toggleResetForm}
                 className="text-[13px] font-medium text-ios-blue transition-opacity hover:opacity-80"
               >
-                {showResetForm ? 'Ocultar recuperación' : '¿Olvidaste tu contraseña?'}
+                {showResetForm
+                  ? 'Ocultar recuperación'
+                  : '¿Olvidaste tu contraseña?'}
               </button>
             </div>
             <div className="group relative">
@@ -244,7 +247,9 @@ const LoginPage = () => {
                 disabled={isResetLoading}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {isResetLoading && <Loader2 size={16} className="animate-spin" />}
+                {isResetLoading && (
+                  <Loader2 size={16} className="animate-spin" />
+                )}
                 {isResetLoading
                   ? 'Enviando enlace...'
                   : 'Enviar enlace de recuperación'}
@@ -252,25 +257,6 @@ const LoginPage = () => {
             </form>
           </div>
         )}
-
-        <div className="mt-6 rounded-2xl border border-white/70 bg-white/45 p-4 text-left">
-          <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-white/80 p-2 text-ios-blue">
-              <ShieldCheck size={18} />
-            </div>
-            <div className="space-y-2 text-sm leading-6 text-slate-600">
-              <p>
-                Tus datos se usan solo para gestionar el acceso, tus avances y la
-                experiencia dentro de AppThesis.
-              </p>
-              <p>
-                AppThesis es una herramienta de apoyo académico. Revisa siempre tu
-                trabajo y tus decisiones metodológicas.
-              </p>
-            </div>
-          </div>
-        </div>
-
         <div className="mt-8 flex flex-col gap-4 text-center">
           <p className="text-sm text-slate-500">
             ¿Aún no tienes cuenta?{' '}
@@ -285,7 +271,8 @@ const LoginPage = () => {
       </div>
 
       <footer className="fixed bottom-6 w-full text-center text-xs text-slate-400">
-        © {currentYear} AppThesis. Plataforma de apoyo para organización, cotización y avance académico.
+        © {currentYear} AppThesis. Plataforma de apoyo para organización,
+        cotización y avance académico.
       </footer>
     </div>
   );
