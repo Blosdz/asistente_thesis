@@ -470,53 +470,6 @@ export default function Services() {
   return (
     <div className="relative w-full px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-[1480px] flex-col gap-6">
-        <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_35%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.96))] p-6 shadow-[0_24px_70px_-54px_rgba(15,23,42,0.45)] sm:p-8">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.9fr)]">
-            <div className="space-y-4">
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                Servicio de pre-sustentacion
-              </span>
-              <div className="space-y-3">
-                <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-                  Ensayo de pre-sustentacion con Diego
-                </h1>
-                <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                  Esta vista es un servicio directo para Diego. Aqui reservas tu
-                  ensayo de pre-sustentacion con bloques reales, sin catalogo ni
-                  buscador de asesores.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-              <div className="rounded-2xl border border-white/90 bg-white/80 p-4 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Servicio
-                </p>
-                <p className="mt-2 text-lg font-semibold tracking-tight text-slate-950">
-                  Diego
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/90 bg-white/80 p-4 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Inversion
-                </p>
-                <p className="mt-2 text-lg font-semibold tracking-tight text-slate-950">
-                  S/ {PRICE_PEN.toFixed(2)}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/90 bg-white/80 p-4 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Bloques
-                </p>
-                <p className="mt-2 text-lg font-semibold tracking-tight text-slate-950">
-                  {loadingSlots ? '...' : `${filteredSlots.length} disponibles`}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
           <div className="space-y-5">
             <Card className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.35)]">

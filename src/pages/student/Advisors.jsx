@@ -447,51 +447,6 @@ export default function Advisors() {
   return (
     <div className="relative w-full px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-[1480px] flex-col gap-6">
-        <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.16),_transparent_35%),linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.96))] p-6 shadow-[0_24px_70px_-54px_rgba(15,23,42,0.45)] sm:p-8">
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.9fr)]">
-            <div className="space-y-4">
-              <span className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                Asesorías
-              </span>
-              <div className="space-y-3">
-                <h1 className="text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-                  Busca asesores y agenda con tus vínculos activos
-                </h1>
-                <p className="max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                  Explora perfiles, contacta asesores y solicita reuniones solo
-                  desde asesores ya conectados.
-                </p>
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
-              <div className="rounded-2xl border border-white/90 bg-white/80 p-4 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Catálogo
-                </p>
-                <p className="mt-2 text-lg font-semibold tracking-tight text-slate-950">
-                  {catalogAdvisors.length}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/90 bg-white/80 p-4 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Mis asesores
-                </p>
-                <p className="mt-2 text-lg font-semibold tracking-tight text-slate-950">
-                  {myAdvisors.length}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-white/90 bg-white/80 p-4 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Listos para reunión
-                </p>
-                <p className="mt-2 text-lg font-semibold tracking-tight text-slate-950">
-                  {readyForMeetingCount}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
 
         <AdvisorsQuickActions
           activeSection={activeSection}
