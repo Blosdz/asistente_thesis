@@ -1,21 +1,25 @@
-#sociales
-#ingenierias 
-#biomedicas
-UNIVERSIDAD OBLIGATORIO 
-CARRERA
-QUITAR COMO SIENTES ESA COSA 
+
+#sociales     # agregado
+#ingenierias    # agregado
+#biomedicas   # agregado
+UNIVERSIDAD OBLIGATORIO  # agregado
+CARRERA #agregado 
+QUITAR COMO SIENTES ESA COSA  #quitado 
+
 NIVEL DE ACOMPAÑAMIENTO OBLIGATORIO GUIA BASICA - ACOMPAÑAMIENTO Y INTEGRAL  AHI COLOCAMOS ESCENCIAL SOLO GUIA Y EL INTEGRAL 
 OPCIONAL NO ES OBLIGATORIO #arquitectura
 
-quitar valor poner un 1 revision de la viabilidad 2 proyecto de tesis 3 borrador de tesis 4 sustentacion y defensa 
+#quitar valor poner un 1 revision de la viabilidad 2 proyecto de tesis 3 borrador de tesis 4 sustentacion y defensa  HECHO 
 
-QUITAR FOOTER
+QUITAR FOOTER #quitado
 
 QUE PUEDE UTILIZAR EL ESTUDIANTE -> 
 BITACORA->
 CONTROL DE VERSIONES 
 
+#falta
 HACER UNA SEPARACION PARA LO QUE OFRECEMOS A ESTUDIANTES Y A LOS ASESORES Y AHI 
+
 
 SOLICITAR ASESOR EN GESTIONAR ACCESOS 
 

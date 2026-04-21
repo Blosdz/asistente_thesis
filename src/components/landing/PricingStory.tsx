@@ -73,18 +73,18 @@ export default function PricingStory() {
           >
             <GlassCard className="h-full p-7 md:p-8">
               <div className="flex items-start justify-between gap-4">
-                <div className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-gradient-to-br from-sky-500/15 to-blue-600/15 text-blue-700">
+                <div className="flex h-14 w-14 items-center justify-center rounded-[22px] border border-white/20 bg-white/10 text-cyan-200 backdrop-blur-md">
                   <ChartNoAxesCombined className="h-6 w-6" />
                 </div>
-                <div className="rounded-full border border-blue-100 bg-blue-50/80 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-blue-700">
+                <div className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-white/85 backdrop-blur-md">
                   Cómo se calcula
                 </div>
               </div>
 
-              <h3 className="mt-6 text-3xl font-semibold text-slate-950">
+              <h3 className="mt-6 text-3xl font-semibold text-white">
                 Especificaciones de la cotización
               </h3>
-              <p className="mt-4 text-base leading-8 text-slate-600">
+              <p className="mt-4 text-base leading-8 text-white/72">
                 La cotización se orienta por el tipo de estudio, el nivel académico,
                 las variables, la estadística requerida y los servicios adicionales.
               </p>
@@ -93,10 +93,10 @@ export default function PricingStory() {
                 {pricingSpecs.map((spec) => (
                   <div
                     key={spec.title}
-                    className="rounded-[22px] border border-white/70 bg-white/72 px-4 py-4"
+                    className="rounded-[22px] border border-white/20 bg-white/10 px-4 py-4 backdrop-blur-md"
                   >
-                    <p className="text-sm font-semibold text-slate-900">{spec.title}</p>
-                    <p className="mt-2 text-sm leading-7 text-slate-600">
+                    <p className="text-sm font-semibold text-white">{spec.title}</p>
+                    <p className="mt-2 text-sm leading-7 text-white/65">
                       {spec.details}
                     </p>
                   </div>
@@ -122,13 +122,13 @@ export default function PricingStory() {
                   }}
                 >
                   <GlassCard hover className="h-full p-7">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-[22px] bg-gradient-to-br from-sky-500/15 to-blue-600/15 text-blue-700">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-[22px] border border-white/20 bg-white/10 text-cyan-200 backdrop-blur-md">
                       <Icon className="h-6 w-6" />
                     </div>
-                    <h3 className="mt-6 text-2xl font-semibold text-slate-950">
+                    <h3 className="mt-6 text-2xl font-semibold text-white">
                       {benefit.title}
                     </h3>
-                    <p className="mt-4 text-base leading-8 text-slate-600">
+                    <p className="mt-4 text-base leading-8 text-white/72">
                       {benefit.description}
                     </p>
                   </GlassCard>

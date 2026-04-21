@@ -12,30 +12,30 @@ import SectionHeading from '../ui/SectionHeading';
 const trustCards = [
   {
     value: '01',
-    title: 'Más claridad metodológica',
+    title: 'Revisión de la viabilidad',
     description:
-      'La plataforma organiza la información de tu tesis para que cada decisión tenga más criterio.',
+      'Evaluamos el tema, enfoque y metodología de tu propuesta para asegurar que es viable y tiene bases sólidas.',
     icon: ChartNoAxesCombined,
   },
   {
     value: '02',
-    title: 'Mejor organización del proceso',
+    title: 'Proyecto de tesis',
     description:
-      'Entregables, observaciones y tareas quedan mejor organizados y menos dispersos.',
+      'Desarrollamos un proyecto estructurado con objetivos claros, cronograma realista y definición de alcances.',
     icon: ClipboardCheck,
   },
   {
     value: '03',
-    title: 'Seguimiento más visible',
+    title: 'Borrador de tesis',
     description:
-      'El avance deja de sentirse abstracto porque cada paso se convierte en decisiones y estado concreto.',
+      'Acompañamos la redacción de tu tesis con revisión de contenido, estructura académica y coherencia metodológica.',
     icon: CheckCircle2,
   },
   {
     value: '04',
-    title: 'Preparación más real para la sustentación',
+    title: 'Sustentación y defensa',
     description:
-      'El cierre se apoya con extras y acompañamiento para llegar mejor preparado al momento final.',
+      'Preparamos tu presentación y argumentación para que llegues a la defensa con confianza y criterio.',
     icon: ShieldCheck,
   },
 ];
@@ -45,9 +45,9 @@ export default function TrustSection() {
     <section id="trust" className="px-4 py-28 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <SectionHeading
-          eyebrow="Valor"
-          title="Una experiencia pensada para reducir ruido y aumentar criterio."
-          description="Cada bloque del producto busca que la tesis se sienta más entendible: menos incertidumbre, más visibilidad y mejor preparación para decisiones importantes."
+          eyebrow="Proceso"
+          title="Cuatro etapas estructuradas hacia tu tesis exitosa."
+          description="Desde la viabilidad del tema hasta la sustentación, cada etapa está diseñada para aumentar tu criterio y confianza en el proceso."
           align="center"
         />
 
@@ -69,18 +69,18 @@ export default function TrustSection() {
               >
                 <GlassCard hover className="h-full p-6">
                   <div className="flex items-center justify-between gap-3">
-                    <div className="text-4xl font-display text-slate-950">
+                    <div className="text-4xl font-display text-white">
                       {card.value}
                     </div>
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500/15 to-blue-600/15 text-blue-700">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-cyan-200 backdrop-blur-md">
                       <Icon className="h-5 w-5" />
                     </div>
                   </div>
 
-                  <h3 className="mt-6 text-xl font-semibold text-slate-950">
+                  <h3 className="mt-6 text-xl font-semibold text-white">
                     {card.title}
                   </h3>
-                  <p className="mt-4 text-sm leading-7 text-slate-600">
+                  <p className="mt-4 text-sm leading-7 text-white/72">
                     {card.description}
                   </p>
                 </GlassCard>

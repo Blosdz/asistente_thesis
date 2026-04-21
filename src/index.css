@@ -196,12 +196,52 @@ body::after {
 
 @layer components {
   .glass-card {
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(12px) saturate(160%);
-    -webkit-backdrop-filter: blur(12px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 60px rgba(2, 6, 23, 0.28);
+    color: rgba(255, 255, 255, 0.7);
     @apply rounded-3xl p-6 transition-all duration-500;
+  }
+
+  .glass-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06) 42%, transparent 72%);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .glass-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
+    opacity: 1;
+    pointer-events: none;
+  }
+
+  .glass-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .glass-card:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 26px 72px rgba(2, 6, 23, 0.34);
+  }
+
+  .glass-card :is(h1, h2, h3, h4, h5, h6, p, small, li, dt, dd, label) {
+    color: inherit;
+  }
+
+  .glass-card svg {
+    color: rgba(255, 255, 255, 0.82);
   }
 
   .liquid-glass-dark {
@@ -338,30 +378,57 @@ body::after {
 
  .glass {
     position: relative;
-   background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(248, 250, 252, 0.86));
+    isolation: isolate;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1);
     border-radius: 20px;
-    backdrop-filter: blur(15px) saturate(140%);
-    -webkit-backdrop-filter: blur(15px) saturate(140%);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.7);
+    transition:
+      border-color 220ms ease,
+      color 220ms ease,
+      transform 220ms ease,
+      box-shadow 220ms ease;
+    box-shadow: 0 20px 60px rgba(2, 6, 23, 0.28);
   }
 
   .glass::before {
     content: "";
     position: absolute;
     inset: 0;
-    padding: 1px; /* grosor del borde */
-    border-radius: inherit;
-    background: linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0.714),   /* #fff */
-        rgba(170, 170, 170, 0.581)       /* #1B1919 con transparencia */
-      );
-    -webkit-mask: 
-      linear-gradient(#000 0 0) content-box, 
-      linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06) 42%, transparent 72%);
+    opacity: 0.7;
     pointer-events: none;
   } 
+
+  .glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
+    opacity: 1;
+    pointer-events: none;
+  }
+
+  .glass > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .glass:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 26px 72px rgba(2, 6, 23, 0.34);
+  }
+
+  .glass :is(h1, h2, h3, h4, h5, h6, p, small, li, dt, dd, label) {
+    color: inherit;
+  }
+
+  .glass svg {
+    color: rgba(255, 255, 255, 0.82);
+  }
 
   .glass-strong {
     background: var(--glass-strong);
@@ -696,5 +763,99 @@ body.landing-page::after {
   .landing-typing-dot,
   .landing-fade-in {
     animation: none !important;
+  }
+}
+
+@layer components {
+  .landing-panel {
+    @apply relative overflow-hidden border border-white/20 bg-white/10 text-white/70 backdrop-blur-md transition-[border-color,color,transform,box-shadow] duration-300;
+    isolation: isolate;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 18px 60px rgba(2, 6, 23, 0.32);
+  }
+
+  .landing-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06) 42%, transparent 72%);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+
+  .landing-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to right, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6));
+    opacity: 1;
+    pointer-events: none;
+  }
+
+  .landing-panel > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .landing-panel :is(h1, h2, h3, h4, h5, h6, p, small, li, dt, dd, label) {
+    color: inherit;
+  }
+
+  .landing-panel svg {
+    color: rgba(255, 255, 255, 0.82);
+  }
+}
+
+body.landing-page {
+  background: #020611;
+  color: #e2e8f0;
+}
+
+body.landing-page::before {
+  display: block;
+  background:
+    radial-gradient(680px circle at 16% 18%, rgba(14, 165, 233, 0.12) 0%, transparent 50%),
+    radial-gradient(720px circle at 78% 14%, rgba(37, 99, 235, 0.2) 0%, transparent 48%),
+    radial-gradient(640px circle at 52% 78%, rgba(15, 23, 42, 0.45) 0%, transparent 52%);
+  filter: blur(48px);
+}
+
+body.landing-page::after {
+  display: block;
+  background:
+    radial-gradient(780px circle at 70% 44%, rgba(56, 189, 248, 0.08) 0%, transparent 48%),
+    radial-gradient(620px circle at 24% 72%, rgba(14, 165, 233, 0.08) 0%, transparent 46%);
+  filter: blur(44px);
+}
+
+.landing-shell-dark {
+  color: #e2e8f0;
+}
+
+.landing-noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 140px 140px;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  body.landing-page *,
+  body.landing-page *::before,
+  body.landing-page *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }

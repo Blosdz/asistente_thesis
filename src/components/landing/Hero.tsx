@@ -37,50 +37,6 @@ const floatingFeatures = [
   },
 ];
 
-const howItWorks = [
-  {
-    number: '1',
-    title: 'Cuéntanos tu tema',
-    description: 'Describe tu proyecto y nivel académico',
-  },
-  {
-    number: '2',
-    title: 'Recibe retroalimentación',
-    description: 'Asesorías personalizadas en 48h',
-  },
-  {
-    number: '3',
-    title: 'Avanza y defiende',
-    description: 'Con claridad y confianza',
-  },
-];
-
-const userFeedback = [
-  {
-    name: 'Tesista anónima',
-    stage: 'Asesoría metodológica',
-    comment:
-      'Me ayudaron a ordenar mi tesis desde el inicio y por fin avancé con claridad.',
-  },
-  {
-    name: 'Tesista anónimo',
-    stage: 'Pre sustentación',
-    comment:
-      'Llegué a mi pre sustentación con una estructura mucho más sólida y segura.',
-  },
-  {
-    name: 'Tesista anónima',
-    stage: 'Sustentación final',
-    comment:
-      'Resolví mis observaciones y defendí mi trabajo con mucha más seguridad.',
-  },
-  {
-    name: 'Tesista anónimo',
-    stage: 'Asesoría y cierre',
-    comment:
-      'Sentí acompañamiento real en cada avance y mi cierre fue mucho más ordenado.',
-  },
-];
 
 export default function Hero({ onNavigate }) {
   return (
@@ -202,85 +158,6 @@ export default function Hero({ onNavigate }) {
 
         </div>
       </section>
-
-      {/* AREA DE FEEDBACK DE USUARIOS*/}
-      {/* INSTRUCCIONES PARA AGENTES DE IA TODO ESTE APARTADO DE COMENTARIOS DE USUARIOS TIENE QUE SER UN CARD AMPLIO DE TODO EL WIDTH DE LA PANTALLA EN AL QUE SE MUESTRA COMO MINIMO 4 COMENTARIOS POSITIVOS SOBRE LOS ASESORSES SUSTENATAICONES Y PRES SUSTENTACIONES EL ESTILO DE LA CARTA ES UN CARD CON UN ICONO DEL USUARIO MASCULINO O FEMENINO EN ANONIMATO UN lucide icon de  <UserRound />*/}
-      <section className="relative left-1/2 right-1/2 w-screen -translate-x-1/2 px-4 py-16 sm:px-6 lg:px-8">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0.62),rgba(239,246,255,0.88))]"
-        />
-
-        <div className="relative mx-auto max-w-7xl border-y border-white/70 py-12">
-          <div className="mx-auto max-w-2xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
-              Testimonios
-            </p>
-            <h3 className="mt-4 text-3xl font-semibold text-slate-950 sm:text-4xl">
-              1000 usuarios, una experiencia más clara para avanzar tu tesis
-            </h3>
-          </div>
-
-          <div className="mt-12 grid gap-10 sm:grid-cols-2 xl:grid-cols-4">
-            {userFeedback.map((item, index) => (
-              <article
-                key={`${item.name}-${item.stage}-${index}`}
-                className="flex flex-col items-center text-center"
-              >
-                <div className="flex h-20 w-20 items-center justify-center rounded-full border border-white/80 bg-white/82 text-sky-700 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur-md">
-                  <UserRound className="h-8 w-8" />
-                </div>
-
-                <p className="mt-5 text-sm font-semibold text-slate-950">{item.name}</p>
-                <p className="mt-1 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">
-                  {item.stage}
-                </p>
-                <p className="mt-4 max-w-[17rem] text-sm leading-7 text-slate-600">
-                  {item.comment}
-                </p>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS SECTION */}
-      <section className="relative px-4 py-20 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-16">
-            <h2 className="text-center text-3xl font-semibold text-slate-950 sm:text-4xl">
-              Cómo funciona en 3 pasos
-            </h2>
-            <p className="mt-4 text-center text-base text-slate-600">
-              Desde tu idea hasta defensa exitosa
-            </p>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-3">
-            {howItWorks.map((step, idx) => (
-              <div key={step.number} className="relative">
-                {/* Connector Line */}
-                {idx < howItWorks.length - 1 && (
-                  <div className="absolute -right-4 top-8 hidden h-1 w-8 bg-gradient-to-r from-sky-500 to-transparent sm:block" />
-                )}
-
-                <div className="rounded-2xl border border-white/70 bg-white/55 p-6 backdrop-blur-xl transition-all hover:border-sky-200 hover:bg-white/70">
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-sky-100 to-blue-100 text-xl font-bold text-sky-600">
-                    {step.number}
-                  </div>
-                  <h3 className="mb-2 text-lg font-semibold text-slate-950">
-                    {step.title}
-                  </h3>
-                  <p className="text-sm leading-6 text-slate-600">
-                    {step.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
     </>
   );
 }

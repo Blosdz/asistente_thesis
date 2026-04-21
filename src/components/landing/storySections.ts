@@ -6,10 +6,9 @@ export type StorySectionConfig = {
 
 export const storySections: StorySectionConfig[] = [
   { id: 'hero', label: 'Inicio', shortLabel: 'Inicio' },
-  { id: 'how-it-works', label: 'Flujo', shortLabel: 'Flujo' },
-  { id: 'pricing-story', label: 'Precio', shortLabel: 'Precio' },
-  { id: 'plans', label: 'Planes', shortLabel: 'Planes' },
-  { id: 'ai-showcase', label: 'Asistente', shortLabel: 'IA' },
-  { id: 'trust', label: 'Valor', shortLabel: 'Valor' },
+  { id: 'como-funciona', label: 'Cómo funciona', shortLabel: 'Flujo' },
+  { id: 'planes', label: 'Planes', shortLabel: 'Planes' },
+  { id: 'asesores', label: 'Asesores', shortLabel: 'Asesores' },
+  { id: 'resultados', label: 'Resultados', shortLabel: 'Resultados' },
   { id: 'final-cta', label: 'Cierre', shortLabel: 'Final' },
 ];

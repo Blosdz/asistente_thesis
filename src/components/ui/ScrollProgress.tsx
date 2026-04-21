@@ -35,10 +35,10 @@ export default function ScrollProgress() {
 
   return (
     <>
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-[80] h-px bg-slate-200/80" />
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[80] h-px bg-white/10" />
       <div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 top-0 z-[90] h-[2px] origin-left bg-gradient-to-r from-sky-500 via-blue-600 to-slate-950"
+        className="pointer-events-none fixed inset-x-0 top-0 z-[90] h-[2px] origin-left bg-gradient-to-r from-cyan-300 via-sky-500 to-blue-600"
         style={{ transform: `scaleX(${progress})` }}
       />
     </>

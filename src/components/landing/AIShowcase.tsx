@@ -61,22 +61,22 @@ export default function AIShowcase() {
 
           <GlassCard className="p-5 sm:p-6 lg:p-8">
             <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="rounded-[28px] border border-white/70 bg-white/72 p-5 sm:p-6">
-                <div className="flex items-center justify-between gap-4 border-b border-white/60 pb-5">
+              <div className="rounded-[28px] border border-white/20 bg-white/10 p-5 backdrop-blur-md sm:p-6">
+                <div className="flex items-center justify-between gap-4 border-b border-white/15 pb-5">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-950 to-blue-700 text-white">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-cyan-200 backdrop-blur-md">
                       <Bot className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">
+                      <p className="text-sm font-semibold text-white">
                         AppThesis Assistant
                       </p>
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-white/58">
                         Guía metodológica contextual
                       </p>
                     </div>
                   </div>
-                  <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  <div className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-1 text-xs font-semibold text-emerald-200 backdrop-blur-md">
                     En linea
                   </div>
                 </div>
@@ -97,7 +97,7 @@ export default function AIShowcase() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.28 }}
                     transition={{ duration: 0.4, delay: 0.08, ease: 'easeOut' }}
-                    className="max-w-[86%] rounded-[24px] rounded-tl-md border border-white/70 bg-white/80 px-5 py-4 text-sm leading-7 text-slate-700"
+                    className="max-w-[86%] rounded-[24px] rounded-tl-md border border-white/20 bg-white/10 px-5 py-4 text-sm leading-7 text-white/78 backdrop-blur-md"
                   >
                     Puedo ayudarte a ordenar tu avance, priorizar pendientes y
                     sugerirte el plan que mejor encaja con el nivel de acompañamiento
@@ -109,7 +109,7 @@ export default function AIShowcase() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.25 }}
                     transition={{ duration: 0.35, delay: 0.16, ease: 'easeOut' }}
-                    className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/70 px-4 py-3 text-sm font-medium text-slate-600"
+                    className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-3 text-sm font-medium text-white/72 backdrop-blur-md"
                   >
                     <span className="landing-typing-dot" />
                     <span className="landing-typing-dot delay-200" />
@@ -130,9 +130,9 @@ export default function AIShowcase() {
                         delay: 0.16 + index * 0.05,
                         ease: [0.16, 1, 0.3, 1],
                       }}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/70 bg-gradient-to-r from-white/80 to-blue-50/70 px-4 py-2.5 text-sm font-medium text-slate-700"
+                      className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-medium text-white/78 backdrop-blur-md"
                     >
-                      <MessageSquareText className="h-4 w-4 text-blue-600" />
+                      <MessageSquareText className="h-4 w-4 text-cyan-200" />
                       {chip}
                     </motion.div>
                   ))}
@@ -142,14 +142,14 @@ export default function AIShowcase() {
               <div className="grid gap-5">
                 <GlassCard className="rounded-[28px] p-6">
                   <div className="flex items-start gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500/15 to-blue-600/15 text-blue-700">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-cyan-200 backdrop-blur-md">
                       <BrainCircuit className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-slate-900">
+                      <p className="text-sm font-semibold text-white">
                         Acciones sugeridas
                       </p>
-                      <p className="mt-1 text-sm leading-7 text-slate-600">
+                      <p className="mt-1 text-sm leading-7 text-white/68">
                         Recomendaciones de siguiente paso según el estado del
                         proyecto y el nivel de acompañamiento.
                       </p>
@@ -166,23 +166,23 @@ export default function AIShowcase() {
                       <button
                         key={item}
                         type="button"
-                        className="flex w-full items-center justify-between rounded-[20px] border border-white/70 bg-white/72 px-4 py-4 text-left text-sm font-medium text-slate-700 transition-all duration-300 hover:bg-white/86"
+                        className="flex w-full items-center justify-between rounded-[20px] border border-white/20 bg-white/10 px-4 py-4 text-left text-sm font-medium text-white/78 backdrop-blur-md transition-all duration-300 hover:border-white/35 hover:text-white"
                       >
                         {item}
-                        <ChevronRight className="h-4 w-4 text-blue-600" />
+                        <ChevronRight className="h-4 w-4 text-cyan-200" />
                       </button>
                     ))}
                   </div>
                 </GlassCard>
 
                 <GlassCard className="rounded-[28px] p-6">
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-white/55">
                     Apoyo claro
                   </p>
-                  <p className="mt-3 text-2xl font-semibold text-slate-950">
+                  <p className="mt-3 text-2xl font-semibold text-white">
                     Una ayuda que orienta el proceso.
                   </p>
-                  <p className="mt-4 text-base leading-8 text-slate-600">
+                  <p className="mt-4 text-base leading-8 text-white/72">
                     El asistente conecta dudas, observaciones y organización real del
                     trabajo para que siempre tengas más claridad sobre cómo seguir.
                   </p>
