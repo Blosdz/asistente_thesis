@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   motion,
   useReducedMotion,
@@ -12,7 +12,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 
-import { heroStats, heroValueProps } from './landingData';
+import appIcon from '../../../page-icon.png';
+import { heroStats, heroValueProps, heroVideoSrc } from './landingData';
 import { useStoryScroll } from './SmoothScrollProvider';
 import { MediaOverlay } from '../ui/cardPrimitives';
 
@@ -21,12 +22,7 @@ export default function HeroSection() {
   const { scrollToSection } = useStoryScroll();
   const { scrollYProgress } = useScroll();
   const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  const orbY = useTransform(
-    scrollYProgress,
-    [0, 0.18],
-    [0, prefersReducedMotion ? 0 : 28],
-  );
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   const videoY = useTransform(
     scrollYProgress,
@@ -34,12 +30,19 @@ export default function HeroSection() {
     [0, prefersReducedMotion ? 0 : -28],
   );
 
-  const heroVideoSrc =
-    'https://www.dropbox.com/scl/fi/hi1wfmjswag4lhvlpy4go/hero_video.mp4?rlkey=sgau15k7zh4o1smovxg0h8n9f&st=fkxsk9er&raw=1';
-
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    // Show video immediately when metadata is loaded
+    const handleLoadedMetadata = () => {
+      setVideoLoaded(true);
+    };
+
+    // Fallback: show after a maximum wait time
+    const timeoutId = setTimeout(() => {
+      setVideoLoaded(true);
+    }, 2000);
 
     const playVideo = async () => {
       try {
@@ -47,25 +50,24 @@ export default function HeroSection() {
         video.playsInline = true;
         await video.play();
       } catch {
-        // Autoplay can fail on some browsers. The poster/fallback background still works.
+        // Autoplay can fail on some browsers
       }
     };
 
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
     void playVideo();
+
+    return () => {
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return (
     <section
       id="hero"
-      className="relative isolate flex min-h-[100svh] items-center overflow-hidden  px-4 pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 lg:px-8 lg:pt-36  bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(224,239,255,0.72)_42%,rgba(191,219,254,0.78)_100%)]"
+      className="relative flex min-h-[100svh] items-center px-4 pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 lg:px-8 lg:pt-36"
     >
-
-      <motion.div
-        aria-hidden="true"
-        style={{ y: orbY }}
-        className="pointer-events-none absolute inset-x-0 top-10 -z-10 mx-auto h-[34rem] max-w-6xl rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.94),rgba(59,130,246,0.16)_34%,rgba(2,132,199,0.12)_62%,transparent_74%)] blur-3xl"
-      />
-
       <div className="relative mx-auto flex w-full max-w-7xl items-center">
         <div className="grid min-h-[calc(100svh-9rem)] w-full content-center gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:gap-14">
           {/* Left content */}
@@ -96,22 +98,17 @@ export default function HeroSection() {
             </h1>
 
             <p className="mt-8 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
-              Cotización clara, orden en tus avances y defensa</p>
+              AppThesis te ayuda a definir el alcance, ordenar el proceso y avanzar con una ruta clara desde el inicio.
+            </p>
 
-            {/* Bottom value props */}
-            <div className="mt-10 grid gap-5 rounded-[32px] border border-white bg-white/40 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)] backdrop-blur-xl sm:grid-cols-3">
-              {heroValueProps.map((item, index) => (
-                <div
-                  key={item.title}
-                  className={index !== 0 ? 'sm:border-l sm:border-slate-200 sm:pl-5' : ''}
-                >
-                  <p className="text-sm font-bold text-slate-600">
-                    {item.title}
-                  </p>
-
-                </div>
-              ))}
-            </div>
+            <button
+              type="button"
+              onClick={() => scrollToSection('assessment-funnel')}
+              className="mt-9 inline-flex items-center gap-3 rounded-full border border-slate-950 bg-slate-950 px-6 py-3 text-sm font-semibold text-white shadow-[0_18px_42px_rgba(15,23,42,0.22)] transition duration-300 hover:-translate-y-0.5 hover:bg-slate-900 hover:shadow-[0_22px_50px_rgba(15,23,42,0.26)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white"
+            >
+              Cotizar plan
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
 
           {/* Right visual */}
@@ -119,7 +116,29 @@ export default function HeroSection() {
             style={{ y: videoY }}
             className="relative hidden lg:block"
           >
-            <div className="relative h-[590px] overflow-hidden rounded-[38px] border border-white/70 bg-slate-100 shadow-[0_34px_90px_rgba(15,23,42,0.16)]">
+          <div className="absolute left-1/2 top-0 z-20 -translate-x-1/2 -translate-y-1/3">
+            <div className="flex items-center gap-3 rounded-[30px] border border-white/80 bg-white/70 px-4 py-3 backdrop-blur-2xl shadow-[0_24px_70px_rgba(15,23,42,0.22),inset_0_1px_0_rgba(255,255,255,0.9)]">
+              
+              {/* Icon */}
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-white/60 shadow-inner">
+                <img
+                  src={appIcon}
+                  alt="AppThesis"
+                  className="h-10 w-10 object-contain"
+                />
+              </div>
+          
+              {/* Badge text */}
+              <div className="flex flex-col leading-tight">
+                <span className="text-sm font-semibold text-slate-800">
+                  IA Estructural para Tesis
+                </span>
+              </div>
+          
+            </div>
+          </div>
+
+            <div className="relative h-[590px] overflow-hidden rounded-[38px] border border-white/70 bg-gradient-to-br from-slate-200 to-slate-100 shadow-[0_34px_90px_rgba(15,23,42,0.16)]">
               <video
                 ref={videoRef}
                 autoPlay
@@ -128,6 +147,7 @@ export default function HeroSection() {
                 playsInline
                 preload="metadata"
                 className="absolute inset-0 h-full w-full object-cover"
+                style={{ display: videoLoaded ? 'block' : 'none' }}
               >
                 <source src={heroVideoSrc} type="video/mp4" />
               </video>

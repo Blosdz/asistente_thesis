@@ -251,11 +251,11 @@ const MyThesis = () => {
 
         {/* Modal Creating Empty State */}
         {showCreateModal && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-md">
+          <div className="ios-overlay fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <div className="glass-card p-8 max-w-md w-full relative animate-in zoom-in-95 duration-200">
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-white/20 rounded-full transition-colors"
+                className="ios-secondary-button absolute top-4 right-4 rounded-full p-2 text-gray-400 transition-colors hover:text-gray-700"
                 title="Cerrar"
               >
                 <X size={24} />
@@ -577,11 +577,11 @@ const MyThesis = () => {
 
       {/* Modal Creating over active layout */}
       {showCreateModal && thesesList.length > 0 && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-md">
+        <div className="ios-overlay fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div className="glass-card p-8 max-w-md w-full relative animate-in zoom-in-95 duration-200">
             <button
               onClick={() => setShowCreateModal(false)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-white/20 rounded-full transition-colors"
+              className="ios-secondary-button absolute top-4 right-4 rounded-full p-2 text-gray-400 transition-colors hover:text-gray-700"
               title="Cerrar"
             >
               <X size={24} />
@@ -629,11 +629,11 @@ const MyThesis = () => {
       )}
 
       {showPreviewModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-md">
+        <div className="ios-overlay fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div className="glass-card w-full max-w-6xl h-[85vh] flex flex-col p-6 relative animate-in zoom-in-95 duration-200">
             <button
               onClick={() => setShowPreviewModal(false)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-white/20 rounded-full transition-colors"
+              className="ios-secondary-button absolute top-4 right-4 rounded-full p-2 text-gray-400 transition-colors hover:text-gray-700"
               title="Cerrar"
             >
               <X size={24} />
@@ -808,11 +808,11 @@ const MyThesis = () => {
       )}
 
       {showSuggestionsModal && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-md">
+        <div className="ios-overlay fixed inset-0 z-[9999] flex items-center justify-center p-4">
           <div className="glass-card w-full max-w-2xl max-h-[85vh] flex flex-col p-6 relative animate-in zoom-in-95 duration-200 overflow-hidden">
             <button
               onClick={() => setShowSuggestionsModal(false)}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-700 hover:bg-white/20 rounded-full transition-colors"
+              className="ios-secondary-button absolute top-4 right-4 rounded-full p-2 text-gray-400 transition-colors hover:text-gray-700"
               title="Cerrar"
             >
               <X size={24} />

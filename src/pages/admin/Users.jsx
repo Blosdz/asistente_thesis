@@ -16,7 +16,7 @@ const ROLE_OPTIONS = [
 const roleBadgeClass = (role) => {
   switch (role) {
     case 'admin':
-      return 'bg-slate-900 text-white';
+      return 'ios-pill-active';
     case 'asesor':
       return 'bg-blue-50 text-blue-700';
     case 'estudiante':
@@ -143,7 +143,7 @@ const AdminUsers = () => {
             type="button"
             onClick={loadUsers}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
+            className="ios-accent-button inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Actualizar

@@ -168,11 +168,11 @@ const AdvisorProfile = () => {
           <div className="glass-card flex flex-col items-center text-center gap-6 p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-ios-blue/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
 
-            <div className="w-32 h-32 rounded-full bg-slate-800 flex items-center justify-center text-white font-bold text-4xl uppercase relative z-10 shadow-2xl">
+            <div className="ios-avatar-glass relative z-10 flex h-32 w-32 items-center justify-center rounded-full text-4xl font-bold uppercase">
               {displayInitial}
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="absolute bottom-0 right-0 bg-ios-blue text-white p-2.5 rounded-full hover:scale-110 transition-transform shadow-xl border-4 border-white"
+                className="ios-accent-button absolute bottom-0 right-0 rounded-full border-4 border-white p-2.5 transition-transform hover:scale-110"
               >
                 <Edit2 size={16} />
               </button>

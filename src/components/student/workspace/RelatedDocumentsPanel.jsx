@@ -47,7 +47,7 @@ export default function RelatedDocumentsPanel({
             Documentos relacionados
           </h3>
         </div>
-        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">
+        <span className="rounded-full border border-white/70 bg-white/72 px-3 py-1 text-xs font-medium text-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.88)]">
           {documents.length}
         </span>
       </div>
@@ -70,7 +70,7 @@ export default function RelatedDocumentsPanel({
                 onClick={() => onSelectDocument(doc)}
                 className={`w-full rounded-[20px] px-4 py-4 text-left transition ${
                   isActive
-                    ? 'bg-slate-950 text-white shadow-[0_20px_45px_-30px_rgba(15,23,42,0.8)]'
+                    ? 'border border-white/80 bg-[linear-gradient(180deg,rgba(232,242,255,0.96)_0%,rgba(214,233,255,0.86)_100%)] text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_18px_36px_rgba(125,168,214,0.18)]'
                     : 'bg-slate-50 text-slate-900 hover:bg-slate-100'
                 }`}
               >
@@ -79,7 +79,7 @@ export default function RelatedDocumentsPanel({
                     <div
                       className={`mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl ${
                         isActive
-                          ? 'bg-white/10 text-white'
+                          ? 'border border-white/80 bg-white/76 text-sky-700'
                           : 'bg-white text-slate-600 shadow-[0_12px_26px_-24px_rgba(15,23,42,0.5)]'
                       }`}
                     >
@@ -92,7 +92,7 @@ export default function RelatedDocumentsPanel({
                       </p>
                       <div
                         className={`mt-2 flex flex-wrap items-center gap-3 text-xs ${
-                          isActive ? 'text-white/70' : 'text-slate-500'
+                          isActive ? 'text-slate-500' : 'text-slate-500'
                         }`}
                       >
                         <span className="inline-flex items-center gap-1.5">
@@ -112,7 +112,7 @@ export default function RelatedDocumentsPanel({
                       onClick={(event) => event.stopPropagation()}
                       className={`inline-flex h-9 w-9 items-center justify-center rounded-lg transition ${
                         isActive
-                          ? 'bg-white/10 text-white hover:bg-white/15'
+                          ? 'border border-white/80 bg-white/78 text-sky-700 hover:bg-white'
                           : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800'
                       }`}
                       title="Abrir documento"

@@ -156,7 +156,7 @@ const ResetPasswordPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-ios-bg px-6 py-10">
+    <div className="auth-shell relative min-h-screen overflow-hidden px-6 py-10">
       <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
         <div
           className="absolute left-[-10%] top-[-10%] h-[50vw] w-[50vw] rounded-full opacity-50 mix-blend-multiply blur-[100px]"
@@ -186,7 +186,7 @@ const ResetPasswordPage = () => {
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-[460px] items-center">
-        <div className="w-full rounded-3xl bg-white/70 p-8 shadow-[0_25px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-10">
+        <div className="glass-card-login w-full sm:p-10">
           <Link
             to="/login"
             className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-slate-700"

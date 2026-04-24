@@ -25,7 +25,7 @@ export default function PaymentMethodSelector({
             }`}
           >
             {active && (
-              <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-slate-950 text-white">
+              <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full border border-white/80 bg-white/80 text-sky-700 shadow-[0_8px_18px_rgba(125,168,214,0.18)]">
                 <Check className="h-3 w-3" />
               </span>
             )}

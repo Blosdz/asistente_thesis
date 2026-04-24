@@ -136,7 +136,7 @@ export default function VoucherUploadGatewayModal({
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-[16px] bg-white text-slate-600 shadow-sm transition group-hover:bg-slate-950 group-hover:text-white">
+            <div className="flex h-12 w-12 items-center justify-center rounded-[16px] border border-white/80 bg-white/82 text-slate-600 shadow-sm transition group-hover:bg-white group-hover:text-sky-700">
               <FileUp className="h-5 w-5" />
             </div>
             <div>
@@ -210,43 +210,43 @@ export default function VoucherUploadGatewayModal({
       modalWidth="full"
       showDefaultHeader={false}
       showDefaultActions={false}
-      panelClassName="rounded-[32px] border-none shadow-[0_35px_110px_-62px_rgba(15,23,42,0.75)]"
+      panelClassName="rounded-[32px] border-none shadow-[0_35px_110px_-62px_rgba(148,163,184,0.28)]"
       contentClassName="max-h-[min(92vh,980px)] overflow-y-auto p-0 text-left"
-      closeButtonClassName="top-4 right-4 bg-white/12 hover:bg-white/20"
-      closeIconClassName="text-white"
+      closeButtonClassName="top-4 right-4"
+      closeIconClassName="text-slate-600"
     >
       <div className="overflow-hidden">
-        <section className="bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-6 py-6 text-white sm:px-7 sm:py-7">
+        <section className="bg-[linear-gradient(180deg,rgba(255,255,255,0.86)_0%,rgba(235,244,255,0.72)_100%)] px-6 py-6 text-slate-900 sm:px-7 sm:py-7">
           <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
             <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-200">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/76 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
                 <BadgeCheck className="h-3.5 w-3.5" />
                 Pago pendiente de validación
               </div>
 
               <div className="space-y-2">
-                <h3 className="max-w-2xl text-[22px] font-semibold tracking-tight text-white sm:text-[24px]">
+                <h3 className="max-w-2xl text-[22px] font-semibold tracking-tight text-slate-900 sm:text-[24px]">
                   Sube tu voucher de pago
                 </h3>
-                <p className="max-w-2xl text-sm leading-6 text-slate-300">
+                <p className="max-w-2xl text-sm leading-6 text-slate-600">
                   Selecciona el método, añade la referencia de operación y carga
                   el comprobante.
                 </p>
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-white/10 bg-white/10 p-5 backdrop-blur-md">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-300">
+            <div className="rounded-[24px] border border-white/80 bg-white/72 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_16px_34px_rgba(148,163,184,0.14)] backdrop-blur-md">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">
                 Monto asociado
               </p>
-              <p className="mt-2 text-[30px] font-semibold tracking-tight text-white">
+              <p className="mt-2 text-[30px] font-semibold tracking-tight text-slate-900">
                 {amount}
               </p>
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-300">
-                <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1">
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                <span className="rounded-full border border-white/80 bg-white/78 px-3 py-1">
                   Pago ID {payment.pago_id}
                 </span>
-                <span className="rounded-full border border-white/10 bg-white/8 px-3 py-1">
+                <span className="rounded-full border border-white/80 bg-white/78 px-3 py-1">
                   {payment.concepto || 'Pago'}
                 </span>
               </div>
@@ -295,7 +295,7 @@ export default function VoucherUploadGatewayModal({
                 })
               }
               disabled={uploading}
-              className="flex-1 rounded-[16px] bg-primary px-5 py-3.5 text-sm font-semibold text-white shadow-[0_18px_40px_-22px_rgba(10,71,238,0.45)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100"
+              className="ios-accent-button flex-1 rounded-[16px] px-5 py-3.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
             >
               {primaryLabel}
             </button>

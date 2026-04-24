@@ -692,14 +692,14 @@ export default function AdvisorCalendar() {
             </div>
 
             <Button
-              className="group inline-flex w-full items-center justify-between rounded-2xl bg-blue-600 px-5 py-4 transition-colors hover:bg-blue-700 sm:w-auto sm:min-w-[220px]"
+              className="ios-accent-button group inline-flex w-full items-center justify-between rounded-2xl px-5 py-4 transition-colors sm:w-auto sm:min-w-[220px]"
               onClick={() => setShowCreateModal(true)}
             >
-              <span className="text-base font-bold text-white">
+              <span className="text-base font-bold">
                 Nuevo espacio
               </span>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 transition-colors group-hover:bg-white/30">
-                <PlusCircle className="h-5 w-5 text-white" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/60 transition-colors group-hover:bg-white/80">
+                <PlusCircle className="h-5 w-5 text-sky-700" />
               </div>
             </Button>
           </div>

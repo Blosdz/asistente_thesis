@@ -5,7 +5,7 @@ export default function PlanesList() {
   const navigate = useNavigate();
 
   return (
-    <Card className="max-w-3xl rounded-[28px] border border-white/80 bg-white/80 p-8 shadow-[0_18px_45px_rgba(15,23,42,0.05)]">
+    <Card className="glass max-w-3xl rounded-[28px] p-8">
       <CardHeader className="mb-6 space-y-2">
         <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
           Flujo unificado

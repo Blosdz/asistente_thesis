@@ -546,7 +546,7 @@ export default function Citas() {
                       href={selectedCita.enlace_reunion}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-slate-800"
+                      className="ios-secondary-button flex flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-center text-sm font-semibold transition"
                     >
                       Abrir reunión
                       <ExternalLink className="h-4 w-4" />

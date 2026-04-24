@@ -122,7 +122,7 @@ export default function Hero({ onNavigate }) {
                   playsInline
                   className="absolute inset-0 h-full w-full object-cover"
                 >
-                  <source src="https://www.dropbox.com/scl/fi/0z0f3udo86pex7c96bgde/tesis-video.mp4?rlkey=cze16aczianjh8gerpdmt87qa&st=r2hwqvky&raw=1" type="video/mp4" />
+                  <source src="https://dl.dropboxusercontent.com/scl/fi/0z0f3udo86pex7c96bgde/tesis-video.mp4?rlkey=cze16aczianjh8gerpdmt87qa&st=r2hwqvky&raw=1" type="video/mp4" />
 
                 </video>
 

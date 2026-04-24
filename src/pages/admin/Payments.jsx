@@ -53,7 +53,7 @@ const roleBadgeClass = (role) => {
     case 'asesor':
       return 'bg-blue-50 text-blue-700';
     case 'admin':
-      return 'bg-slate-900 text-white';
+      return 'ios-pill-active';
     case 'estudiante':
     default:
       return 'bg-emerald-50 text-emerald-700';
@@ -479,7 +479,7 @@ const AdminPayments = () => {
             type="button"
             onClick={loadPayments}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:opacity-60"
+            className="ios-accent-button inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition disabled:opacity-60"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
             Actualizar
@@ -659,7 +659,7 @@ const AdminPayments = () => {
                         <button
                           type="button"
                           onClick={() => openVerificationModal(item)}
-                          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-white transition hover:bg-slate-800"
+                          className="ios-accent-button inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition"
                         >
                           <ShieldCheck className="h-4 w-4" />
                           Verificar
@@ -781,14 +781,14 @@ const AdminPayments = () => {
             </div>
 
             {selectedPayment.metadata && (
-              <div className="rounded-2xl border border-slate-200 bg-slate-950 p-4 text-white">
+              <div className="rounded-2xl border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.82)_0%,rgba(239,246,255,0.7)_100%)] p-4 text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_16px_36px_rgba(148,163,184,0.14)]">
                 <div className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
-                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     Metadata
                   </p>
                 </div>
-                <pre className="mt-3 overflow-x-auto text-xs leading-6 text-slate-200">
+                <pre className="mt-3 overflow-x-auto text-xs leading-6 text-slate-600">
                   {JSON.stringify(selectedPayment.metadata, null, 2)}
                 </pre>
               </div>
@@ -798,7 +798,7 @@ const AdminPayments = () => {
               <button
                 type="button"
                 onClick={() => openVerificationModal(selectedPayment)}
-                className="inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                className="ios-accent-button inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition"
               >
                 <ShieldCheck className="h-4 w-4" />
                 Verificar pago

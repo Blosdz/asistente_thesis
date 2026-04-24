@@ -88,14 +88,14 @@ const Modal = ({
         }
       }}
     >
-      <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-[8px]" />
+      <div className="ios-overlay absolute inset-0" />
       <div
-        className={`relative z-10 w-full ${modalWidthClass} overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg animate-in fade-in zoom-in-95 duration-300 ${panelClassName}`}
+        className={`glass-card-login relative z-10 w-full ${modalWidthClass} overflow-hidden animate-in fade-in zoom-in-95 duration-300 ${panelClassName}`}
       >
         <button
           ref={closeBtnRef}
           onClick={onClose}
-          className={`absolute top-5 right-5 z-20 flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-black/5 ${closeButtonClassName}`}
+          className={`ios-secondary-button absolute top-5 right-5 z-20 flex h-10 w-10 items-center justify-center rounded-full transition-colors ${closeButtonClassName}`}
           aria-label="Cerrar"
         >
           <X className={`h-5 w-5 text-slate-500 ${closeIconClassName}`} />
@@ -123,7 +123,7 @@ const Modal = ({
                 <button
                   onClick={secondaryAction.onClick}
                   disabled={secondaryAction.disabled}
-                  className="h-12 flex-1 rounded-2xl border border-slate-200 bg-white/70 font-semibold text-slate-700 transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                  className="ios-secondary-button h-12 flex-1 rounded-2xl font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {secondaryAction.label}
                 </button>
@@ -132,7 +132,7 @@ const Modal = ({
                 <button
                   onClick={primaryAction.onClick}
                   disabled={primaryAction.disabled}
-                  className="h-12 flex-1 rounded-2xl bg-primary font-semibold text-white shadow-[0_10px_25px_-5px_rgba(10,71,238,0.35)] transition hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:brightness-100"
+                  className="ios-accent-button h-12 flex-1 rounded-2xl font-semibold transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {primaryAction.label}
                 </button>

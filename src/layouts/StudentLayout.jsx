@@ -105,8 +105,8 @@ const StudentLayout = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
-        <header className="fixed top-0 w-full z-50 rounded-none bg-white/85 backdrop-blur-[22px] border-b border-white/60 shadow-[0_0_30px_rgba(0,0,0,0.06)]">
+      <div className="app-shell min-h-screen">
+        <header className="app-topbar fixed top-0 z-50 w-full rounded-none">
           <div className="flex items-center justify-between px-8 h-20 w-full animate-pulse">
             <div className="h-6 w-32 bg-slate-200 rounded-full" />
             <div className="h-10 w-80 bg-slate-200 rounded-full" />
@@ -130,16 +130,16 @@ const StudentLayout = () => {
   }
 
   return (
-    <div className="relative min-h-screen font-sans text-gray-900 overflow-hidden">
+    <div className="app-shell font-sans text-gray-900">
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
-        <header className="fixed top-0 w-full z-50 rounded-none bg-white/85 backdrop-blur-[22px] border-b border-white/60 shadow-[0_0_30px_rgba(0,0,0,0.06)]">
+        <header className="app-topbar fixed top-0 z-50 w-full rounded-none">
           <div className="flex items-center justify-between px-8 h-20 w-full">
-            <div className="text-2xl font-bold tracking-tighter text-slate-900 dark:text-white heading-ubuntu">
+            <div className="text-2xl font-bold tracking-tighter text-slate-900 heading-ubuntu">
               {/* ThesisFlow */}
             </div>
 
-            <div className="hidden md:flex bg-[#f4f1eb] rounded-full px-2 py-1 shadow-[0_8px_24px_rgba(0,0,0,0.08)] border border-white/70">
+            <div className="app-nav-cluster hidden rounded-full px-2 py-1 md:flex">
               <nav className="relative flex gap-2">
                 {navItems.map((item) => (
                   <NavLink
@@ -147,10 +147,10 @@ const StudentLayout = () => {
                     to={item.path}
                     className={({ isActive }) =>
                       cn(
-                        'top-nav-link px-4 py-1.5 rounded-full text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1eb]',
+                        'top-nav-link app-nav-item px-4 py-1.5 rounded-full text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1eb]',
                         isActive
-                          ? 'bg-slate-950 text-white shadow-[0_10px_24px_rgba(15,23,42,0.24)]'
-                          : 'text-black hover:bg-white/70 hover:text-black',
+                          ? 'app-nav-item-active'
+                          : '',
                       )
                     }
                   >
@@ -164,7 +164,7 @@ const StudentLayout = () => {
               <button
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
-                className="w-10 h-10 rounded-full border border-outline-variant/30 bg-white flex items-center justify-center text-slate-900 shadow-sm hover:shadow-md transition-shadow"
+                className="app-icon-button flex h-10 w-10 items-center justify-center rounded-full text-slate-900 transition-shadow hover:shadow-md"
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
               >
@@ -172,9 +172,9 @@ const StudentLayout = () => {
               </button>
 
               {menuOpen && (
-                <div className="absolute right-0 top-12 w-44 rounded-xl bg-white shadow-xl border border-slate-100 py-2 text-sm">
+                <div className="app-menu absolute right-0 top-12 w-44 rounded-2xl py-2 text-sm">
                   <button
-                    className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2"
+                    className="flex w-full items-center gap-2 px-4 py-2 text-left hover:bg-white/70"
                     onClick={() => {
                       navigate('/student/profile');
                       setMenuOpen(false);
@@ -184,7 +184,7 @@ const StudentLayout = () => {
                     Profile
                   </button>
                   <button
-                    className="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center gap-2 text-red-600"
+                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-red-600 hover:bg-white/70"
                     onClick={() => {
                       setMenuOpen(false);
                       handleLogout();

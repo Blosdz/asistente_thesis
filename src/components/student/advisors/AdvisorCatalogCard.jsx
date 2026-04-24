@@ -97,7 +97,7 @@ export default function AdvisorCatalogCard({
             type="button"
             onClick={() => onContact(advisor)}
             disabled={linking || !hasPublicAccess}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+            className="ios-accent-button inline-flex h-10 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold transition disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500 disabled:shadow-none"
           >
             {hasPublicAccess ? (
               <UserPlus className="h-4 w-4" />

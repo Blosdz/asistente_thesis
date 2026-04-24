@@ -3,15 +3,9 @@ import { forwardRef } from 'react';
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
 export const Card = forwardRef(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      'group glass p-6 text-white/70 transition-[border-color,transform,box-shadow] duration-300 hover:border-white/35',
-      className,
-    )}
-    {...props}
-  />
+  <div ref={ref} className={cn('glass p-6', className)} {...props} />
 ));
+
 Card.displayName = 'Card';
 
 export const CardHeader = forwardRef(({ className, ...props }, ref) => (
@@ -20,19 +14,11 @@ export const CardHeader = forwardRef(({ className, ...props }, ref) => (
 CardHeader.displayName = 'CardHeader';
 
 export const CardTitle = forwardRef(({ className, ...props }, ref) => (
-  <h3
-    ref={ref}
-    className={cn('text-lg font-semibold text-white', className)}
-    {...props}
-  />
+  <h3 ref={ref} className={cn('text-lg font-semibold text-slate-900', className)} {...props} />
 ));
 CardTitle.displayName = 'CardTitle';
 
 export const CardContent = forwardRef(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn('text-sm text-white/80', className)}
-    {...props}
-  />
+  <div ref={ref} className={cn('text-sm text-slate-700', className)} {...props} />
 ));
 CardContent.displayName = 'CardContent';

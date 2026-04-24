@@ -1,14 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { ArrowLeft, ArrowRight, Quote } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Pause, Play } from 'lucide-react';
 
-import { cn } from '../../lib/cn';
 import GlassCard from '../ui/GlassCard';
-import {
-  CARD_INSET_CLASS,
-  MediaOverlay,
-  PILL_CLASS,
-} from '../ui/cardPrimitives';
+import { MediaOverlay } from '../ui/cardPrimitives';
 import { testimonials } from './landingData';
 
 const outcomeStats = [
@@ -26,56 +21,88 @@ const outcomeStats = [
   },
 ];
 
+// Duplicate testimonials for seamless infinite loop
+const carouselItems = [...testimonials, ...testimonials];
+
+const AUTO_SCROLL_SPEED = 48;
+
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return Boolean(
+    target.closest('input, textarea, select, [contenteditable="true"]'),
+  );
+}
+
 export default function OutcomesSection() {
-  const viewportRef = useRef<HTMLDivElement | null>(null);
-  const trackRef = useRef<HTMLDivElement | null>(null);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isHoveringCard, setIsHoveringCard] = useState(false);
 
-  const [cardPitch, setCardPitch] = useState(0);
-  const [maxDrag, setMaxDrag] = useState(0);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    const carousel = carouselRef.current;
+    if (!carousel) return;
 
-  useEffect(() => {
-    const measure = () => {
-      const viewport = viewportRef.current;
-      const track = trackRef.current;
-      const firstCard = track?.children[0] as HTMLElement | undefined;
+    const loopPoint = carousel.scrollWidth / 2;
+    const scrollAmount = Math.min(carousel.clientWidth * 0.85, 720);
 
-      if (!viewport || !track || !firstCard) return;
+    if (direction === 'left' && carousel.scrollLeft <= scrollAmount) {
+      carousel.scrollLeft += loopPoint;
+    }
 
-      const styles = window.getComputedStyle(track);
-      const gap = Number.parseFloat(styles.columnGap || styles.gap || '0');
-      const nextPitch = firstCard.offsetWidth + gap;
-      const nextMaxDrag = Math.max(track.scrollWidth - viewport.clientWidth, 0);
+    if (direction === 'right' && carousel.scrollLeft + scrollAmount >= loopPoint) {
+      carousel.scrollLeft -= loopPoint;
+    }
 
-      setCardPitch(nextPitch);
-      setMaxDrag(nextMaxDrag);
-      setActiveIndex((current) =>
-        Math.min(current, Math.max(testimonials.length - 1, 0)),
-      );
-    };
-
-    measure();
-
-    const resizeObserver = new ResizeObserver(measure);
-
-    if (viewportRef.current) resizeObserver.observe(viewportRef.current);
-    if (trackRef.current) resizeObserver.observe(trackRef.current);
-
-    return () => resizeObserver.disconnect();
-  }, []);
-
-  const activeOffset = useMemo(() => {
-    if (!cardPitch) return 0;
-
-    return Math.min(activeIndex * cardPitch, maxDrag);
-  }, [activeIndex, cardPitch, maxDrag]);
-
-  const selectIndex = (index: number) => {
-    setActiveIndex(Math.max(0, Math.min(index, testimonials.length - 1)));
+    carousel.scrollBy({
+      left: direction === 'right' ? scrollAmount : -scrollAmount,
+      behavior: 'smooth',
+    });
   };
 
-  const goPrev = () => selectIndex(activeIndex - 1);
-  const goNext = () => selectIndex(activeIndex + 1);
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isEditableTarget(event.target)) return;
+
+      if (event.code === 'Space') {
+        event.preventDefault();
+        setIsPaused((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!carousel || prefersReducedMotion) return undefined;
+
+    let animationFrame = 0;
+    let lastTime = performance.now();
+
+    const animate = (time: number) => {
+      const delta = time - lastTime;
+      lastTime = time;
+
+      if (!isPaused && !isHoveringCard) {
+        const loopPoint = carousel.scrollWidth / 2;
+        if (loopPoint <= 0) return;
+
+        carousel.scrollLeft += (AUTO_SCROLL_SPEED * delta) / 1000;
+
+        if (carousel.scrollLeft >= loopPoint) {
+          carousel.scrollLeft -= loopPoint;
+        }
+      }
+
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [isPaused, isHoveringCard]);
 
   return (
     <section
@@ -92,25 +119,45 @@ export default function OutcomesSection() {
               <h2 className="mt-6 max-w-3xl font-display text-4xl leading-[1.08] tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-6xl">
                 Historias de exito
               </h2>
+              <p className="mt-6 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+                Conoce las experiencias de estudiantes que transformaron sus tesis con asesoría especializada.
+              </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={goPrev}
-                disabled={activeIndex === 0}
-                aria-label="Testimonio anterior"
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-35"
+                onClick={() => scrollCarousel('left')}
+                aria-label="Ver historia anterior"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
               >
                 <ArrowLeft className="h-5 w-5" />
               </button>
 
               <button
                 type="button"
-                onClick={goNext}
-                disabled={activeIndex === testimonials.length - 1}
-                aria-label="Siguiente testimonio"
-                className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-35"
+                onClick={() => setIsPaused(!isPaused)}
+                className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
+                title={isPaused ? 'Presiona SPACE para reanudar' : 'Presiona SPACE para pausar'}
+              >
+                {isPaused ? (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Continuar
+                  </>
+                ) : (
+                  <>
+                    <Pause className="h-4 w-4" />
+                    Pausar
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => scrollCarousel('right')}
+                aria-label="Ver siguiente historia"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
               >
                 <ArrowRight className="h-5 w-5" />
               </button>
@@ -118,118 +165,83 @@ export default function OutcomesSection() {
           </div>
         </div>
 
-        {/* Full-width carousel */}
-        <div ref={viewportRef} className="relative mt-16 overflow-hidden">
-          <motion.div
-            ref={trackRef}
-            drag="x"
-            dragConstraints={{ left: -maxDrag, right: 0 }}
-            dragElastic={0.06}
-            animate={{ x: -activeOffset }}
-            transition={{ type: 'spring', stiffness: 230, damping: 30 }}
-            onDragEnd={(_, info) => {
-              if (!cardPitch) return;
-
-              const nextOffset = Math.max(
-                0,
-                Math.min(activeOffset - info.offset.x, maxDrag),
-              );
-
-              selectIndex(Math.round(nextOffset / cardPitch));
-            }}
-            className="flex gap-8 px-6 sm:px-8 lg:px-12"
+        {/* Full-width infinite carousel */}
+        <div className="relative mt-16 overflow-hidden">
+          <div
+            ref={carouselRef}
+            className="flex gap-8 overflow-x-auto px-6 pb-4 sm:px-8 lg:px-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {testimonials.map((item) => (
+            {carouselItems.map((item, index) => (
               <GlassCard
-                key={`${item.name}-${item.outcome}`}
+                key={`${item.name}-${item.outcome}-${index}`}
                 variant="light"
-                className="w-[min(86vw,44rem)] shrink-0 p-5 sm:p-6"
+                className="group relative w-[min(86vw,520px)] shrink-0 overflow-hidden p-3 sm:w-[560px] lg:w-[640px]"
+                onMouseEnter={() => setIsHoveringCard(true)}
+                onMouseLeave={() => setIsHoveringCard(false)}
               >
-                <div className="relative h-[320px] overflow-hidden rounded-[28px] bg-slate-100">
-                  {item.imageUrl ? (
-                    <>
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name}
-                        className="h-full w-full object-cover object-[center_22%]"
-                        loading="lazy"
-                      />
+                <div className="relative grid min-h-[320px] overflow-hidden rounded-[24px] bg-white sm:grid-cols-[220px_1fr] lg:grid-cols-[260px_1fr]">
+                  <div className="relative h-[320px] overflow-hidden bg-slate-50 sm:h-full">
+                    {item.imageUrl ? (
+                      <>
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                          loading="lazy"
+                        />
+                        <MediaOverlay />
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(219,234,254,0.95),rgba(191,219,254,0.55)),radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.16),transparent_34%)]" />
+                    )}
 
-                      <MediaOverlay />
-                    </>
-                  ) : (
-                    <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(219,234,254,0.95),rgba(191,219,254,0.55)),radial-gradient(circle_at_30%_20%,rgba(59,130,246,0.16),transparent_34%)]" />
-                  )}
+                    <div className="absolute left-4 top-4 z-10 inline-flex max-w-[calc(100%-2rem)] rounded-[18px] border border-white/20 bg-white/14 px-3 py-2 text-xs font-semibold text-white shadow-sm backdrop-blur-xl">
+                      {item.badge}
+                    </div>
+                  </div>
 
-                  <div className="absolute inset-x-6 bottom-6 sm:inset-x-8 sm:bottom-8">
-                    <div className="max-w-md rounded-[28px] border border-white/20 bg-white/12 p-6 text-white shadow-[0_24px_70px_-36px_rgba(15,23,42,0.55)] backdrop-blur-md">
-                      <Quote className="h-5 w-5 text-white/90" />
-                      <p className="mt-4 text-sm leading-6 text-white/92">
-                        {item.recommendation}
+                  <div className="flex flex-col justify-center p-6 sm:p-7 lg:p-8">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600">
+                      Historia destacada
+                    </p>
+                    <h3 className="mt-4 text-2xl font-semibold leading-tight tracking-[-0.03em] text-slate-950 sm:text-3xl">
+                      {item.name}
+                    </h3>
+                    <p className="mt-3 text-base leading-6 text-slate-600">
+                      {item.role}
+                    </p>
+                  </div>
+
+                  <div className="absolute inset-0 z-20 hidden translate-y-4 overflow-y-auto bg-slate-950/78 p-5 opacity-0 backdrop-blur-sm transition duration-300 ease-out group-hover:translate-y-0 group-hover:opacity-100 sm:flex sm:flex-col sm:justify-center lg:p-7">
+                    <blockquote className="text-sm font-medium leading-6 tracking-[-0.02em] text-white sm:text-base sm:leading-7">
+                      “{item.quote}”
+                    </blockquote>
+
+                    <div className="mt-4 rounded-[20px] border border-white/15 bg-white/12 p-4 text-white shadow-sm backdrop-blur-xl">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/60">
+                        Reseña
+                      </p>
+                      <p className="mt-2 text-sm leading-6 text-white/88">
+                        {item.outcome}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-7 flex flex-col gap-6">
-                  <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200/70 pb-5">
-                    <div>
-                      <p className="text-lg font-semibold tracking-[-0.02em] text-slate-950">
-                        {item.name}
-                      </p>
-                      <p className="mt-2 text-sm text-slate-500">{item.role}</p>
-                    </div>
-
-                    <div
-                      className={cn(
-                        PILL_CLASS,
-                        'inline-flex items-center text-xs font-semibold uppercase tracking-[0.2em] text-blue-700',
-                      )}
-                    >
-                      Resultado
-                    </div>
-                  </div>
-
-                  <blockquote className="text-2xl leading-9 tracking-[-0.03em] text-slate-900">
+                <div className="mt-3 rounded-[22px] border border-slate-200/70 bg-white/78 p-4 shadow-sm sm:hidden">
+                  <blockquote className="text-sm leading-6 text-slate-800">
                     “{item.quote}”
                   </blockquote>
-
-                  <div className={cn(CARD_INSET_CLASS, 'px-5 py-5')}>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
-                      Outcome
-                    </p>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">
-                      {item.outcome}
-                    </p>
-                  </div>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                    Outcome
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    {item.outcome}
+                  </p>
                 </div>
               </GlassCard>
             ))}
-          </motion.div>
-        </div>
-
-        {/* Progress and counter */}
-        <div className="mx-auto mt-14 flex max-w-7xl items-center gap-6 px-6 sm:px-8 lg:px-12">
-          <div className="flex flex-1 items-center gap-2">
-            {testimonials.map((item, index) => (
-              <button
-                key={`${item.name}-progress`}
-                type="button"
-                onClick={() => selectIndex(index)}
-                aria-label={`Ir al testimonio ${index + 1}`}
-                className={cn(
-                  'h-1.5 flex-1 rounded-full transition',
-                  index === activeIndex
-                    ? 'bg-slate-950'
-                    : 'bg-slate-200 hover:bg-slate-300',
-                )}
-              />
-            ))}
           </div>
-
-          <span className="min-w-[3.5rem] text-sm font-medium text-slate-500">
-            {activeIndex + 1} / {testimonials.length}
-          </span>
         </div>
 
         {/* Bottom stats */}

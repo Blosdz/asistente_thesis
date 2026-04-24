@@ -641,7 +641,7 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
     <>
       <button
         onClick={() => setOpen((value) => !value)}
-        className="fixed bottom-5 right-5 z-[9999] flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0f172a_0%,#334155_55%,#0ea5e9_100%)] text-white shadow-[0_18px_50px_rgba(15,23,42,0.35)] transition duration-300 hover:scale-105"
+        className="fixed bottom-5 right-5 z-[9999] flex h-14 w-14 items-center justify-center rounded-full border border-white/75 bg-[linear-gradient(180deg,rgba(255,255,255,0.94)_0%,rgba(239,246,255,0.78)_100%)] text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_18px_42px_rgba(148,163,184,0.28)] backdrop-blur-2xl transition duration-300 hover:scale-105 hover:border-white hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_22px_48px_rgba(148,163,184,0.34)]"
         aria-label="Abrir asistente"
       >
         <CircleQuestionMark className="h-6 w-6" />
@@ -649,13 +649,13 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
 
       {open && (
         <div
-          className={`fixed right-5 z-[9999] overflow-hidden rounded-[28px] border border-slate-200/70 bg-slate-100 shadow-[0_28px_90px_rgba(15,23,42,0.28)] backdrop-blur transition-all duration-300 ${
+          className={`fixed right-5 z-[9999] overflow-hidden rounded-[30px] border border-white/65 bg-[linear-gradient(180deg,rgba(255,255,255,0.74)_0%,rgba(243,247,251,0.58)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.78),0_30px_90px_rgba(148,163,184,0.28)] backdrop-blur-2xl transition-all duration-300 ${
             expanded
               ? 'bottom-5 top-5 w-[min(520px,calc(100vw-24px))] max-w-[calc(100vw-24px)]'
               : 'bottom-24 w-[390px] max-w-[calc(100vw-24px)]'
           }`}
         >
-          <div className="flex items-center gap-3 bg-slate-900 px-4 py-3 text-white">
+          <div className="flex items-center gap-3 border-b border-white/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.66)_0%,rgba(244,248,252,0.48)_100%)] px-4 py-3 text-slate-700 backdrop-blur-2xl">
             <div className="flex gap-2">
               <button
                 onClick={handleClose}
@@ -676,41 +676,41 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
                 title={expanded ? 'Reducir' : 'Expandir'}
               />
             </div>
-            <div className="flex-1 text-center text-sm font-medium text-white/75">
+            <div className="flex-1 text-center text-sm font-medium text-slate-500">
               Asistente AppThesis
             </div>
             <div className="w-4" />
           </div>
 
           {!minimized && (
-            <div className="bg-[radial-gradient(circle_at_top,_rgba(14,165,233,0.18),_transparent_36%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4">
-            <div className="rounded-[24px] border border-slate-200 bg-white/95 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-              <div className="border-b border-slate-200 px-4 pb-4 pt-5">
+            <div className="bg-[radial-gradient(circle_at_top,_rgba(191,219,254,0.34),_transparent_38%),radial-gradient(circle_at_bottom_right,_rgba(251,207,232,0.18),_transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.66)_0%,rgba(246,249,252,0.5)_100%)] p-4">
+            <div className="rounded-[26px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.72)_0%,rgba(248,250,252,0.62)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.88),0_18px_50px_rgba(148,163,184,0.14)] backdrop-blur-2xl">
+              <div className="border-b border-slate-200/55 px-4 pb-4 pt-5">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_60%,#0ea5e9_100%)] text-white shadow-[0_12px_30px_rgba(37,99,235,0.3)]">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.88)_0%,rgba(219,234,254,0.72)_100%)] text-sky-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.95),0_12px_30px_rgba(125,168,214,0.22)]">
                     <Bot className="h-7 w-7" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="text-base font-semibold text-slate-900">
                       Asistente inteligente
                     </h3>
-                    <p className="text-sm text-slate-500">
+                    <p className="text-sm text-slate-500/90">
                       Online · Listo para cotizar y orientar
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700">
+                  <div className="flex items-center gap-2 rounded-full border border-white/70 bg-white/72 px-3 py-1.5 text-xs font-medium text-emerald-700 shadow-[0_8px_20px_rgba(148,163,184,0.1)]">
                     <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-[0_0_14px_rgba(34,197,94,0.85)]" />
                     Activo
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center gap-2 rounded-2xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/65 bg-white/62 px-3 py-2 text-xs text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                   <Volume2 className="h-4 w-4 text-sky-600" />
                   <span>Voz: {statusLabel}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 border-b border-slate-100 px-4 py-3">
+              <div className="flex items-center gap-3 border-b border-slate-200/45 px-4 py-3">
                 <label className="flex items-center gap-2 text-xs font-medium text-slate-600">
                   <input
                     type="checkbox"
@@ -724,7 +724,7 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
                 <select
                   value={audioMode}
                   onChange={(event) => setAudioMode(event.target.value)}
-                  className="ml-auto rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-sky-400"
+                  className="ml-auto rounded-xl border border-white/70 bg-white/78 px-3 py-2 text-xs font-medium text-slate-700 outline-none transition focus:border-sky-400"
                 >
                   <option value="coqui">Coqui local</option>
                   <option value="browser">Voz del navegador</option>
@@ -754,8 +754,8 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
                     <div
                       className={`rounded-[22px] px-4 py-3 text-sm leading-6 shadow-sm ${
                         msg.role === 'bot'
-                          ? 'rounded-tl-md bg-slate-100 text-slate-800'
-                          : 'rounded-br-md bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_60%,#0ea5e9_100%)] text-white'
+                          ? 'rounded-tl-md border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.9)_0%,rgba(248,250,252,0.74)_100%)] text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_12px_26px_rgba(148,163,184,0.12)]'
+                          : 'rounded-br-md border border-white/70 bg-[linear-gradient(180deg,rgba(226,240,255,0.88)_0%,rgba(208,232,255,0.76)_100%)] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.78),0_12px_26px_rgba(125,168,214,0.18)]'
                       }`}
                     >
                       {msg.text}
@@ -772,7 +772,7 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
 
                 {pendingReply ? (
                   <div className="mr-auto max-w-[85%] animate-[fadeIn_.25s_ease-out]">
-                    <div className="rounded-[22px] rounded-tl-md border border-slate-200 bg-slate-50 px-4 py-3 text-slate-700 shadow-sm">
+                    <div className="rounded-[22px] rounded-tl-md border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.88)_0%,rgba(248,250,252,0.72)_100%)] px-4 py-3 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_12px_26px_rgba(148,163,184,0.12)]">
                       <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
                         <TypingDots />
                         Escribiendo...
@@ -782,18 +782,18 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
                 ) : null}
               </div>
 
-              <div className="border-t border-slate-100 px-4 py-3">
+              <div className="border-t border-slate-200/45 px-4 py-3">
                 <div className="flex gap-2">
                   <button
                     onClick={handleReplayLastBotMessage}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:border-sky-300 hover:text-sky-700"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/70 bg-white/72 px-3 py-2.5 text-sm font-medium text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.86)] transition hover:border-sky-300 hover:text-sky-700"
                   >
                     <Volume2 className="h-4 w-4" />
                     Repetir
                   </button>
                   <button
                     onClick={stopAudio}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:border-rose-300 hover:text-rose-700"
+                    className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-white/70 bg-white/72 px-3 py-2.5 text-sm font-medium text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.86)] transition hover:border-rose-300 hover:text-rose-700"
                   >
                     <PauseCircle className="h-4 w-4" />
                     Detener
@@ -801,7 +801,7 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
                 </div>
               </div>
 
-              <div className="border-t border-slate-200 bg-slate-50 px-4 py-4">
+              <div className="border-t border-slate-200/55 bg-[linear-gradient(180deg,rgba(255,255,255,0.5)_0%,rgba(243,247,251,0.72)_100%)] px-4 py-4">
                 <div className="flex items-center gap-3">
                   <input
                     value={input}
@@ -810,11 +810,11 @@ export default function LeadChatWidget({ initiallyOpen = false }) {
                       if (event.key === 'Enter') handleSend();
                     }}
                     placeholder="Escribe tu consulta..."
-                    className="flex-1 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-400"
+                    className="flex-1 rounded-full border border-white/80 bg-white/84 px-4 py-3 text-sm text-slate-800 outline-none shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] transition placeholder:text-slate-400 focus:border-sky-400"
                   />
                   <button
                     onClick={handleSend}
-                    className="flex h-12 w-12 items-center justify-center rounded-full bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_60%,#0ea5e9_100%)] text-white shadow-[0_12px_30px_rgba(37,99,235,0.28)] transition hover:scale-105"
+                    className="flex h-12 w-12 items-center justify-center rounded-full border border-white/80 bg-[linear-gradient(180deg,rgba(225,239,255,0.92)_0%,rgba(204,232,255,0.78)_100%)] text-sky-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_12px_30px_rgba(125,168,214,0.26)] transition hover:scale-105"
                     aria-label="Enviar"
                   >
                     <Send className="h-4 w-4" />

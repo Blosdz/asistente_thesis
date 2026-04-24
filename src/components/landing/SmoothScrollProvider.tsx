@@ -201,19 +201,22 @@ export function SmoothScrollProvider({
         '(prefers-reduced-motion: reduce)',
       ).matches;
       const lenis = lenisRef.current?.lenis;
+      const targetTop = Math.max(
+        0,
+        target.getBoundingClientRect().top + window.scrollY - offset,
+      );
 
       if (lenis) {
-        lenis.scrollTo(target, {
-          offset: -offset,
+        lenis.scrollTo(targetTop, {
           duration: prefersReducedMotion ? 0.45 : 1.05,
           immediate: false,
         });
         return;
       }
 
-      target.scrollIntoView({
+      window.scrollTo({
+        top: targetTop,
         behavior: prefersReducedMotion ? 'auto' : 'smooth',
-        block: 'start',
       });
     },
     [offset],

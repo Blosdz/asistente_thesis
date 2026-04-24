@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   User,
   Lock,
@@ -10,11 +10,16 @@ import {
   EyeOff,
   CheckCircle2,
 } from 'lucide-react';
-import { registrarAsesor, registrarEstudiante } from '../../services/authService';
 import { clsx } from 'clsx';
 
+import { registrarAsesor, registrarEstudiante } from '../../services/authService';
+import AuthLayout from './AuthLayout';
+
+const inputClassName =
+  'block w-full rounded-[13px] border border-slate-950/10 bg-white/70 py-3.5 pl-11 pr-12 text-sm text-slate-950 placeholder:text-blue-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] outline-none transition-all focus:border-slate-950/40 focus:bg-white/95 focus:ring-4 focus:ring-blue-400/15';
+
 const SignupPage = () => {
-  const [role, setRole] = useState('student'); // 'student' or 'advisor'
+  const [role, setRole] = useState('student');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -25,7 +30,6 @@ const SignupPage = () => {
   const [error, setError] = useState('');
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [signupQueued, setSignupQueued] = useState(false);
-  const navigate = useNavigate();
 
   const handleSignup = async (e) => {
     e.preventDefault();
@@ -51,60 +55,35 @@ const SignupPage = () => {
       setSignupQueued(Boolean(result?.queued));
       setSignupSuccess(true);
     } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
+      setError(err.message || 'No pudimos crear la cuenta. Inténtalo nuevamente.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden bg-ios-bg">
-      {/* Animated Blur Background (Replicated Lights) */}
-      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-        <div
-          className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full opacity-50 mix-blend-multiply filter blur-[100px]"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(173, 216, 230, 0.8) 0%, transparent 70%)',
-            animation: 'none',
-          }}
-        ></div>
-        <div
-          className="absolute top-[40%] right-[-10%] w-[60vw] h-[60vw] rounded-full opacity-50 mix-blend-multiply filter blur-[100px]"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(221, 160, 221, 0.8) 0%, transparent 70%)',
-            animation:
-              'pastel-move-2 25s infinite alternate-reverse ease-in-out',
-          }}
-        ></div>
-        <div
-          className="absolute bottom-[-20%] left-[10%] w-[55vw] h-[55vw] rounded-full opacity-50 mix-blend-multiply filter blur-[100px]"
-          style={{
-            background:
-              'radial-gradient(circle, rgba(255, 182, 193, 0.7) 0%, transparent 70%)',
-            animation: 'none',
-          }}
-        ></div>
-      </div>
-
-      {/* Signup Card */}
-      <div className="relative z-10 liquid-glass w-full max-w-[480px] rounded-3xl p-8 sm:p-10">
+    <AuthLayout
+      eyebrow="Nuevo acceso"
+      title="Empieza tu ruta de tesis con"
+      accent="más orden."
+      description="Crea tu cuenta como estudiante o asesor para centralizar documentos, revisiones y pasos académicos en AppThesis."
+    >
+      <div className="w-full max-w-[480px] rounded-[28px] border border-slate-950/10 bg-white/58 p-7 shadow-[0_28px_74px_rgba(15,23,42,0.14),0_8px_32px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,0.96)] backdrop-blur-[34px] backdrop-saturate-200 sm:p-9">
         {signupSuccess ? (
           <div className="text-center">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-lg shadow-emerald-200/50">
               <CheckCircle2 size={36} />
             </div>
-            <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">
+            <h2 className="mb-2 text-3xl font-semibold tracking-[-0.02em] text-slate-950">
               Cuenta creada
-            </h1>
+            </h2>
             <p className="mx-auto max-w-sm text-sm leading-6 text-slate-500">
               {signupQueued
                 ? 'Tu cuenta quedó registrada en cola. El correo de validación se enviará automáticamente cuando el servicio vuelva a estar disponible.'
                 : 'Tu cuenta fue creada correctamente. La validación por correo se enviará automáticamente para completar el acceso a la plataforma.'}
             </p>
 
-            <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-4 text-left text-sm text-emerald-800">
+            <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-4 text-left text-sm leading-6 text-emerald-800">
               {signupQueued ? (
                 <>
                   La invitación para <strong>{email}</strong> quedó en cola.
@@ -122,7 +101,7 @@ const SignupPage = () => {
             <div className="mt-8 flex flex-col gap-3">
               <Link
                 to="/login"
-                className="w-full rounded-2xl bg-ios-blue py-4 text-center font-bold text-white shadow-xl shadow-ios-blue/30 transition-all hover:bg-ios-blue/90"
+                className="w-full rounded-[13px] bg-gradient-to-r from-slate-950 via-blue-700 to-blue-500 py-4 text-center font-semibold text-white shadow-[0_16px_38px_rgba(15,23,42,0.26),0_10px_28px_rgba(59,130,246,0.2),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all hover:-translate-y-0.5 hover:brightness-105"
               >
                 Ir al inicio de sesión
               </Link>
@@ -137,7 +116,7 @@ const SignupPage = () => {
                   setError('');
                   setSignupQueued(false);
                 }}
-                className="w-full rounded-2xl border border-white/40 bg-white/40 py-4 text-center font-bold text-slate-700 transition-all hover:bg-white/60"
+                className="w-full rounded-[13px] border border-slate-950/10 bg-white/55 py-4 text-center font-semibold text-slate-950 transition-all hover:bg-white/80"
               >
                 Registrar otra cuenta
               </button>
@@ -145,22 +124,26 @@ const SignupPage = () => {
           </div>
         ) : (
           <>
-            <div className="mb-10 text-center">
-              <h1 className="mb-2 text-3xl font-bold tracking-tight text-slate-900">
+            <div className="mb-8 text-slate-900">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-950">
+                Registro académico
+              </p>
+              <h2 className="mb-2 mt-3 text-3xl font-semibold tracking-[-0.02em] text-slate-950">
                 Crea tu acceso académico
-              </h1>
-              <p className="text-sm text-slate-500">
-                Regístrate para comenzar tu experiencia en la plataforma
+              </h2>
+              <p className="text-sm leading-6 text-slate-500">
+                Regístrate para comenzar tu experiencia en la plataforma.
               </p>
             </div>
 
-            <div className="relative mb-8 flex gap-1.5 overflow-hidden rounded-2xl border border-white/30 bg-slate-100/50 p-1.5 backdrop-blur-sm">
+            <div className="relative mb-7 flex gap-1.5 overflow-hidden rounded-2xl border border-slate-950/10 bg-white/45 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] backdrop-blur-xl">
               <button
+                type="button"
                 onClick={() => setRole('student')}
                 className={clsx(
-                  'z-10 flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all duration-500',
+                  'z-10 flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all duration-300',
                   role === 'student'
-                    ? 'bg-white text-ios-blue shadow-lg'
+                    ? 'bg-slate-950 text-white shadow-lg shadow-slate-950/15'
                     : 'text-slate-500 hover:text-slate-700',
                 )}
               >
@@ -168,85 +151,79 @@ const SignupPage = () => {
                 Estudiante
               </button>
               <button
+                type="button"
                 onClick={() => setRole('advisor')}
                 className={clsx(
-                  'z-10 flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all duration-500',
+                  'z-10 flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all duration-300',
                   role === 'advisor'
-                    ? 'bg-white text-ios-blue shadow-lg'
+                    ? 'bg-slate-950 text-white shadow-lg shadow-slate-950/15'
                     : 'text-slate-500 hover:text-slate-700',
                 )}
               >
                 <Briefcase size={18} />
                 Asesor
               </button>
-
-              <div
-                className={clsx(
-                  'absolute top-1.5 bottom-1.5 z-0 w-[calc(50%-0.5rem)] rounded-xl bg-white shadow-sm transition-all duration-500 ease-in-out',
-                  role === 'student' ? 'left-1.5' : 'left-[50%]',
-                )}
-              />
             </div>
 
-            <form onSubmit={handleSignup} className="space-y-6">
+            <form onSubmit={handleSignup} className="space-y-5">
               {error && (
-                <div className="rounded-2xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700 backdrop-blur-sm">
+                <div className="rounded-xl border border-red-200 bg-red-50/80 px-4 py-3 text-sm text-red-700">
                   {error}
                 </div>
               )}
 
               <div className="flex flex-col gap-1.5">
-                <label className="ml-1 text-[13px] font-medium text-slate-500">
+                <label className="ml-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
                   Nombre completo
                 </label>
                 <div className="group relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-ios-blue">
-                    <User size={20} />
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-slate-950">
+                    <User size={18} />
                   </div>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="block w-full rounded-2xl border-none bg-white/40 py-4 pl-11 pr-4 text-sm text-slate-900 placeholder:text-slate-400 backdrop-blur-md transition-all focus:ring-2 focus:ring-ios-blue/20"
-                    placeholder="John Doe"
+                    className={inputClassName.replace('pr-12', 'pr-4')}
+                    placeholder="Nombre Apellido"
                     required
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="ml-1 text-[13px] font-medium text-slate-500">
+                <label className="ml-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
                   Correo electrónico
                 </label>
                 <div className="group relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-ios-blue">
-                    <Mail size={20} />
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-slate-950">
+                    <Mail size={18} />
                   </div>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="block w-full rounded-2xl border-none bg-white/40 py-4 pl-11 pr-4 text-sm text-slate-900 placeholder:text-slate-400 backdrop-blur-md transition-all focus:ring-2 focus:ring-ios-blue/20"
-                    placeholder="name@university.edu"
+                    className={inputClassName.replace('pr-12', 'pr-4')}
+                    placeholder="nombre@universidad.edu.pe"
                     required
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="ml-1 text-[13px] font-medium text-slate-500">
+                <label className="ml-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
                   Contraseña
                 </label>
                 <div className="group relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-ios-blue">
-                    <Lock size={20} />
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-slate-950">
+                    <Lock size={18} />
                   </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="block w-full rounded-2xl border-none bg-white/40 py-4 pl-11 pr-12 text-sm text-slate-900 placeholder:text-slate-400 backdrop-blur-md transition-all focus:ring-2 focus:ring-ios-blue/20"
-                    placeholder="••••••••"
+                    className={inputClassName}
+                    placeholder="Ingresa tu contraseña"
                     required
                   />
                   <button
@@ -260,33 +237,27 @@ const SignupPage = () => {
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="ml-1 text-[13px] font-medium text-slate-500">
+                <label className="ml-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-700">
                   Confirmar contraseña
                 </label>
                 <div className="group relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-ios-blue">
-                    <Lock size={20} />
+                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 transition-colors group-focus-within:text-slate-950">
+                    <Lock size={18} />
                   </div>
                   <input
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="block w-full rounded-2xl border-none bg-white/40 py-4 pl-11 pr-12 text-sm text-slate-900 placeholder:text-slate-400 backdrop-blur-md transition-all focus:ring-2 focus:ring-ios-blue/20"
-                    placeholder="••••••••"
+                    className={inputClassName}
+                    placeholder="Repite tu contraseña"
                     required
                   />
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowConfirmPassword(!showConfirmPassword)
-                    }
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute inset-y-0 right-0 flex items-center pr-4 text-slate-400 transition-colors hover:text-slate-600"
                   >
-                    {showConfirmPassword ? (
-                      <EyeOff size={20} />
-                    ) : (
-                      <Eye size={20} />
-                    )}
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                   </button>
                 </div>
               </div>
@@ -294,7 +265,7 @@ const SignupPage = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-ios-blue py-4 font-bold text-white shadow-xl shadow-ios-blue/30 transition-all active:scale-[0.98] hover:bg-ios-blue/90"
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-[13px] bg-gradient-to-r from-slate-950 via-blue-700 to-blue-500 py-4 font-semibold text-white shadow-[0_16px_38px_rgba(15,23,42,0.26),0_10px_28px_rgba(59,130,246,0.2),inset_0_1px_0_rgba(255,255,255,0.18)] transition-all hover:-translate-y-0.5 hover:brightness-105 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-80"
               >
                 {isLoading ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
@@ -307,12 +278,12 @@ const SignupPage = () => {
               </button>
             </form>
 
-            <div className="mt-10 text-center">
+            <div className="mt-8 text-center">
               <p className="text-sm text-slate-500">
                 ¿Ya tienes una cuenta?{' '}
                 <Link
                   to="/login"
-                  className="font-bold text-ios-blue hover:underline"
+                  className="font-semibold text-slate-950 hover:text-blue-600 hover:underline"
                 >
                   Inicia sesión
                 </Link>
@@ -321,12 +292,7 @@ const SignupPage = () => {
           </>
         )}
       </div>
-
-      {/* Footer */}
-      <footer className="fixed bottom-6 w-full text-center text-[10px] text-slate-400 uppercase tracking-widest font-semibold">
-        Secure Academic Gateway • 2024
-      </footer>
-    </div>
+    </AuthLayout>
   );
 };
 

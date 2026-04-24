@@ -14,7 +14,7 @@ const stepVisuals = [
   {
     bg: 'from-cyan-950 via-blue-850 to-blue-500',
     icon: Sparkles,
-    label: 'Ruta académica',
+    label: 'Redacta tu proyecto',
     meta: 'IA + estructura',
   },
   {
@@ -26,8 +26,8 @@ const stepVisuals = [
   {
     bg: 'from-orange-400 via-blue-500 to-blue-900',
     icon: MessageSquareText,
-    label: 'Sustentación lista',
-    meta: 'Preparación final',
+    label: 'Preparacion de Sustentación',
+    meta: 'Quitate los nervios',
   },
 ];
 
@@ -38,11 +38,11 @@ const fallbackSteps = [
   },
   {
     title: 'Proyecto de tesis',
-    description: 'Enfoca tu tema inicial para que sea más claro y defendible.',
+    description: 'Enfoca tu tema inicial.',
   },
   {
     title: 'Borrador de tesis y estadistica',
-    description: 'Sube tus avances para recibir sugerencias de nuestros especialistas.',
+    description: 'Sube tus avances para recibir sugerencias.',
   },
   {
     title: 'Sustentacion y defensa',
@@ -117,7 +117,7 @@ export default function HowItWorksIntro() {
                 </div>
                 <div className="pt-7">
                   <h3 className="text-2xl tracking-[-0.04em] text-slate-950">
-                    {step.title ?? fallback.title}
+                    {fallback.title}
                   </h3>
                 </div>
               </motion.article>

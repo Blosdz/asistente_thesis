@@ -127,7 +127,9 @@ export default function Dashboard() {
       setLinkingByCode(true);
       const result = await vincularmeConAsesorPorCodigo(codigo);
       toast.success(
-        result?.r_mensaje || result?.mensaje || 'Vinculación creada correctamente',
+        result?.r_mensaje ||
+          result?.mensaje ||
+          'Vinculación creada correctamente',
       );
       setCodigoAsesor('');
       navigate('/student/asesorias');
@@ -199,7 +201,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <section className="space-y-8 lg:col-span-8">
-            <Card className="relative overflow-hidden rounded-[32px] border border-white/70 bg-gradient-to-br from-white via-slate-50 to-blue-50 p-10 shadow-[0_24px_60px_rgba(18,74,240,0.08)]">
+            <Card className="glass relative overflow-hidden rounded-[32px] p-10">
               <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" />
 
               <div className="relative z-10">
@@ -221,7 +223,7 @@ export default function Dashboard() {
                   <button
                     type="button"
                     onClick={() => navigate('/student/my-thesis')}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-[0_16px_30px_rgba(37,99,235,0.26)] hover:bg-blue-700"
+                    className="ios-accent-button inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold"
                   >
                     Abrir mi tesis
                     <ArrowRight className="h-4 w-4" />
@@ -232,10 +234,7 @@ export default function Dashboard() {
                   {milestones.map((item) => {
                     const Icon = item.icon;
                     return (
-                      <div
-                        key={item.title}
-                        className="rounded-2xl border border-white/70 bg-white/70 p-5"
-                      >
+                      <div key={item.title} className="glass rounded-2xl p-5">
                         <div
                           className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${item.tone}`}
                         >
@@ -299,14 +298,17 @@ export default function Dashboard() {
               </div>
 
               <p className="mt-4 text-sm leading-6 text-slate-600">
-                Si tu asesor te compartió un código público, úsalo aquí para crear la vinculación rápidamente.
+                Si tu asesor te compartió un código público, úsalo aquí para
+                crear la vinculación rápidamente.
               </p>
 
               <div className="mt-6 space-y-3">
                 <input
                   type="text"
                   value={codigoAsesor}
-                  onChange={(event) => setCodigoAsesor(event.target.value.toUpperCase())}
+                  onChange={(event) =>
+                    setCodigoAsesor(event.target.value.toUpperCase())
+                  }
                   placeholder="Ejemplo: ABC123"
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
                 />
@@ -314,7 +316,7 @@ export default function Dashboard() {
                   type="button"
                   onClick={handleLinkByCode}
                   disabled={linkingByCode}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="ios-accent-button flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {linkingByCode ? 'Vinculando...' : 'Conectar con código'}
                   <ArrowRight className="h-4 w-4" />
@@ -355,7 +357,7 @@ export default function Dashboard() {
                 <button
                   type="button"
                   onClick={() => navigate('/student/citas')}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  className="ios-secondary-button flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition"
                 >
                   Ver calendario de citas
                   <ArrowRight className="h-4 w-4" />

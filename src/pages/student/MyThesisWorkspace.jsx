@@ -779,7 +779,7 @@ export default function MyThesisWorkspace() {
           </p>
           <Button
             onClick={openCreateModal}
-            className="mx-auto mt-8 h-12 rounded-xl bg-slate-950 px-6 text-white shadow-[0_18px_40px_-24px_rgba(15,23,42,0.7)] hover:bg-slate-900"
+            className="ios-accent-button mx-auto mt-8 h-12 rounded-xl px-6"
           >
             Crear nueva tesis
           </Button>

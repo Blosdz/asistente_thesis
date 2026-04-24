@@ -207,26 +207,26 @@ const AdditionalDocuments = () => {
   }, [documents.length]);
 
   return (
-    <div className="relative w-full flex-1 px-4 sm:px-6 lg:px-10 py-12 animate-fade-in text-slate-900">
-      <div className="max-w-7xl mx-auto flex flex-col gap-8">
+    <div className="relative w-full flex-1 px-4 py-4 text-slate-900 animate-fade-in sm:px-5 lg:px-8 lg:py-3">
+      <div className="mx-auto flex max-w-7xl flex-col gap-4">
         {loading ? (
-          <div className="flex justify-center items-center py-24">
+          <div className="flex flex-1 items-center justify-center py-24">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-300 border-t-transparent shadow-lg shadow-blue-200/40"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <aside className="lg:col-span-4 flex flex-col gap-4">
-              <Card className="p-6">
-                <h3 className="text-xs font-bold uppercase tracking-[0.35em] text-blue-500 mb-4">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+            <aside className="flex flex-col gap-3 lg:col-span-4">
+              <Card className="p-4 sm:p-5">
+                <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-blue-500">
                   Thesis Selection
                 </h3>
                 {thesesList.length > 0 ? (
-                  <div className="flex flex-col gap-3">
-                    <span className="text-xs font-semibold text-slate-500">
+                  <div className="flex flex-col gap-2.5">
+                    <span className="text-[11px] font-semibold text-slate-500">
                       Proyecto activo
                     </span>
                     <Select
-                      className="py-3 pl-4 pr-10 text-sm font-semibold text-slate-900 border border-slate-200 rounded-2xl shadow-sm"
+                      className="rounded-xl border border-slate-200 py-2.5 pl-3.5 pr-9 text-sm font-semibold text-slate-900 shadow-sm"
                       value={selectedThesisId}
                       onChange={(e) => setSelectedThesisId(e.target.value)}
                     >
@@ -244,28 +244,28 @@ const AdditionalDocuments = () => {
                 )}
               </Card>
 
-              <Card className="p-6">
-                <h3 className="text-xs font-bold uppercase tracking-[0.35em] text-blue-500 mb-4">
+              <Card className="p-4 sm:p-5">
+                <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-blue-500">
                   Helper Document Categories
                 </h3>
-                <div className="space-y-4">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-                    <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="space-y-3">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5">
+                    <div className="mb-2.5 flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                           Filtro activo
                         </p>
-                        <p className="mt-1 truncate text-sm font-semibold text-slate-900">
+                        <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">
                           {activeFilterMeta?.label || allDocumentsFilter.label}
                         </p>
                       </div>
-                      <span className="rounded-full border border-blue-100 bg-white px-2.5 py-1 text-xs font-bold text-blue-600">
+                      <span className="rounded-full border border-blue-100 bg-white px-2 py-0.5 text-[11px] font-bold text-blue-600">
                         {activeFilterMeta?.count || 0}
                       </span>
                     </div>
 
                     <Select
-                      className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm"
                       value={activeFilter}
                       onChange={(e) => setActiveFilter(e.target.value)}
                     >
@@ -277,18 +277,18 @@ const AdditionalDocuments = () => {
                     </Select>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="rounded-xl border border-slate-200 bg-white p-3.5">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
                         Vista rápida
                       </p>
-                      <span className="text-xs font-medium text-slate-400">
+                      <span className="text-[11px] font-medium text-slate-400">
                         {documents.length} archivo(s)
                       </span>
                     </div>
 
                     {highlightedHelperTypes.length > 0 ? (
-                      <div className="mt-3 flex flex-wrap gap-2">
+                      <div className="mt-2.5 flex flex-wrap gap-1.5">
                         {highlightedHelperTypes.map((type) => {
                           const Icon = type.icon;
 
@@ -297,13 +297,13 @@ const AdditionalDocuments = () => {
                               key={type.value}
                               type="button"
                               onClick={() => setActiveFilter(type.value)}
-                              className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition ${
+                              className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold transition ${
                                 activeFilter === type.value
                                   ? 'border-blue-200 bg-blue-50 text-blue-700'
                                   : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:text-slate-900'
                               }`}
                             >
-                              <Icon className="h-3.5 w-3.5" />
+                              <Icon className="h-3 w-3" />
                               <span>{type.label}</span>
                               <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-500">
                                 {type.count}
@@ -322,26 +322,26 @@ const AdditionalDocuments = () => {
               </Card>
             </aside>
 
-            <article className="lg:col-span-8 flex flex-col gap-8">
-              <Card className="p-10">
-                <div className="group relative mb-12">
-                  <div className="relative border-2 border-dashed border-slate-200 rounded-3xl p-12 sm:p-14 flex flex-col items-center justify-center text-center">
-                    <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 border border-blue-100 group-hover:scale-105 transition-transform duration-500">
-                      <Upload className="w-9 h-9 text-blue-500" />
+            <article className="flex flex-col gap-4 lg:col-span-8">
+              <Card className="p-4 sm:p-6 lg:p-6">
+                <div className="group relative mb-5">
+                  <div className="relative flex flex-col items-center justify-center rounded-[24px] border border-dashed border-slate-200 p-6 text-center sm:p-8">
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-blue-100 transition-transform duration-500 group-hover:scale-105">
+                      <Upload className="h-6 w-6 text-blue-500" />
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">
+                    <h3 className="mb-1.5 text-lg font-bold text-slate-900">
                       Suelta para comenzar la carga
                     </h3>
-                    <p className="text-slate-500 text-sm mb-6">
+                    <p className="mb-4 max-w-xl text-sm text-slate-500">
                       Sube reglamentos, instrumentos, rúbricas y demás
                       documentos de apoyo.
                     </p>
-                    <div className="w-full max-w-sm mb-6 text-left">
-                      <label className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500 block mb-2">
+                    <div className="mb-4 w-full max-w-sm text-left">
+                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
                         Tipo de documento
                       </label>
                       <Select
-                        className="py-3 pl-4 pr-10 text-sm font-semibold text-slate-900 border border-slate-200 rounded-2xl shadow-sm w-full"
+                        className="w-full rounded-xl border border-slate-200 py-2.5 pl-3.5 pr-9 text-sm font-semibold text-slate-900 shadow-sm"
                         value={docType}
                         onChange={(e) => setDocType(e.target.value)}
                       >
@@ -362,10 +362,10 @@ const AdditionalDocuments = () => {
                     />
                     <label
                       htmlFor="file-upload"
-                      className={`inline-flex items-center justify-center gap-2 px-10 py-3 rounded-full font-semibold text-sm text-white shadow-lg transition-all duration-300 cursor-pointer ${
+                      className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all duration-300 ${
                         uploading || !selectedThesisId
-                          ? 'bg-slate-300 cursor-not-allowed'
-                          : 'bg-gradient-to-br from-blue-500 to-indigo-500 hover:scale-105 active:scale-95'
+                          ? 'cursor-not-allowed rounded-full bg-slate-200 text-slate-400 shadow-none'
+                          : 'ios-accent-button cursor-pointer hover:scale-105 active:scale-95'
                       }`}
                     >
                       {uploading ? 'Subiendo...' : 'Seleccionar archivos'}
@@ -374,11 +374,11 @@ const AdditionalDocuments = () => {
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-lg font-bold text-slate-900">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h3 className="text-base font-bold text-slate-900">
                       Documentos subidos
                     </h3>
-                    <span className="text-xs font-bold text-blue-600 px-3 py-1 rounded-full uppercase tracking-tight border border-blue-100">
+                    <span className="rounded-full border border-blue-100 px-2.5 py-1 text-[11px] font-bold uppercase tracking-tight text-blue-600">
                       {activeFilter === 'todos'
                         ? `Total: ${documents.length} archivos`
                         : `${getDocumentTypeLabel({ tipo: activeFilter })}: ${filteredDocuments.length}`}
@@ -386,13 +386,13 @@ const AdditionalDocuments = () => {
                   </div>
 
                   {filteredDocuments.length === 0 ? (
-                    <div className="min-h-[200px] flex items-center justify-center text-slate-500 text-sm border border-dashed border-slate-200 rounded-2xl">
+                    <div className="min-h-[200px] flex items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-500">
                       {activeFilter === 'todos'
                         ? 'Aún no has subido documentos para esta tesis.'
                         : 'No hay documentos en esta categoría todavía.'}
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-2.5">
                       {filteredDocuments.map((doc) => {
                         const fileName = getDocumentName(doc);
                         const fileUrl =
@@ -401,10 +401,10 @@ const AdditionalDocuments = () => {
                         return (
                           <div
                             key={doc.id}
-                            className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 hover:border-blue-200 transition-colors"
+                            className="flex items-center justify-between rounded-xl border border-slate-200 p-3 transition-colors hover:border-blue-200"
                           >
-                            <div className="flex items-center gap-4 min-w-0">
-                              <div className="w-12 h-12 rounded-2xl flex items-center justify-center border border-slate-100 shrink-0">
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-100">
                                 {getDocumentIcon(doc)}
                               </div>
                               <div className="min-w-0">

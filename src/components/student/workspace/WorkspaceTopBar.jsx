@@ -45,7 +45,7 @@ export default function WorkspaceTopBar({
           variant="outline"
           onClick={onOpenAccesses}
           disabled={!selectedThesisId}
-          className="h-12 rounded-xl border-slate-200/80 bg-white px-4 text-slate-700 shadow-[0_12px_32px_-24px_rgba(15,23,42,0.28)] hover:bg-slate-50"
+          className="ios-secondary-button h-12 rounded-xl px-4"
         >
           <ShieldCheck className="h-4 w-4" />
           Gestionar accesos
@@ -53,7 +53,7 @@ export default function WorkspaceTopBar({
 
         <Button
           onClick={onOpenCreate}
-          className="h-12 rounded-xl bg-slate-950 px-5 text-white shadow-[0_18px_40px_-24px_rgba(15,23,42,0.7)] hover:bg-slate-900"
+          className="ios-accent-button h-12 rounded-xl px-5"
           title="Crear tesis"
         >
           <Plus className="h-4 w-4" />

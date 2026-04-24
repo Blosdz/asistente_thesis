@@ -1,9 +1,9 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   ArrowLeft,
   ArrowRight,
-  CalendarDays,
+  Sparkles,
   GraduationCap,
   ShieldCheck,
 } from 'lucide-react';
@@ -11,6 +11,19 @@ import {
 import { cn } from '../../lib/cn';
 import { MediaOverlay, PILL_CLASS } from '../ui/cardPrimitives';
 import { advisorCards } from './landingData';
+
+// Duplicate advisors for seamless infinite loop
+const carouselItems = [...advisorCards, ...advisorCards];
+
+const AUTO_SCROLL_SPEED = 48;
+
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return Boolean(
+    target.closest('input, textarea, select, [contenteditable="true"]'),
+  );
+}
 
 const advisorStats = [
   {
@@ -35,17 +48,72 @@ const advisorDescriptions = [
 
 export default function AdvisorsSection() {
   const carouselRef = useRef<HTMLDivElement | null>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   const scrollCarousel = (direction: 'left' | 'right') => {
-    if (!carouselRef.current) return;
+    const carousel = carouselRef.current;
+    if (!carousel) return;
 
-    const scrollAmount = carouselRef.current.clientWidth * 0.85;
+    const loopPoint = carousel.scrollWidth / 2;
+    const scrollAmount = Math.min(carousel.clientWidth * 0.85, 820);
 
-    carouselRef.current.scrollBy({
+    if (direction === 'left' && carousel.scrollLeft <= scrollAmount) {
+      carousel.scrollLeft += loopPoint;
+    }
+
+    if (direction === 'right' && carousel.scrollLeft + scrollAmount >= loopPoint) {
+      carousel.scrollLeft -= loopPoint;
+    }
+
+    carousel.scrollBy({
       left: direction === 'right' ? scrollAmount : -scrollAmount,
       behavior: 'smooth',
     });
   };
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isEditableTarget(event.target)) return;
+
+      if (event.code === 'Space') {
+        event.preventDefault();
+        setIsPaused((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    const carousel = carouselRef.current;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!carousel || prefersReducedMotion) return undefined;
+
+    let animationFrame = 0;
+    let lastTime = performance.now();
+
+    const animate = (time: number) => {
+      const delta = time - lastTime;
+      lastTime = time;
+
+      if (!isPaused) {
+        const loopPoint = carousel.scrollWidth / 2;
+        if (loopPoint <= 0) return;
+
+        carousel.scrollLeft += (AUTO_SCROLL_SPEED * delta) / 1000;
+
+        if (carousel.scrollLeft >= loopPoint) {
+          carousel.scrollLeft -= loopPoint;
+        }
+      }
+
+      animationFrame = requestAnimationFrame(animate);
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, [isPaused]);
 
   return (
     <section
@@ -63,6 +131,13 @@ export default function AdvisorsSection() {
                 Asesoría especializada
               </p>
 
+              <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/80 px-4 py-2 shadow-[0_16px_38px_rgba(59,130,246,0.12),inset_0_1px_0_rgba(255,255,255,0.86)] backdrop-blur-xl">
+                <Sparkles className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-semibold text-slate-800">
+                  IA Estructural para Tesis
+                </span>
+              </div>
+
               <h2 className="mt-6 max-w-3xl font-display text-4xl leading-[1.08] tracking-[-0.04em] text-slate-950 sm:text-5xl lg:text-6xl">
                 Asesores especializados cuando más los necesitas
               </h2>
@@ -79,7 +154,7 @@ export default function AdvisorsSection() {
               <button
                 type="button"
                 onClick={() => scrollCarousel('left')}
-                aria-label="Ver asesores anteriores"
+                aria-label="Ver asesor anterior"
                 className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
               >
                 <ArrowLeft className="h-5 w-5" />
@@ -88,7 +163,7 @@ export default function AdvisorsSection() {
               <button
                 type="button"
                 onClick={() => scrollCarousel('right')}
-                aria-label="Ver más asesores"
+                aria-label="Ver siguiente asesor"
                 className="flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600"
               >
                 <ArrowRight className="h-5 w-5" />
@@ -97,22 +172,22 @@ export default function AdvisorsSection() {
           </div>
         </div>
 
-        {/* Full width carousel */}
-        <div className="mt-16 w-full overflow-hidden">
+        {/* Full-width infinite carousel */}
+        <div className="relative mt-16 overflow-hidden">
           <div
             ref={carouselRef}
-            className="flex w-full snap-x snap-mandatory gap-10 overflow-x-auto scroll-smooth px-6 pb-8 sm:px-8 lg:px-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex gap-10 overflow-x-auto px-6 pb-8 sm:px-8 lg:px-12 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {advisorCards.map((advisor, index) => (
+            {carouselItems.map((advisor, index) => (
               <motion.article
-                key={advisor.name}
+                key={`${advisor.name}-${index}`}
                 initial={{ opacity: 0, y: 22 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.25 }}
                 transition={{
                   duration: 0.5,
                   ease: 'easeOut',
-                  delay: index * 0.06,
+                  delay: (index % advisorCards.length) * 0.06,
                 }}
                 className="group flex min-w-[86vw] snap-start flex-col gap-6 rounded-[32px] border border-slate-200/70 bg-white/72 p-5 shadow-[0_22px_55px_-34px_rgba(15,23,42,0.18)] backdrop-blur-xl sm:min-w-[720px] sm:flex-row sm:gap-8 sm:p-6 lg:min-w-[780px]"
               >
@@ -141,8 +216,17 @@ export default function AdvisorsSection() {
 
                 {/* Content */}
                 <div className="flex min-h-[260px] flex-col justify-center py-2">
-                  <div className={cn(PILL_CLASS, 'mb-5 inline-flex w-fit text-xs font-semibold text-blue-700')}>
-                    {advisor.availability}
+                  <div className="mb-5 flex flex-wrap items-center gap-2">
+                    <div className={cn(PILL_CLASS, 'inline-flex w-fit text-xs font-semibold text-blue-700')}>
+                      {advisor.availability}
+                    </div>
+
+                    <div className="inline-flex w-fit items-center gap-2 rounded-full border border-blue-100 bg-blue-50/80 px-3.5 py-2 shadow-[0_12px_28px_rgba(59,130,246,0.1),inset_0_1px_0_rgba(255,255,255,0.86)]">
+                      <Sparkles className="h-3.5 w-3.5 text-blue-600" />
+                      <span className="text-sm font-semibold text-slate-800">
+                        IA Estructural para Tesis
+                      </span>
+                    </div>
                   </div>
 
                   <h3 className="text-xl font-semibold tracking-[-0.02em] text-slate-950">
@@ -154,7 +238,7 @@ export default function AdvisorsSection() {
                   </p>
 
                   <p className="mt-6 max-w-sm text-sm leading-6 text-slate-700">
-                    {advisorDescriptions[index] ??
+                    {advisorDescriptions[index % advisorCards.length] ??
                       'Acompañamiento personalizado para avanzar con claridad en tu proyecto académico.'}
                   </p>
 
@@ -163,20 +247,7 @@ export default function AdvisorsSection() {
                       <ShieldCheck className="h-4 w-4 text-blue-600" />
                       <span>{advisor.level}</span>
                     </div>
-
-                    <div className="flex items-center gap-3 text-sm text-slate-600">
-                      <CalendarDays className="h-4 w-4 text-blue-600" />
-                      <span>{advisor.duration}</span>
-                    </div>
                   </div>
-
-                  <button
-                    type="button"
-                    className="mt-7 inline-flex w-fit items-center gap-2 text-sm font-semibold text-slate-950 underline decoration-slate-300 underline-offset-4 transition hover:text-blue-600 hover:decoration-blue-300"
-                  >
-                    Agendar asesoría
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
                 </div>
               </motion.article>
             ))}

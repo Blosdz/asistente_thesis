@@ -148,7 +148,7 @@ export default function SuggestionsThreadModal({
 
                     {item.comentario_estudiante ? (
                       <div className="flex justify-end">
-                        <div className="max-w-[90%] rounded-[22px] rounded-tr-md bg-slate-900 px-4 py-3 text-sm leading-7 text-white">
+                        <div className="max-w-[90%] rounded-[22px] rounded-tr-md border border-white/80 bg-[linear-gradient(180deg,rgba(232,242,255,0.96)_0%,rgba(214,233,255,0.84)_100%)] px-4 py-3 text-sm leading-7 text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_14px_28px_rgba(125,168,214,0.16)]">
                           {item.comentario_estudiante}
                         </div>
                       </div>
@@ -185,7 +185,7 @@ export default function SuggestionsThreadModal({
                               type="button"
                               onClick={() => handleSubmit(item)}
                               disabled={updatingSuggestionId === suggestionId}
-                              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 text-sm font-medium text-white shadow-[0_16px_36px_-24px_rgba(15,23,42,0.7)] transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                              className="ios-accent-button inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               {updatingSuggestionId === suggestionId ? (
                                 <>

@@ -41,7 +41,7 @@ export default function AdvisorsQuickActions({
             }`}
           >
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-700 transition-colors group-hover:bg-slate-900 group-hover:text-white">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/70 bg-white/78 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.88)] transition-colors group-hover:bg-white group-hover:text-sky-700">
                 <Icon className="h-5 w-5" />
               </div>
               <p className="truncate text-sm font-semibold tracking-tight text-slate-950">

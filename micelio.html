@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Micelio Estadística — En Construcción</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    font-family: 'Nunito', sans-serif;
+    background: #eff6ff;
+  }
+
+  /* ── Background ── */
+  .bg {
+    position: fixed; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 70% 60% at 10% 15%, #bfdbfe 0%, transparent 55%),
+      radial-gradient(ellipse 60% 70% at 90% 85%, #c7d2fe 0%, transparent 55%),
+      radial-gradient(ellipse 55% 55% at 50% 50%, #e0f2fe 0%, transparent 65%),
+      #eff6ff;
+  }
+
+  .orb {
+    position: fixed; border-radius: 50%; z-index: 0;
+    filter: blur(90px); opacity: 0.5;
+    animation: floatOrb 12s ease-in-out infinite;
+  }
+  .o1 { width: 600px; height: 600px; background: #93c5fd; top: -160px; left: -140px; animation-delay: 0s; }
+  .o2 { width: 420px; height: 420px; background: #a5b4fc; bottom: -100px; right: -100px; animation-delay: -5s; }
+  .o3 { width: 300px; height: 300px; background: #7dd3fc; top: 35%; left: 42%; animation-delay: -9s; }
+
+  @keyframes floatOrb {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    40%       { transform: translate(20px, -25px) scale(1.05); }
+    70%       { transform: translate(-14px, 16px) scale(0.96); }
+  }
+
+  /* ── Canvas ── */
+  #mycelium {
+    position: fixed; inset: 0; z-index: 1;
+    width: 100%; height: 100%;
+  }
+
+  /* ── UI Layer ── */
+  .ui {
+    position: relative; z-index: 2;
+    width: 100%; height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  /* brand */
+  .brand {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 3.5rem;
+    animation: fadeUp 0.8s 0.1s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  .brand-icon {
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.72);
+    backdrop-filter: blur(14px);
+    border: 1.5px solid rgba(255,255,255,0.95);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 16px rgba(96,165,250,0.22);
+  }
+
+  .brand-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px; font-weight: 500;
+    color: #1e40af;
+  }
+
+  /* glass card */
+  .card {
+    background: rgba(255,255,255,0.48);
+    backdrop-filter: blur(44px) saturate(200%);
+    -webkit-backdrop-filter: blur(44px) saturate(200%);
+    border: 1.5px solid rgba(255,255,255,0.92);
+    border-radius: 32px;
+    padding: 3.2rem 3.6rem;
+    max-width: 620px; width: 100%;
+    box-shadow:
+      0 10px 40px rgba(59,130,246,0.1),
+      0 2px 10px rgba(59,130,246,0.06),
+      inset 0 1px 0 rgba(255,255,255,0.98);
+    animation: fadeUp 0.8s 0.25s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(219,234,254,0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(147,197,253,0.5);
+    border-radius: 100px;
+    padding: 7px 18px;
+    font-size: 12px; font-weight: 600;
+    color: #2563eb; letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 1.8rem;
+  }
+
+  .badge-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(96,165,250,0.28);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 3px rgba(96,165,250,0.28); }
+    50%       { box-shadow: 0 0 0 7px rgba(96,165,250,0.1); }
+  }
+
+  .headline {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 400;
+    color: #1e3a8a;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.5rem;
+  }
+
+  .headline em {
+    font-style: italic;
+    color: #3b82f6;
+  }
+
+  .subheadline {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    font-weight: 400; font-style: italic;
+    color: #60a5fa;
+    margin-bottom: 1.4rem;
+  }
+
+  .desc {
+    font-size: 15px; font-weight: 300;
+    color: #64748b; line-height: 1.75;
+    max-width: 440px; margin: 0 auto 2.4rem;
+  }
+
+  /* progress bar */
+  .progress-wrap {
+    width: 100%; margin-bottom: 2rem;
+  }
+
+  .progress-meta {
+    display: flex; justify-content: space-between;
+    font-size: 12px; font-weight: 600;
+    color: #93c5fd; letter-spacing: 0.06em;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+
+  .progress-track {
+    width: 100%; height: 5px;
+    background: rgba(147,197,253,0.25);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #60a5fa, #3b82f6, #818cf8);
+    border-radius: 100px;
+    width: 0%;
+    animation: fillBar 2.5s 1s cubic-bezier(0.22,1,0.36,1) forwards;
+  }
+
+  @keyframes fillBar {
+    to { width: 38%; }
+  }
+
+  /* notify input */
+  .notify-row {
+    display: flex; gap: 10px;
+  }
+
+  .notify-input {
+    flex: 1;
+    background: rgba(255,255,255,0.65);
+    border: 1.5px solid rgba(147,197,253,0.4);
+    border-radius: 13px;
+    padding: 13px 16px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 400;
+    color: #1e3a8a; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+
+  .notify-input::placeholder { color: #bfdbfe; font-weight: 300; }
+
+  .notify-input:focus {
+    border-color: #60a5fa;
+    background: rgba(255,255,255,0.88);
+    box-shadow: 0 0 0 4px rgba(96,165,250,0.14);
+  }
+
+  .notify-btn {
+    padding: 13px 22px;
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 55%, #2563eb 100%);
+    border: none; border-radius: 13px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px; font-weight: 600;
+    color: #fff; cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 6px 22px rgba(59,130,246,0.32), inset 0 1px 0 rgba(255,255,255,0.18);
+    transition: transform 0.15s, box-shadow 0.2s, filter 0.2s;
+    position: relative; overflow: hidden;
+  }
+
+  .notify-btn::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(rgba(255,255,255,0.12), transparent);
+    pointer-events: none;
+  }
+
+  .notify-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 30px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.18);
+    filter: brightness(1.06);
+  }
+
+  .notify-btn:active { transform: translateY(0); }
+
+  /* bottom stats row */
+  .stats-row {
+    display: flex; gap: 14px;
+    margin-top: 3.5rem;
+    animation: fadeUp 0.8s 0.4s cubic-bezier(0.22,1,0.36,1) both;
+  }
+
+  .stat-pill {
+    background: rgba(255,255,255,0.52);
+    backdrop-filter: blur(18px);
+    border: 1.5px solid rgba(255,255,255,0.92);
+    border-radius: 16px;
+    padding: 1rem 1.6rem;
+    flex: 1; text-align: center;
+    box-shadow: 0 4px 20px rgba(59,130,246,0.08);
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px; font-weight: 500;
+    color: #1d4ed8; line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 11.5px; font-weight: 400;
+    color: #94a3b8; letter-spacing: 0.04em;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+<div class="orb o3"></div>
+
+<!-- Mycelium canvas -->
+<canvas id="mycelium"></canvas>
+
+<div class="ui">
+
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+        <circle cx="11" cy="11" r="3.5" fill="#3b82f6"/>
+        <circle cx="11" cy="3"  r="1.5" fill="#93c5fd"/>
+        <circle cx="19" cy="7" r="1.5" fill="#93c5fd"/>
+        <circle cx="19" cy="15" r="1.5" fill="#93c5fd"/>
+        <circle cx="11" cy="19" r="1.5" fill="#93c5fd"/>
+        <circle cx="3"  cy="15" r="1.5" fill="#93c5fd"/>
+        <circle cx="3"  cy="7"  r="1.5" fill="#93c5fd"/>
+        <line x1="11" y1="7.5" x2="11" y2="4.5" stroke="#bfdbfe" stroke-width="1"/>
+        <line x1="14.5" y1="8.5" x2="17.5" y2="6.5" stroke="#bfdbfe" stroke-width="1"/>
+        <line x1="14.5" y1="13.5" x2="17.5" y2="15.5" stroke="#bfdbfe" stroke-width="1"/>
+        <line x1="11" y1="14.5" x2="11" y2="17.5" stroke="#bfdbfe" stroke-width="1"/>
+        <line x1="7.5" y1="13.5" x2="4.5" y2="15.5" stroke="#bfdbfe" stroke-width="1"/>
+        <line x1="7.5" y1="8.5" x2="4.5" y2="6.5" stroke="#bfdbfe" stroke-width="1"/>
+      </svg>
+    </div>
+    <span class="brand-name">Micelio Estadística</span>
+  </div>
+
+  <div class="card">
+    <div class="badge">
+      <span class="badge-dot"></span>
+      En Construcción
+    </div>
+
+    <h1 class="headline"><em>Micelio</em> Estadística</h1>
+    <p class="subheadline">Tejiendo datos. Conectando perspectivas.</p>
+
+    <p class="desc">
+      Estamos cultivando algo extraordinario. Una plataforma estadística que crece de manera orgánica, conectando tus datos como las redes del micelio — invisible, eficiente y profunda.
+    </p>
+
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span>Progreso del desarrollo</span>
+        <span>38%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="notify-row">
+      <input class="notify-input" type="email" placeholder="tu@correo.com">
+      <button class="notify-btn">Notifícame</button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-pill">
+      <div class="stat-num">12</div>
+      <div class="stat-label">Módulos en desarrollo</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-num">3</div>
+      <div class="stat-label">Semanas restantes</div>
+    </div>
+    <div class="stat-pill">
+      <div class="stat-num">847</div>
+      <div class="stat-label">En lista de espera</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const canvas = document.getElementById('mycelium');
+const ctx = canvas.getContext('2d');
+
+let W, H, nodes, branches;
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+
+// ── Node: a spore point that branches outward
+class Node {
+  constructor(x, y, angle, depth, speed) {
+    this.x = x; this.y = y;
+    this.ox = x; this.oy = y;  // origin for drawing
+    this.angle = angle;
+    this.depth = depth;
+    this.speed = speed || (0.4 + Math.random() * 0.6);
+    this.length = 0;
+    this.maxLen = 40 + Math.random() * 120;
+    this.done = false;
+    this.children = [];
+    this.spawned = false;
+    this.opacity = 0;
+    // slight wobble
+    this.wobble = (Math.random() - 0.5) * 0.012;
+    this.thickness = Math.max(0.15, 1.2 - depth * 0.22);
+  }
+
+  grow() {
+    if (this.done) { this.children.forEach(c => c.grow()); return; }
+    this.opacity = Math.min(1, this.opacity + 0.04);
+    this.angle += this.wobble;
+    this.length = Math.min(this.length + this.speed, this.maxLen);
+    if (this.length >= this.maxLen && !this.spawned) {
+      this.spawned = true;
+      if (this.depth < 7) {
+        const count = this.depth < 2 ? 3 : (this.depth < 4 ? 2 : (Math.random() < 0.55 ? 2 : 1));
+        for (let i = 0; i < count; i++) {
+          const spread = (Math.random() - 0.5) * (Math.PI * 0.55);
+          const child = new Node(
+            this.x + Math.cos(this.angle) * this.length,
+            this.y + Math.sin(this.angle) * this.length,
+            this.angle + spread,
+            this.depth + 1,
+            this.speed * (0.82 + Math.random() * 0.22)
+          );
+          child.ox = child.x; child.oy = child.y;
+          this.children.push(child);
+        }
+      }
+      this.done = true;
+    }
+    this.children.forEach(c => c.grow());
+  }
+
+  draw() {
+    const ex = this.ox + Math.cos(this.angle) * this.length;
+    const ey = this.oy + Math.sin(this.angle) * this.length;
+
+    const alpha = this.opacity * (0.08 + (7 - this.depth) * 0.045);
+    ctx.beginPath();
+    ctx.moveTo(this.ox, this.oy);
+    ctx.lineTo(ex, ey);
+    ctx.strokeStyle = `rgba(59,130,246,${Math.min(alpha, 0.55)})`;
+    ctx.lineWidth = this.thickness;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // tiny node dot at tip when done
+    if (this.done) {
+      const dotAlpha = this.opacity * 0.35;
+      ctx.beginPath();
+      ctx.arc(ex, ey, this.thickness * 1.4, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(96,165,250,${dotAlpha})`;
+      ctx.fill();
+    }
+
+    this.children.forEach(c => c.draw());
+  }
+}
+
+// ── Spore: a root origin that periodically resets & regrows
+class Spore {
+  constructor() { this.reset(); }
+
+  reset() {
+    // spawn from edges or random interior
+    const edge = Math.random();
+    if (edge < 0.25)      { this.sx = Math.random() * W; this.sy = 0; }
+    else if (edge < 0.5)  { this.sx = W; this.sy = Math.random() * H; }
+    else if (edge < 0.75) { this.sx = Math.random() * W; this.sy = H; }
+    else                  { this.sx = 0; this.sy = Math.random() * H; }
+
+    const toward = Math.atan2(H / 2 - this.sy, W / 2 - this.sx);
+    const spread = (Math.random() - 0.5) * Math.PI * 0.6;
+    this.root = new Node(this.sx, this.sy, toward + spread, 0, 0.5 + Math.random() * 0.8);
+    this.life = 0;
+    this.maxLife = 280 + Math.random() * 220;
+    this.fadeOut = 0;
+  }
+
+  tick() {
+    this.life++;
+    if (this.life > this.maxLife) {
+      this.fadeOut = Math.min(1, this.fadeOut + 0.012);
+      if (this.fadeOut >= 1) this.reset();
+    }
+    this.root.grow();
+  }
+
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, 1 - this.fadeOut);
+    this.root.draw();
+    ctx.restore();
+  }
+}
+
+// Floating particles (spores)
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.r = 1 + Math.random() * 2;
+    this.vx = (Math.random() - 0.5) * 0.3;
+    this.vy = -0.1 - Math.random() * 0.35;
+    this.alpha = 0;
+    this.maxAlpha = 0.1 + Math.random() * 0.2;
+    this.life = 0;
+    this.maxLife = 120 + Math.random() * 180;
+  }
+  tick() {
+    this.life++;
+    this.x += this.vx; this.y += this.vy;
+    const progress = this.life / this.maxLife;
+    this.alpha = progress < 0.15
+      ? (progress / 0.15) * this.maxAlpha
+      : progress > 0.75
+        ? ((1 - progress) / 0.25) * this.maxAlpha
+        : this.maxAlpha;
+    if (this.life >= this.maxLife) this.reset();
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(96,165,250,${this.alpha})`;
+    ctx.fill();
+  }
+}
+
+function init() {
+  resize();
+  const sporeCount = Math.min(18, Math.floor(W * H / 42000));
+  nodes = Array.from({ length: sporeCount }, () => new Spore());
+  // stagger initial life so they don't all reset together
+  nodes.forEach((s, i) => { s.life = Math.floor((i / sporeCount) * s.maxLife * 0.6); });
+  branches = Array.from({ length: 40 }, () => new Particle());
+}
+
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+  nodes.forEach(s => { s.tick(); s.draw(); });
+  branches.forEach(p => { p.tick(); p.draw(); });
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('resize', () => { resize(); init(); });
+init();
+loop();
+</script>
+</body>
+</html>
