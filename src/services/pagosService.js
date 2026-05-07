@@ -1,150 +1,93 @@
-import { supabase } from '../lib/supabase';
+import { pagosApi } from '../api/pagos.api';
+import { pendingEndpoint } from '../api/client';
+import { reunionesApi } from '../api/reuniones.api';
 
-const atSchema = () => supabase.schema('AT');
-
-const toUtcIsoString = (value) => {
-  if (!value) return value ?? null;
-
-  const date = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toISOString();
+const asArray = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.pagos)) return data.pagos;
+  return data ? [data] : [];
 };
 
+const unwrap = (data) => data?.data || data?.pago || data;
+
 export async function obtenerPlanesDisponibles() {
-  const { data, error } = await atSchema().rpc('fn_planes_disponibles');
-  if (error) {
-    console.error('Error obteniendo planes:', error);
-    throw error;
-  }
-  return data ?? [];
+  pendingEndpoint('Planes disponibles');
 }
 
-export async function iniciarPagoPlan({ planId }) {
-  const { data, error } = await atSchema().rpc('fn_iniciar_pago_plan', {
-    plan_id: planId,
-  });
-  if (error) {
-    console.error('Error iniciando pago de plan:', error);
-    throw error;
-  }
-  // RPC returns { pago_id, monto, estado }
-  return Array.isArray(data) ? data[0] : data;
+export async function iniciarPagoPlan({ planId, tesisId = null, monto = 0 }) {
+  return unwrap(
+    await pagosApi.registrar({
+      concepto: 'Pago de plan',
+      monto,
+      tesisId,
+      metadata: { planId },
+    }),
+  );
 }
 
 export async function obtenerMisPagosEstudiante() {
-  const { data, error } = await atSchema().rpc('obtener_mis_pagos_estudiante');
-
-  if (error) {
-    console.error('Error obteniendo mis pagos:', error);
-    throw error;
-  }
-
-  return data ?? [];
+  return asArray(await pagosApi.listar());
 }
 
 export async function registrarVoucherPago({
   pagoId,
+  codigoOperacion = null,
+  operationCode = null,
   driveId,
   driveUrl,
   nombreArchivo,
   tipoMime,
   tamanoBytes,
+  metadata = {},
 }) {
-  const { data, error } = await atSchema().rpc('subir_voucher_pago', {
-    p_pago_id: pagoId,
-    p_documento_drive_id: driveId,
-    p_url_archivo_drive: driveUrl,
-    p_nombre_archivo_voucher: nombreArchivo ?? null,
-    p_tipo_mime_voucher: tipoMime ?? null,
-    p_tamano_bytes_voucher: tamanoBytes ?? null,
-  });
-
-  if (error) {
-    console.error('Error registrando voucher:', error);
-    throw error;
-  }
-
-  return Array.isArray(data) ? data[0] : data;
-}
-
-export async function subirVoucherPago({
-  pagoId,
-  file,
-  paymentMethod = null,
-  operationCode = null,
-}) {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session?.access_token) {
-    throw new Error('Usuario no autenticado');
-  }
-
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('pago_id', pagoId);
-  if (paymentMethod) {
-    formData.append('payment_method', paymentMethod);
-  }
-  if (operationCode) {
-    formData.append('operation_code', operationCode);
-  }
-
-  const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/subir-vouchers`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: formData,
-    },
+  return unwrap(
+    await pagosApi.registrarVoucher(pagoId, {
+      codigoOperacion: codigoOperacion || operationCode || null,
+      documentoDriveId: driveId,
+      urlArchivoDrive: driveUrl,
+      nombreArchivoVoucher: nombreArchivo ?? null,
+      tipoMimeVoucher: tipoMime ?? null,
+      tamanoBytesVoucher: tamanoBytes ?? null,
+      metadata,
+    }),
   );
-
-  const uploadData = await response.json();
-
-  if (!response.ok) {
-    throw new Error(uploadData.error || 'No se pudo subir el voucher');
-  }
-
-  return uploadData;
 }
 
-export async function disponibilidadAsesorSemana({ asesorId, desde, hasta }) {
-  const { data, error } = await atSchema().rpc('fn_disponibilidad_asesor_semana', {
-    p_asesor: asesorId,
-    desde: toUtcIsoString(desde),
-    hasta: toUtcIsoString(hasta),
-  });
-  if (error) {
-    console.error('Error obteniendo disponibilidad:', error);
-    throw error;
-  }
-  return data ?? [];
+export async function subirVoucherPago() {
+  pendingEndpoint('Subida binaria de vouchers');
+}
+
+export async function disponibilidadAsesorSemana() {
+  pendingEndpoint('Disponibilidad semanal de asesor');
 }
 
 export async function reservarReunion({
   disponibilidadId,
-  asesorId,
   tesisId = null,
   motivo = '',
   modalidad = 'virtual',
+  inicio = null,
+  fin = null,
+  lugar = null,
+  enlaceReunion = null,
+  notas = null,
 }) {
-  const { data, error } = await atSchema().rpc('fn_reservar_reunion', {
-    p_disponibilidad: disponibilidadId,
-    p_asesor: asesorId,
-    p_tesis: tesisId,
-    p_motivo: motivo || null,
-    p_modalidad: modalidad,
-  });
-  if (error) {
-    console.error('Error reservando reunión:', error);
-    throw error;
+  if (!inicio || !fin) {
+    pendingEndpoint('Reserva de reunión sin inicio/fin documentados');
   }
-  // RPC returns { reunion_id, pago_id, enlace, estado }
-  return Array.isArray(data) ? data[0] : data;
+
+  return unwrap(
+    await reunionesApi.crear({
+      disponibilidadId,
+      inicio,
+      fin,
+      tesisId,
+      motivo: motivo || 'Asesoría',
+      modalidad,
+      lugar,
+      enlaceReunion,
+      notas,
+    }),
+  );
 }

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import {
   ArrowRight,
-  BarChart3,
   CalendarClock,
   CheckCircle2,
   Clock3,
@@ -10,15 +10,15 @@ import {
   ExternalLink,
   FileText,
   Sparkles,
+  Users,
 } from 'lucide-react';
+
 import { Card } from '../../components/ui/card';
 import SubscriptionSummaryCard from '../../components/student/SubscriptionSummaryCard';
-import { obtenerResumenDashboardEstudiante } from '../../services/dashboardService';
-import { vincularmeConAsesorPorCodigo } from '../../services/advisorService';
-import { obtenerMiSuscripcion } from '../../services/suscripcionService';
-import { toast } from 'react-hot-toast';
+import { normalizeMyAdvisor } from '../../components/student/advisors/advisors.utils';
+import { obtenerDashboardEstudianteBase } from '../../services/dashboardService';
 
-const formatterFecha = new Intl.DateTimeFormat('es-PE', {
+const formatterFechaLarga = new Intl.DateTimeFormat('es-PE', {
   weekday: 'long',
   day: '2-digit',
   month: 'long',
@@ -26,43 +26,23 @@ const formatterFecha = new Intl.DateTimeFormat('es-PE', {
   minute: '2-digit',
 });
 
-const formatterDia = new Intl.DateTimeFormat('es-PE', {
+const formatterFechaCorta = new Intl.DateTimeFormat('es-PE', {
   day: '2-digit',
   month: 'short',
+  year: 'numeric',
 });
 
 const formatterHora = new Intl.DateTimeFormat('es-PE', {
-  hour: 'numeric',
+  hour: '2-digit',
   minute: '2-digit',
 });
-
-const milestones = [
-  {
-    title: 'Propuesta',
-    state: 'Aprobada',
-    icon: CheckCircle2,
-    tone: 'text-emerald-600 bg-emerald-50',
-  },
-  {
-    title: 'Marco teórico',
-    state: 'En revisión',
-    icon: FileText,
-    tone: 'text-blue-600 bg-blue-50',
-  },
-  {
-    title: 'Próxima cita',
-    state: 'Agenda actualizada',
-    icon: CalendarClock,
-    tone: 'text-violet-600 bg-violet-50',
-  },
-];
 
 const resumenInicial = {
   cantidad_citas_proximas: 0,
   pagos_pendientes: 0,
+  documentos_recientes: 0,
   tesis_id: null,
   tesis_titulo: null,
-  documentos_recientes: 0,
   proxima_reunion_id: null,
   proxima_reunion_inicio: null,
   proxima_reunion_fin: null,
@@ -72,151 +52,362 @@ const resumenInicial = {
   proximo_asesor_nombre: null,
 };
 
+const dashboardInicial = {
+  resumen: resumenInicial,
+  perfil: null,
+  tesis: [],
+  suscripcion: null,
+  citas: [],
+  pagos: [],
+  asesores: [],
+};
+
+const paymentPendingStatuses = ['pendiente', 'voucher_subido', 'rechazado'];
+
+const cleanText = (value, fallback = '') => {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed) return trimmed;
+  }
+
+  return fallback;
+};
+
+const toNumber = (value) => Number(value || 0);
+
+const hasValidDate = (value) => {
+  if (!value) return false;
+  return !Number.isNaN(new Date(value).getTime());
+};
+
+const humanizeToken = (value, fallback = 'Sin estado') => {
+  const safeValue = cleanText(value, fallback);
+  return safeValue
+    .replaceAll('_', ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+const getStudentName = (perfil) => {
+  const nombres = cleanText(perfil?.nombres || perfil?.r_nombres, '');
+  const apellidos = cleanText(perfil?.apellidos || perfil?.r_apellidos, '');
+  const nombreCompleto = [nombres, apellidos].filter(Boolean).join(' ');
+
+  return nombreCompleto || 'Estudiante';
+};
+
+const getThesisId = (tesis) => tesis?.id || tesis?.tesis_id || null;
+const getThesisTitle = (tesis) =>
+  cleanText(tesis?.titulo || tesis?.tesis_titulo || tesis?.nombre, 'Tesis sin título');
+const getThesisStatus = (tesis) =>
+  cleanText(tesis?.estado || tesis?.estado_tesis, 'en progreso');
+const getThesisDescription = (tesis) =>
+  cleanText(tesis?.descripcion || tesis?.tema || tesis?.resumen, '');
+
+const getMeetingStart = (cita) =>
+  cita?.start_at ||
+  cita?.inicio_reunion ||
+  cita?.fecha_inicio ||
+  cita?.inicio_bloque ||
+  null;
+
+const getMeetingEnd = (cita) =>
+  cita?.end_at ||
+  cita?.fin_reunion ||
+  cita?.fecha_fin ||
+  cita?.fin_bloque ||
+  null;
+
+const getMeetingStatus = (cita) =>
+  cleanText(
+    cita?.status || cita?.estado_reunion || cita?.estado || cita?.proxima_reunion_estado,
+    'pendiente',
+  ).toLowerCase();
+
+const getMeetingAdvisorName = (cita) =>
+  cleanText(
+    cita?.asesor_nombre ||
+      cita?.nombre_asesor ||
+      cita?.proximo_asesor_nombre ||
+      cita?.nombre_mostrar,
+    'Asesor académico',
+  );
+
+const getMeetingLink = (cita) =>
+  cita?.meet_link || cita?.enlace_reunion || cita?.enlace || cita?.proxima_reunion_enlace || null;
+
+const getPaymentId = (pago) => pago?.pago_id || pago?.id || null;
+const getPaymentStatus = (pago) =>
+  cleanText(pago?.estado_pago || pago?.estado, 'pendiente').toLowerCase();
+const getPaymentAmount = (pago) => toNumber(pago?.monto || pago?.amount || 0);
+const getPaymentConcept = (pago) =>
+  cleanText(pago?.concepto || pago?.motivo || pago?.descripcion, 'Pago registrado');
+const getPaymentDate = (pago) =>
+  pago?.created_at || pago?.fecha_pago || pago?.fecha_creacion || pago?.updated_at || null;
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [resumen, setResumen] = useState(resumenInicial);
-  const [codigoAsesor, setCodigoAsesor] = useState('');
-  const [linkingByCode, setLinkingByCode] = useState(false);
-  const [loadingSuscripcion, setLoadingSuscripcion] = useState(true);
-  const [suscripcion, setSuscripcion] = useState(null);
+  const [dashboard, setDashboard] = useState(dashboardInicial);
 
   useEffect(() => {
-    const cargarResumen = async () => {
+    const cargarDashboard = async () => {
       try {
         setLoading(true);
-        const data = await obtenerResumenDashboardEstudiante();
-        setResumen({ ...resumenInicial, ...(data ?? {}) });
+        const data = await obtenerDashboardEstudianteBase();
+        setDashboard({
+          resumen: { ...resumenInicial, ...(data?.resumen ?? {}) },
+          perfil: data?.perfil ?? null,
+          tesis: data?.tesis ?? [],
+          suscripcion: data?.suscripcion ?? null,
+          citas: data?.citas ?? [],
+          pagos: data?.pagos ?? [],
+          asesores: data?.asesores ?? [],
+        });
       } catch (error) {
-        console.error('Error cargando dashboard:', error);
-        toast.error('No se pudo cargar el dashboard.');
+        console.error('Error cargando dashboard de estudiante:', error);
+        toast.error('No se pudo cargar el dashboard del estudiante.');
       } finally {
         setLoading(false);
       }
     };
 
-    cargarResumen();
+    cargarDashboard();
   }, []);
 
-  useEffect(() => {
-    const cargarSuscripcion = async () => {
-      try {
-        setLoadingSuscripcion(true);
-        const data = await obtenerMiSuscripcion();
-        setSuscripcion(data ?? null);
-      } catch (error) {
-        console.error('Error cargando suscripción activa:', error);
-        setSuscripcion(null);
-      } finally {
-        setLoadingSuscripcion(false);
-      }
-    };
+  const perfilNombre = useMemo(
+    () => getStudentName(dashboard.perfil),
+    [dashboard.perfil],
+  );
 
-    cargarSuscripcion();
-  }, []);
+  const tesisNormalizadas = useMemo(
+    () =>
+      (dashboard.tesis ?? [])
+        .map((tesis) => ({
+          id: getThesisId(tesis),
+          titulo: getThesisTitle(tesis),
+          estado: getThesisStatus(tesis),
+          descripcion: getThesisDescription(tesis),
+        }))
+        .filter((tesis) => tesis.id || tesis.titulo),
+    [dashboard.tesis],
+  );
 
-  const handleLinkByCode = async () => {
-    const codigo = codigoAsesor.trim().toUpperCase();
+  const tesisActiva = useMemo(() => {
+    const thesisBySummary = tesisNormalizadas.find(
+      (tesis) => tesis.id && tesis.id === dashboard.resumen.tesis_id,
+    );
 
-    if (!codigo) {
-      toast.error('Ingresa un código de asesor');
-      return;
+    if (thesisBySummary) return thesisBySummary;
+
+    if (dashboard.resumen.tesis_titulo) {
+      return {
+        id: dashboard.resumen.tesis_id,
+        titulo: dashboard.resumen.tesis_titulo,
+        estado: 'activa',
+        descripcion: '',
+      };
     }
 
-    try {
-      setLinkingByCode(true);
-      const result = await vincularmeConAsesorPorCodigo(codigo);
-      toast.success(
-        result?.r_mensaje ||
-          result?.mensaje ||
-          'Vinculación creada correctamente',
-      );
-      setCodigoAsesor('');
-      navigate('/student/asesorias');
-    } catch (error) {
-      console.error('Error vinculando por código:', error);
-      toast.error(error.message || 'No se pudo vincular con el asesor');
-    } finally {
-      setLinkingByCode(false);
+    return tesisNormalizadas[0] ?? null;
+  }, [dashboard.resumen, tesisNormalizadas]);
+
+  const citasNormalizadas = useMemo(
+    () =>
+      (dashboard.citas ?? [])
+        .map((cita) => {
+          const inicio = getMeetingStart(cita);
+
+          return {
+            id: cita?.reunion_id || cita?.validation_cita_id || cita?.id || null,
+            inicio,
+            fin: getMeetingEnd(cita),
+            estado: getMeetingStatus(cita),
+            asesorNombre: getMeetingAdvisorName(cita),
+            enlace: getMeetingLink(cita),
+            tipoServicio: cleanText(cita?.tipo_servicio, 'asesoria'),
+          };
+        })
+        .filter((cita) => hasValidDate(cita.inicio))
+        .sort((a, b) => new Date(a.inicio) - new Date(b.inicio)),
+    [dashboard.citas],
+  );
+
+  const citasProximas = useMemo(() => {
+    const now = Date.now();
+
+    return citasNormalizadas
+      .filter((cita) => new Date(cita.inicio).getTime() >= now)
+      .slice(0, 3);
+  }, [citasNormalizadas]);
+
+  const proximaCita = useMemo(() => {
+    if (hasValidDate(dashboard.resumen.proxima_reunion_inicio)) {
+      return {
+        id: dashboard.resumen.proxima_reunion_id,
+        inicio: dashboard.resumen.proxima_reunion_inicio,
+        fin: dashboard.resumen.proxima_reunion_fin,
+        estado: getMeetingStatus(dashboard.resumen),
+        asesorNombre: cleanText(
+          dashboard.resumen.proximo_asesor_nombre,
+          'Asesor académico',
+        ),
+        enlace: dashboard.resumen.proxima_reunion_enlace,
+      };
     }
-  };
+
+    return citasProximas[0] ?? null;
+  }, [dashboard.resumen, citasProximas]);
+
+  const pagosNormalizados = useMemo(
+    () =>
+      (dashboard.pagos ?? [])
+        .map((pago) => ({
+          id: getPaymentId(pago),
+          estado: getPaymentStatus(pago),
+          monto: getPaymentAmount(pago),
+          concepto: getPaymentConcept(pago),
+          moneda: pago?.moneda || 'PEN',
+          fecha: getPaymentDate(pago),
+        }))
+        .filter((pago) => pago.id || pago.concepto),
+    [dashboard.pagos],
+  );
+
+  const pagosPendientes = useMemo(
+    () =>
+      pagosNormalizados.filter((pago) =>
+        paymentPendingStatuses.includes(pago.estado),
+      ),
+    [pagosNormalizados],
+  );
+
+  const asesoresNormalizados = useMemo(
+    () =>
+      (dashboard.asesores ?? [])
+        .map(normalizeMyAdvisor)
+        .filter((asesor) => asesor.id || asesor.name),
+    [dashboard.asesores],
+  );
 
   const stats = useMemo(
     () => [
       {
-        label: 'Avance general',
-        value: resumen.tesis_titulo ? 'Activo' : 'Sin tesis',
-        note: resumen.tesis_titulo ?? 'Crea o selecciona tu tesis',
-        icon: BarChart3,
-        tone: 'text-blue-600 bg-blue-50 border-blue-100',
-      },
-      {
-        label: 'Documentos',
-        value: String(resumen.documentos_recientes ?? 0).padStart(2, '0'),
-        note: 'Archivos registrados',
-        icon: FileText,
-        tone: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+        label: 'Citas próximas',
+        value: String(toNumber(dashboard.resumen.cantidad_citas_proximas)).padStart(2, '0'),
+        note: proximaCita?.inicio
+          ? formatterFechaCorta.format(new Date(proximaCita.inicio))
+          : 'Sin reuniones programadas',
+        icon: CalendarClock,
+        tone: 'text-violet-600 bg-violet-50 border-violet-100',
       },
       {
         label: 'Pagos pendientes',
-        value: String(resumen.pagos_pendientes ?? 0).padStart(2, '0'),
-        note: 'En revisión o por subir',
+        value: String(toNumber(dashboard.resumen.pagos_pendientes)).padStart(2, '0'),
+        note:
+          pagosPendientes.length > 0
+            ? 'Revisa voucher, validación o pago por completar'
+            : 'No tienes pagos pendientes',
         icon: CreditCard,
         tone: 'text-amber-600 bg-amber-50 border-amber-100',
       },
       {
-        label: 'Próximas citas',
-        value: String(resumen.cantidad_citas_proximas ?? 0).padStart(2, '0'),
-        note: resumen.proxima_reunion_inicio
-          ? formatterDia.format(new Date(resumen.proxima_reunion_inicio))
-          : 'Sin reuniones próximas',
-        icon: CalendarClock,
-        tone: 'text-violet-600 bg-violet-50 border-violet-100',
+        label: 'Documentos recientes',
+        value: String(toNumber(dashboard.resumen.documentos_recientes)).padStart(2, '0'),
+        note: 'Documentos vinculados a tu tesis',
+        icon: FileText,
+        tone: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+      },
+      {
+        label: 'Tesis activa',
+        value: tesisActiva ? 'Activa' : 'Sin tesis',
+        note: tesisActiva?.titulo || 'Crea o selecciona tu tesis',
+        icon: CheckCircle2,
+        tone: 'text-blue-600 bg-blue-50 border-blue-100',
       },
     ],
-    [resumen],
+    [dashboard.resumen, pagosPendientes.length, proximaCita, tesisActiva],
   );
-
-  const proximaReunionTexto = resumen.proxima_reunion_inicio
-    ? formatterFecha.format(new Date(resumen.proxima_reunion_inicio))
-    : 'Aún no tienes una cita agendada';
 
   return (
     <div className="relative w-full px-4 py-12 text-slate-900 sm:px-6 lg:px-10">
-      <div className="mx-auto flex max-w-7xl flex-col gap-10">
+      <div className="mx-auto flex max-w-7xl flex-col gap-8">
         <header className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-600">
-              Dashboard
+              Dashboard Estudiante
             </p>
             <h1 className="font-['Ubuntu'] text-4xl font-bold tracking-tighter text-slate-900 md:text-5xl">
-              Tu espacio de seguimiento académico
+              {loading ? 'Cargando tu dashboard...' : `Hola, ${perfilNombre}`}
             </h1>
-            <p className="max-w-2xl text-sm leading-7 text-slate-500 md:text-base">
-              Consulta el estado de tu tesis, pagos y próximas reuniones desde
-              una sola vista.
+            <p className="max-w-3xl text-sm leading-7 text-slate-500 md:text-base">
+              Revisa tu tesis activa, tu plan, citas, pagos y asesores desde una
+              sola vista.
             </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/student/my-thesis')}
+              className="ios-secondary-button inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold"
+            >
+              Ir a mi tesis
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/student/asesorias')}
+              className="ios-accent-button inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold"
+            >
+              Ver asesorías
+              <ArrowRight className="h-4 w-4" />
+            </button>
           </div>
         </header>
 
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+          {stats.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Card
+                key={item.label}
+                className="rounded-[28px] border border-white/80 bg-white/75 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.05)]"
+              >
+                <div
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${item.tone}`}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                <p className="mt-5 text-sm font-semibold text-slate-500">
+                  {item.label}
+                </p>
+                <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">
+                  {loading ? '--' : item.value}
+                </p>
+                <p className="mt-2 text-sm text-slate-500">{item.note}</p>
+              </Card>
+            );
+          })}
+        </div>
+
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <section className="space-y-8 lg:col-span-8">
-            <Card className="glass relative overflow-hidden rounded-[32px] p-10">
+            <Card className="glass relative overflow-hidden rounded-[32px] p-8 md:p-10">
               <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" />
 
               <div className="relative z-10">
-                <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                   <div className="max-w-2xl">
                     <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-600">
                       Tesis activa
                     </p>
                     <h2 className="mt-2 font-['Ubuntu'] text-3xl font-bold tracking-tight text-slate-900">
-                      {resumen.tesis_titulo ?? 'Selecciona o crea una tesis'}
+                      {tesisActiva?.titulo || 'Aún no tienes una tesis activa'}
                     </h2>
                     <p className="mt-3 text-sm leading-7 text-slate-500">
-                      {resumen.tesis_titulo
-                        ? 'Tu espacio principal ya está listo para seguir subiendo versiones, revisar sugerencias y mantener ordenado tu avance.'
-                        : 'Aún no se detecta una tesis activa. Puedes ir a tu espacio de tesis para crearla o elegirla.'}
+                      {tesisActiva
+                        ? 'Tu tesis ya está vinculada a tu espacio de trabajo. Desde aquí puedes revisar documentos, sugerencias y el avance general.'
+                        : 'Cuando crees o selecciones una tesis, aquí verás su título, estado y accesos rápidos para continuar tu proceso.'}
                     </p>
                   </div>
 
@@ -225,132 +416,303 @@ export default function Dashboard() {
                     onClick={() => navigate('/student/my-thesis')}
                     className="ios-accent-button inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold"
                   >
-                    Abrir mi tesis
+                    Abrir espacio de tesis
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
 
                 <div className="mt-8 grid gap-4 md:grid-cols-3">
-                  {milestones.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <div key={item.title} className="glass rounded-2xl p-5">
-                        <div
-                          className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${item.tone}`}
-                        >
-                          <Icon className="h-5 w-5" />
-                        </div>
-                        <p className="text-sm font-bold text-slate-900">
-                          {item.title}
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          {item.title === 'Próxima cita'
-                            ? (resumen.proxima_reunion_estado ?? item.state)
-                            : item.state}
-                        </p>
-                      </div>
-                    );
-                  })}
+                  <div className="glass rounded-2xl p-5">
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-900">Estado</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {humanizeToken(tesisActiva?.estado, 'Sin estado')}
+                    </p>
+                  </div>
+
+                  <div className="glass rounded-2xl p-5">
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                      <CheckCircle2 className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-900">
+                      Documentos recientes
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {toNumber(dashboard.resumen.documentos_recientes)} registrado(s)
+                    </p>
+                  </div>
+
+                  <div className="glass rounded-2xl p-5">
+                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                      <CalendarClock className="h-5 w-5" />
+                    </div>
+                    <p className="text-sm font-bold text-slate-900">
+                      Próxima reunión
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {proximaCita?.inicio
+                        ? formatterFechaLarga.format(new Date(proximaCita.inicio))
+                        : 'Sin cita agendada'}
+                    </p>
+                  </div>
                 </div>
               </div>
             </Card>
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
-              {stats.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Card
-                    key={item.label}
-                    className="rounded-[28px] border border-white/80 bg-white/75 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.05)]"
-                  >
-                    <div
-                      className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${item.tone}`}
-                    >
-                      <Icon className="h-5 w-5" />
+            <div className="grid gap-6 xl:grid-cols-2">
+              <Card className="rounded-[32px] border border-white/70 bg-white/75 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                      Tesis
+                    </p>
+                    <h3 className="mt-3 text-xl font-bold text-slate-900">
+                      Mis tesis
+                    </h3>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  {tesisNormalizadas.length > 0 ? (
+                    tesisNormalizadas.slice(0, 3).map((tesis) => (
+                      <div
+                        key={tesis.id || tesis.titulo}
+                        className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+                      >
+                        <p className="text-sm font-bold text-slate-900">
+                          {tesis.titulo}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Estado: {humanizeToken(tesis.estado, 'En progreso')}
+                        </p>
+                        {tesis.descripcion && (
+                          <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-500">
+                            {tesis.descripcion}
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-500">
+                      Aún no se encontraron tesis registradas para tu cuenta.
                     </div>
-                    <p className="mt-5 text-sm font-semibold text-slate-500">
-                      {item.label}
+                  )}
+                </div>
+              </Card>
+
+              <Card className="rounded-[32px] border border-white/70 bg-white/75 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                      Citas
                     </p>
-                    <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">
-                      {loading ? '--' : item.value}
+                    <h3 className="mt-3 text-xl font-bold text-slate-900">
+                      Próximas reuniones
+                    </h3>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
+                    <CalendarClock className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  {citasProximas.length > 0 ? (
+                    citasProximas.map((cita) => (
+                      <div
+                        key={cita.id || cita.inicio}
+                        className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+                      >
+                        <p className="text-sm font-bold text-slate-900">
+                          {cita.asesorNombre}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {formatterFechaLarga.format(new Date(cita.inicio))}
+                        </p>
+                        <p className="mt-2 text-xs text-slate-500">
+                          Estado: {humanizeToken(cita.estado)}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-500">
+                      No tienes citas próximas por ahora.
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/student/citas')}
+                  className="ios-secondary-button mt-6 inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold"
+                >
+                  Ver todas las citas
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </Card>
+            </div>
+
+            <div className="grid gap-6 xl:grid-cols-2">
+              <Card className="rounded-[32px] border border-white/70 bg-white/75 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                      Pagos
                     </p>
-                    <p className="mt-2 text-sm text-slate-500">{item.note}</p>
-                  </Card>
-                );
-              })}
+                    <h3 className="mt-3 text-xl font-bold text-slate-900">
+                      Pagos del estudiante
+                    </h3>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                    <CreditCard className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  {pagosPendientes.length > 0 ? (
+                    pagosPendientes.slice(0, 3).map((pago) => (
+                      <div
+                        key={pago.id || pago.concepto}
+                        className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+                      >
+                        <p className="text-sm font-bold text-slate-900">
+                          {pago.concepto}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Estado: {humanizeToken(pago.estado)}
+                        </p>
+                        <p className="mt-2 text-xs text-slate-500">
+                          Monto: {new Intl.NumberFormat('es-PE', {
+                            style: 'currency',
+                            currency: pago.moneda || 'PEN',
+                            minimumFractionDigits: 2,
+                          }).format(pago.monto)}
+                        </p>
+                        {pago.fecha && hasValidDate(pago.fecha) && (
+                          <p className="mt-1 text-xs text-slate-500">
+                            Registrado: {formatterFechaCorta.format(new Date(pago.fecha))}
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-500">
+                      No tienes pagos pendientes en este momento.
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/student/payments')}
+                  className="ios-secondary-button mt-6 inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold"
+                >
+                  Ver pagos
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </Card>
+
+              <Card className="rounded-[32px] border border-white/70 bg-white/75 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
+                      Asesores
+                    </p>
+                    <h3 className="mt-3 text-xl font-bold text-slate-900">
+                      Mis asesores
+                    </h3>
+                  </div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700">
+                    <Users className="h-5 w-5" />
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-3">
+                  {asesoresNormalizados.length > 0 ? (
+                    asesoresNormalizados.slice(0, 3).map((asesor) => (
+                      <div
+                        key={asesor.relacionId || asesor.id || asesor.name}
+                        className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+                      >
+                        <p className="text-sm font-bold text-slate-900">
+                          {asesor.name}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          Estado: {humanizeToken(asesor.estado)}
+                        </p>
+                        <p className="mt-2 text-xs text-slate-500">
+                          {asesor.thesisTitle || asesor.career}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-500">
+                      Aún no tienes asesores vinculados.
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/student/asesorias')}
+                  className="ios-secondary-button mt-6 inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold"
+                >
+                  Ver asesores
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </Card>
             </div>
           </section>
 
           <aside className="space-y-8 lg:col-span-4">
-            <Card className="rounded-[32px] border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-600">
-                    Vincular asesor
-                  </p>
-                  <h3 className="mt-3 text-xl font-bold text-slate-900">
-                    Conéctate con un código
-                  </h3>
-                </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-blue-700">
-                  <Sparkles className="h-5 w-5" />
-                </div>
-              </div>
-
-              <p className="mt-4 text-sm leading-6 text-slate-600">
-                Si tu asesor te compartió un código público, úsalo aquí para
-                crear la vinculación rápidamente.
-              </p>
-
-              <div className="mt-6 space-y-3">
-                <input
-                  type="text"
-                  value={codigoAsesor}
-                  onChange={(event) =>
-                    setCodigoAsesor(event.target.value.toUpperCase())
-                  }
-                  placeholder="Ejemplo: ABC123"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold uppercase tracking-[0.12em] text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                />
-                <button
-                  type="button"
-                  onClick={handleLinkByCode}
-                  disabled={linkingByCode}
-                  className="ios-accent-button flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {linkingByCode ? 'Vinculando...' : 'Conectar con código'}
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </Card>
+            <SubscriptionSummaryCard
+              subscription={dashboard.suscripcion}
+              loading={loading}
+            />
 
             <Card className="rounded-[32px] border border-white/70 bg-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    Citas
+                    Próxima reunión
                   </p>
                   <h3 className="mt-3 text-xl font-bold text-slate-900">
-                    {loading
-                      ? 'Cargando agenda...'
-                      : resumen.cantidad_citas_proximas > 0
-                        ? `${resumen.cantidad_citas_proximas} próxima(s)`
-                        : 'Sin citas próximas'}
+                    {proximaCita?.inicio ? 'Agenda confirmada' : 'Aún sin cita'}
                   </h3>
                 </div>
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                  <CalendarClock className="h-6 w-6" />
+                  <Clock3 className="h-5 w-5" />
                 </div>
               </div>
 
               <p className="mt-4 text-sm leading-6 text-slate-500">
-                {proximaReunionTexto}
+                {proximaCita?.inicio
+                  ? formatterFechaLarga.format(new Date(proximaCita.inicio))
+                  : 'Cuando tengas una nueva reunión asignada aparecerá aquí con su fecha, estado y acceso rápido.'}
               </p>
 
-              {resumen.proximo_asesor_nombre && (
+              {proximaCita?.asesorNombre && (
                 <p className="mt-2 text-sm font-semibold text-slate-700">
-                  {resumen.proximo_asesor_nombre}
+                  {proximaCita.asesorNombre}
                 </p>
+              )}
+
+              {proximaCita?.inicio && (
+                <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600">
+                  <p>
+                    Estado: {humanizeToken(proximaCita.estado)}
+                  </p>
+                  <p className="mt-1">
+                    Horario: {formatterHora.format(new Date(proximaCita.inicio))}
+                    {proximaCita.fin && hasValidDate(proximaCita.fin)
+                      ? ` - ${formatterHora.format(new Date(proximaCita.fin))}`
+                      : ''}
+                  </p>
+                </div>
               )}
 
               <div className="mt-6 space-y-3">
@@ -359,74 +721,78 @@ export default function Dashboard() {
                   onClick={() => navigate('/student/citas')}
                   className="ios-secondary-button flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition"
                 >
-                  Ver calendario de citas
+                  Ver detalle de citas
                   <ArrowRight className="h-4 w-4" />
                 </button>
 
-                {resumen.proxima_reunion_enlace && (
+                {proximaCita?.enlace && (
                   <a
-                    href={resumen.proxima_reunion_enlace}
+                    href={proximaCita.enlace}
                     target="_blank"
                     rel="noreferrer"
                     className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
                   >
-                    Abrir Google Meet
+                    Abrir enlace de reunión
                     <ExternalLink className="h-4 w-4" />
                   </a>
                 )}
               </div>
             </Card>
 
-            <SubscriptionSummaryCard
-              subscription={suscripcion}
-              loading={loadingSuscripcion}
-            />
-
             <Card className="rounded-[32px] border border-white/70 bg-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
                 <Sparkles className="h-4 w-4 text-blue-600" />
-                Resumen rápido
+                Perfil del estudiante
               </p>
+
               <div className="mt-5 space-y-4">
                 <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                   <p className="text-sm font-bold text-slate-900">
-                    Pagos por revisar
+                    {perfilNombre}
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {loading
-                      ? 'Cargando...'
-                      : `${resumen.pagos_pendientes ?? 0} pago(s) aún requieren seguimiento.`}
+                    {cleanText(
+                      dashboard.perfil?.carrera || dashboard.perfil?.r_carrera,
+                      'Carrera no registrada',
+                    )}
                   </p>
                 </div>
+
                 <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
                   <p className="text-sm font-bold text-slate-900">
-                    Documentos recientes
+                    Universidad
                   </p>
                   <p className="mt-1 text-xs text-slate-500">
-                    {loading
-                      ? 'Cargando...'
-                      : `${resumen.documentos_recientes ?? 0} documento(s) vinculados a tu tesis activa.`}
+                    {cleanText(
+                      dashboard.perfil?.universidad_nombre ||
+                        dashboard.perfil?.universidad ||
+                        dashboard.perfil?.r_universidad_id,
+                      'Pendiente de completar',
+                    )}
                   </p>
                 </div>
-                {resumen.proxima_reunion_inicio && (
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
-                    <p className="text-sm font-bold text-slate-900">
-                      Hora estimada
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {formatterHora.format(
-                        new Date(resumen.proxima_reunion_inicio),
-                      )}{' '}
-                      -{' '}
-                      {resumen.proxima_reunion_fin
-                        ? formatterHora.format(
-                            new Date(resumen.proxima_reunion_fin),
-                          )
-                        : '--'}
-                    </p>
-                  </div>
-                )}
+
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <p className="text-sm font-bold text-slate-900">
+                    Contacto
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {cleanText(
+                      dashboard.perfil?.telefono || dashboard.perfil?.r_telefono,
+                      'Sin teléfono registrado',
+                    )}
+                  </p>
+                </div>
               </div>
+
+              <button
+                type="button"
+                onClick={() => navigate('/student/profile')}
+                className="ios-secondary-button mt-6 inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold"
+              >
+                Actualizar perfil
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </Card>
           </aside>
         </div>

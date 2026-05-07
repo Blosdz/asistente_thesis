@@ -1,205 +1,95 @@
-import { supabase } from '../lib/supabase';
+import { documentosApi } from '../api/documentos.api';
+import { pendingEndpoint } from '../api/client';
+import { tesisApi } from '../api/tesis.api';
 
-const atSchema = () => supabase.schema('AT');
+const asArray = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.tesis)) return data.tesis;
+  if (Array.isArray(data?.documentos)) return data.documentos;
+  return data ? [data] : [];
+};
 
-// Crear una nueva tesis
+const unwrap = (data) => data?.data || data?.tesis || data?.documento || data;
+
 export async function crearMiTesis(payload) {
-  const { data, error } = await atSchema().rpc('crear_mi_tesis', {
-    p_universidad_id: payload.universidad_id,
-    p_titulo: payload.titulo,
-    p_descripcion: payload.descripcion ?? null,
+  const data = await tesisApi.crear({
+    universidadId: payload.universidad_id || payload.universidadId || null,
+    titulo: payload.titulo,
+    descripcion: payload.descripcion ?? null,
   });
 
-  if (error) {
-    console.error('Error creando tesis:', error);
-    throw error;
-  }
-
-  return data?.[0] ?? null;
+  return unwrap(data);
 }
 
 export async function obtenerTiposTesisActivos() {
-  const { data, error } = await atSchema().rpc('obtener_tipos_tesis_activos');
-
-  if (error) {
-    console.error('Error obteniendo tipos de tesis:', error);
-    throw error;
-  }
-
-  return data ?? [];
+  pendingEndpoint('Tipos de tesis activos');
 }
 
-export async function cotizarTesisPlan(payload) {
-  const { data, error } = await atSchema().rpc('cotizar_tesis_plan', {
-    p_plan_id: payload.plan_id,
-    p_tipo_tesis_id: payload.tipo_tesis_id,
-    p_nivel_academico: payload.nivel_academico,
-    p_requiere_analisis_estadistico:
-      payload.requiere_analisis_estadistico ?? true,
-  });
-
-  if (error) {
-    console.error('Error cotizando tesis con plan:', error);
-    throw error;
-  }
-
-  return Array.isArray(data) ? (data[0] ?? null) : data;
+export async function cotizarTesisPlan() {
+  pendingEndpoint('Cotización de tesis con plan');
 }
 
-export async function crearTesisConPlan(payload) {
-  const { data, error } = await atSchema().rpc('crear_tesis_con_plan', {
-    p_estudiante_id: payload.estudiante_id,
-    p_universidad_id: payload.universidad_id ?? null,
-    p_titulo: payload.titulo,
-    p_descripcion: payload.descripcion ?? null,
-    p_plan_id: payload.plan_id,
-    p_tipo_tesis_id: payload.tipo_tesis_id,
-    p_nivel_academico: payload.nivel_academico,
-    p_requiere_analisis_estadistico:
-      payload.requiere_analisis_estadistico ?? true,
-    p_programa_id: payload.programa_id ?? null,
-    p_estado_tesis: payload.estado_tesis ?? 'borrador',
-  });
-
-  if (error) {
-    console.error('Error creando tesis con plan:', error);
-    throw error;
-  }
-
-  return Array.isArray(data) ? (data[0] ?? null) : data;
+export async function crearTesisConPlan() {
+  pendingEndpoint('Creación de tesis con plan');
 }
 
-// Obtener todas mis tesis
 export async function obtenerMisTesis() {
-  const { data, error } = await atSchema().rpc('get_mis_tesis');
-
-  if (error) {
-    console.error('Error obteniendo mis tesis:', error);
-    throw error;
-  }
-
-  return data ?? [];
+  return asArray(await tesisApi.listar());
 }
 
-// Obtener documentos de una tesis específica
+export async function obtenerDetalleTesis(tesisId) {
+  return unwrap(await tesisApi.detalle(tesisId));
+}
+
+export async function actualizarEstadoTesis(tesisId, estado) {
+  return unwrap(await tesisApi.actualizarEstado(tesisId, estado));
+}
+
 export async function obtenerDocumentosMiTesis(tesisId) {
-  const { data, error } = await atSchema().rpc('obtener_documentos_mi_tesis', {
-    p_tesis_id: tesisId,
-  });
-
-  if (error) {
-    console.error('Error obteniendo documentos de mi tesis:', error);
-    throw error;
-  }
-
-  return data ?? [];
+  return asArray(await documentosApi.listarPorTesis(tesisId));
 }
 
-// Subir documento (Manda a pre-firmada o edge function de Supabase Drive Proxy en el futuro)
-export async function subirDocumentoAGoogleDrive({
+export async function subirDocumentoAGoogleDrive() {
+  pendingEndpoint('Subida binaria de documentos');
+}
+
+export async function registrarDocumentoTesis({
   tesisId,
-  file,
-  modo = 'tesis',
-  tipoDocumento = '',
+  nombreArchivo,
+  urlArchivoDrive,
+  carpetaDriveId,
+  documentoDriveId,
+  version = 1,
+  tipoMime,
+  tamanoBytes,
 }) {
-  if (modo === 'estudiante_documento' && !tipoDocumento) {
-    throw new Error(
-      'Se requiere tipo_documento cuando el modo es estudiante_documento',
-    );
-  }
-
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('tesis_id', tesisId);
-  formData.append('modo', modo);
-  if (tipoDocumento) {
-    formData.append('tipo_documento', tipoDocumento);
-  }
-
-  const response = await fetch(
-    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/upload-thesis-document`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      body: formData,
-    },
+  return unwrap(
+    await documentosApi.registrar({
+      tesisId,
+      nombreArchivo,
+      urlArchivoDrive,
+      carpetaDriveId,
+      documentoDriveId,
+      version,
+      tipoMime,
+      tamanoBytes,
+    }),
   );
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(
-      errorData.error || 'Failed to upload document to Edge Function',
-    );
-  }
-
-  return await response.json();
 }
+
 export async function obtenerDocumentosComplementarios(tesisId) {
-  const { data, error } = await atSchema().rpc('get_estudiante_documentos', {
-    p_tesis_id: tesisId,
-  });
-
-  if (error) {
-    console.error('Error obteniendo documentos complementarios:', error);
-    throw error;
-  }
-
-  return data ?? [];
+  return obtenerDocumentosMiTesis(tesisId);
 }
 
-export async function crearSugerenciaAsesor({
-  tesisId,
-  documentoTesisId,
-  tipoSugerenciaId,
-  detalle,
-}) {
-  const { data, error } = await atSchema().rpc('crear_sugerencia_asesor', {
-    p_tesis_id: tesisId,
-    p_documento_tesis_id: documentoTesisId ?? null,
-    p_tipo_sugerencia_id: tipoSugerenciaId,
-    p_detalle: detalle,
-  });
-
-  if (error) {
-    console.error('Error creando sugerencia:', error);
-    throw error;
-  }
-
-  return data?.[0] ?? null;
+export async function crearSugerenciaAsesor() {
+  pendingEndpoint('Creación de sugerencias de asesor');
 }
 
-export async function obtenerSugerenciasMiTesis(tesisId) {
-  const { data, error } = await atSchema().rpc('listar_sugerencias_tesis', {
-    p_tesis_id: tesisId,
-  });
-
-  if (error) {
-    console.error('Error obteniendo sugerencias:', error);
-    throw error;
-  }
-
-  return data ?? [];
+export async function obtenerSugerenciasMiTesis() {
+  pendingEndpoint('Listado de sugerencias de tesis');
 }
 
-export async function marcarSugerenciaAplicadaEstudiante(
-  sugerenciaId,
-  comentarioEstudiante = null,
-) {
-  const { data, error } = await atSchema().rpc('marcar_sugerencia_aplicada', {
-    p_historial_sugerencia_id: sugerenciaId,
-    p_comentario_estudiante: comentarioEstudiante,
-  });
-
-  if (error) {
-    console.error('Error marcando sugerencia como aplicada:', error);
-    throw error;
-  }
-
-  return Array.isArray(data) ? (data[0] ?? null) : data;
+export async function marcarSugerenciaAplicadaEstudiante() {
+  pendingEndpoint('Marcado de sugerencias aplicadas');
 }

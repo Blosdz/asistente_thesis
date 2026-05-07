@@ -1,204 +1,161 @@
-import { supabase } from '../lib/supabase';
+import { authApi } from '../api/auth.api';
+import {
+  clearStoredSession,
+  getStoredToken,
+  getStoredUser,
+  pendingEndpoint,
+  setStoredSession,
+} from '../api/client';
+import { usuariosApi } from '../api/usuarios.api';
 
-async function encolarInvitacionSignup({ email, name, rol }) {
-  const { data, error } = await supabase.functions.invoke(
-    'encolar-invitacion-signup',
-    {
-      body: {
-        email,
-        name,
-        rol,
-      },
-    },
+function getUsuarioFromResponse(data) {
+  return data?.usuario || data?.user || data?.data?.usuario || data?.data?.user || null;
+}
+
+function getTokenFromResponse(data) {
+  return (
+    data?.token ||
+    data?.access_token ||
+    data?.accessToken ||
+    data?.data?.token ||
+    data?.data?.access_token ||
+    null
   );
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
 }
 
-function construirRedirectResetPassword(redirectTo) {
-  if (redirectTo) {
-    return redirectTo;
-  }
-
-  if (typeof window === 'undefined') {
-    return undefined;
-  }
-
-  return `${window.location.origin}/#/reset-password`;
+function normalizeUser(usuario) {
+  if (!usuario) return null;
+  return {
+    ...usuario,
+    id: usuario.id || usuario.usuario_id || usuario.auth_usuario_id,
+    email: usuario.email || usuario.correo || usuario.email_publico,
+    user_metadata: {
+      ...(usuario.user_metadata || {}),
+      rol: usuario.rol,
+      nombre: usuario.nombre || usuario.nombres,
+    },
+  };
 }
 
-async function obtenerRolDesdePerfil(authUsuarioId) {
-  const { data, error } = await supabase.schema('AT').rpc('obtener_mi_rol');
-
-  if (error) {
-    throw error;
-  }
-
-  const raw = Array.isArray(data) ? (data[0] ?? null) : data;
-
-  if (!raw) {
-    return null;
-  }
-
-  if (authUsuarioId && raw.auth_usuario_id && raw.auth_usuario_id !== authUsuarioId) {
-    return null;
-  }
-
-  return raw.rol ?? null;
+function buildSession(token, usuario) {
+  if (!token) return null;
+  return {
+    access_token: token,
+    token_type: 'bearer',
+    user: normalizeUser(usuario),
+  };
 }
 
-export async function registrarEstudiante(email, password, name) {
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          rol: 'estudiante',
-          nombre: name,
-          name,
-        },
-      },
-    });
+async function registerByRole(email, password, rol) {
+  const data = await authApi.register({
+    email,
+    rol,
+    contrasena: password,
+  });
 
-    if (error) throw error;
-    return { ...data, queued: false };
-  } catch (error) {
-    if (error?.code === 'over_email_send_rate_limit') {
-      await encolarInvitacionSignup({
-        email,
-        name,
-        rol: 'estudiante',
-      });
-
-      return { user: null, session: null, queued: true };
-    }
-
-    throw error;
-  }
+  return {
+    user: normalizeUser(getUsuarioFromResponse(data)),
+    session: null,
+    queued: false,
+    data,
+  };
 }
 
-export async function registrarAsesor(email, password, name) {
-  try {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          rol: 'asesor',
-          nombre: name,
-          name,
-        },
-      },
-    });
+export async function registrarEstudiante(email, password) {
+  return registerByRole(email, password, 'estudiante');
+}
 
-    if (error) throw error;
-    return { ...data, queued: false };
-  } catch (error) {
-    if (error?.code === 'over_email_send_rate_limit') {
-      await encolarInvitacionSignup({
-        email,
-        name,
-        rol: 'asesor',
-      });
-
-      return { user: null, session: null, queued: true };
-    }
-
-    throw error;
-  }
+export async function registrarAsesor(email, password) {
+  return registerByRole(email, password, 'asesor');
 }
 
 export async function loginEstudiante(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (error) throw error;
-  return data;
+  return loginUsuario(email, password);
 }
 
 export async function loginUsuario(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const data = await authApi.login({
     email,
-    password,
+    contrasena: password,
   });
+  const token = getTokenFromResponse(data);
+  const usuario = normalizeUser(getUsuarioFromResponse(data));
 
-  if (error) throw error;
+  if (!token || !usuario) {
+    throw new Error('El backend no devolvió token y usuario para iniciar sesión.');
+  }
 
-  const role =
-    (await obtenerRolDesdePerfil(data?.user?.id)) ||
-    data?.user?.user_metadata?.rol ||
-    'estudiante';
+  setStoredSession(token, usuario);
 
-  return { ...data, role };
+  return {
+    user: usuario,
+    usuario,
+    session: buildSession(token, usuario),
+    token,
+    role: usuario.rol || usuario.user_metadata?.rol || 'estudiante',
+    data,
+  };
 }
 
 export async function logout() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
+  clearStoredSession();
 }
 
 export async function getCurrentUser() {
-  const { data, error } = await supabase.auth.getUser();
-  if (error) throw error;
-  return data.user;
+  const token = getStoredToken();
+  if (!token) return null;
+
+  try {
+    const data = await usuariosApi.me();
+    const usuario = normalizeUser(getUsuarioFromResponse(data) || data);
+    if (usuario) {
+      setStoredSession(token, usuario);
+    }
+    return usuario;
+  } catch (error) {
+    if (error?.status === 401) return null;
+    const storedUser = normalizeUser(getStoredUser());
+    if (storedUser) return storedUser;
+    throw error;
+  }
 }
 
 export async function isAuthenticated() {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
-  if (error) return false;
-  return !!session;
+  if (!getStoredToken()) return false;
+  return Boolean(await getCurrentUser());
 }
 
 export async function getCurrentSession() {
-  const {
-    data: { session },
-    error,
-  } = await supabase.auth.getSession();
-
-  if (error) {
-    throw error;
-  }
-
-  return session;
+  const token = getStoredToken();
+  if (!token) return null;
+  return buildSession(token, normalizeUser(getStoredUser()));
 }
 
-export async function enviarResetPassword(email, options = {}) {
-  const redirectTo = construirRedirectResetPassword(options.redirectTo);
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo,
+export async function enviarResetPassword() {
+  pendingEndpoint('Recuperación de contraseña por correo');
+}
+
+export async function cambiarPassword(password, options = {}) {
+  if (!options.contrasenaActual) {
+    pendingEndpoint(
+      'Cambio de contraseña sin contraseña actual / flujo de recuperación',
+    );
+  }
+
+  return authApi.cambiarPassword({
+    contrasenaActual: options.contrasenaActual,
+    contrasenaNueva: password,
   });
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
 }
 
-export async function cambiarPassword(password) {
-  const { data, error } = await supabase.auth.updateUser({
-    password,
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  return data;
-}
-
-export function escucharCambiosAuth(callback) {
-  return supabase.auth.onAuthStateChange(callback);
+export function escucharCambiosAuth() {
+  return {
+    data: {
+      subscription: {
+        unsubscribe() {},
+      },
+    },
+  };
 }
 
 export function esFlujoRecuperacionPassword() {

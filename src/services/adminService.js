@@ -1,87 +1,26 @@
-import { supabase } from '../lib/supabase';
+import { pagosApi } from '../api/pagos.api';
+import { pendingEndpoint } from '../api/client';
 
-const atSchema = () => supabase.schema('AT');
-
-const isPresent = (value) =>
-  value !== null &&
-  value !== undefined &&
-  !(typeof value === 'string' && value.trim() === '');
-
-const mergePaymentRows = (baseRow, nextRow) => {
-  if (!baseRow) return nextRow;
-  if (!nextRow) return baseRow;
-
-  const merged = { ...baseRow };
-
-  for (const [key, value] of Object.entries(nextRow)) {
-    if (key === 'metadata') {
-      merged.metadata = {
-        ...(baseRow.metadata || {}),
-        ...(nextRow.metadata || {}),
-      };
-      continue;
-    }
-
-    if (!isPresent(merged[key]) && isPresent(value)) {
-      merged[key] = value;
-    }
-  }
-
-  return merged;
+const asArray = (data) => {
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  if (Array.isArray(data?.pagos)) return data.pagos;
+  return data ? [data] : [];
 };
 
-const dedupePaymentsById = (rows) => {
-  const paymentMap = new Map();
-
-  for (const row of rows || []) {
-    const paymentId = row?.pago_id || row?.id;
-
-    if (!paymentId) {
-      continue;
-    }
-
-    paymentMap.set(
-      paymentId,
-      mergePaymentRows(paymentMap.get(paymentId), row),
-    );
-  }
-
-  return Array.from(paymentMap.values());
-};
+const unwrap = (data) => data?.data || data?.pago || data;
 
 export async function adminListarUsuarios() {
-  const { data, error } = await atSchema().rpc('admin_listar_usuarios');
-
-  if (error) {
-    console.error('Error listando usuarios desde admin:', error);
-    throw error;
-  }
-
-  return data ?? [];
+  pendingEndpoint('Listado administrativo de usuarios');
 }
 
 export async function adminListarPagos() {
-  const { data, error } = await atSchema().rpc('admin_listar_pagos');
-
-  if (error) {
-    console.error('Error listando pagos desde admin:', error);
-    throw error;
-  }
-
-  return dedupePaymentsById(data ?? []);
+  return asArray(await pagosApi.listar());
 }
 
 export async function adminObtenerPago(pagoId) {
-  const { data, error } = await atSchema().rpc('admin_obtener_pago', {
-    p_pago_id: pagoId,
-  });
-
-  if (error) {
-    console.error('Error obteniendo detalle del pago:', error);
-    throw error;
-  }
-
-  return Array.isArray(data) ? (data[0] ?? null) : data;
+  const pagos = await adminListarPagos();
+  return pagos.find((pago) => pago?.pago_id === pagoId || pago?.id === pagoId) || null;
 }
 
 export async function adminVerificarPago(
@@ -89,67 +28,20 @@ export async function adminVerificarPago(
   {
     estado,
     notaVerificacion = null,
-    enlaceReunion = null,
   } = {},
 ) {
-  const { data, error } = await atSchema().rpc('admin_verificar_pago', {
-    p_pago_id: pagoId,
-    p_estado: estado,
-    p_nota_verificacion: notaVerificacion,
-    p_enlace_reunion: enlaceReunion,
-  });
-
-  if (error) {
-    console.error('Error verificando pago desde admin:', error);
-    throw error;
-  }
-
-  return Array.isArray(data) ? (data[0] ?? null) : data;
-}
-
-export async function adminVerificarPagoPlan(
-  pagoId,
-  {
-    estado,
-    notaVerificacion = null,
-  } = {},
-) {
-  const { data, error } = await atSchema().rpc('admin_verificar_pago_plan', {
-    p_pago_id: pagoId,
-    p_estado: estado,
-    p_nota_verificacion: notaVerificacion,
-  });
-
-  if (error) {
-    console.error('Error verificando pago de plan desde admin:', error);
-    throw error;
-  }
-
-  return Array.isArray(data) ? (data[0] ?? null) : data;
-}
-
-export async function validarCitaAsesoriaAdmin(
-  validationCitaId,
-  {
-    aprobado,
-    notasAdmin = null,
-    enlaceReunion = null,
-  } = {},
-) {
-  const { data, error } = await atSchema().rpc(
-    'validar_cita_asesoria_admin',
-    {
-      p_validation_cita_id: validationCitaId,
-      p_aprobado: aprobado,
-      p_notas_admin: notasAdmin,
-      p_enlace_reunion: enlaceReunion,
-    },
+  return unwrap(
+    await pagosApi.verificar(pagoId, {
+      aprobado: estado === true || estado === 'aprobado' || estado === 'verificado',
+      notaVerificacion,
+    }),
   );
+}
 
-  if (error) {
-    console.error('Error validando cita desde administración:', error);
-    throw error;
-  }
+export async function adminVerificarPagoPlan(pagoId, options = {}) {
+  return adminVerificarPago(pagoId, options);
+}
 
-  return Array.isArray(data) ? (data[0] ?? null) : data;
+export async function validarCitaAsesoriaAdmin() {
+  pendingEndpoint('Validación administrativa de citas');
 }

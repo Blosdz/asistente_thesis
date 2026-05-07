@@ -16,6 +16,12 @@ const formatDate = (value) => {
 };
 
 const toNumber = (value) => Number(value || 0);
+const getPlanName = (subscription) =>
+  subscription?.plan_nombre ||
+  subscription?.nombre_plan ||
+  subscription?.plan ||
+  subscription?.nombre ||
+  null;
 
 const getCoverageMeta = (subscription, serviceType) => {
   if (!subscription || !serviceType) {
@@ -71,15 +77,21 @@ export default function SubscriptionSummaryCard({
       >
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
-            Plan Activo
+            Plan actual
           </p>
           <h3
             className={`font-bold text-slate-900 ${
               compact ? 'mt-1 text-base' : 'mt-2 text-lg'
             }`}
           >
-            {compact ? 'Cobertura disponible' : 'Beneficios disponibles'}
+            {getPlanName(subscription) ||
+              (compact ? 'Cobertura disponible' : 'Beneficios disponibles')}
           </h3>
+          {subscription && getPlanName(subscription) && !compact && (
+            <p className="mt-1 text-sm text-slate-500">
+              Revisa tus asesorías, pre-sustentaciones y fecha de expiración.
+            </p>
+          )}
         </div>
         <div
           className={`flex items-center justify-center rounded-2xl bg-blue-100 text-blue-700 ${
