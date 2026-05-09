@@ -26,4 +26,20 @@ export const authApi = {
       body: payload,
     });
   },
+
+  solicitarResetPassword(payload: { email: string }) {
+    return apiRequest('/auth/password/reset-request', {
+      method: 'POST',
+      auth: false,
+      body: payload,
+    });
+  },
+
+  resetPassword(payload: { token: string; contrasenaNueva: string }) {
+    return apiRequest('/auth/password/reset', {
+      method: 'POST',
+      auth: false,
+      body: payload,
+    });
+  },
 };

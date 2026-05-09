@@ -515,6 +515,118 @@ Body:
 }
 ```
 
+## Planes Listar planes
+
+Endpoint:
+GET /planes
+
+Auth:
+No
+
+Headers:
+
+```json
+{
+  "Content-Type": "application/json"
+}
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "data": [
+    {
+      "id": "uuid",
+      "nombre": "Esencial",
+      "precio": "0.00",
+      "duracion_dias": 180,
+      "caracteristicas": {
+        "descripcion": "Acceso base al sistema",
+        "incluye_ai_tool": true,
+        "asesorias_incluidas": 0,
+        "presustentaciones_incluidas": 0
+      }
+    }
+  ]
+}
+```
+
+## Planes Cotizar tesis con plan
+
+Endpoint:
+POST /planes/cotizar
+
+Auth:
+No
+
+Headers:
+
+```json
+{
+  "Content-Type": "application/json"
+}
+```
+
+Body:
+
+```json
+{
+  "planId": "uuid",
+  "tipoTesisId": "uuid",
+  "nivelAcademico": "PREGRADO|MAESTRIA|ESPECIALIDAD|DOCTORADO",
+  "requiereAnalisisEstadistico": true
+}
+```
+
+Response:
+
+```json
+{
+  "ok": true,
+  "data": {
+    "plan_id": "uuid",
+    "plan_nombre": "Esencial",
+    "tipo_tesis_id": "uuid",
+    "tipo_tesis_codigo": "ING",
+    "tipo_tesis_nombre": "Ingeniería",
+    "nivel_academico": "PREGRADO",
+    "precio_base": 2000.0,
+    "porcentaje_nivel": 0,
+    "monto_ajuste_nivel": 0.0,
+    "descuento_analisis_estadistico": 0.0,
+    "precio_total": 2000.0,
+    "moneda": "PEN"
+  }
+}
+```
+
+## Planes Comprar plan
+
+Endpoint:
+POST /planes/comprar
+
+Auth:
+Sí
+
+Headers:
+
+```json
+{
+  "Content-Type": "application/json",
+  "Authorization": "Bearer <token>"
+}
+```
+
+Body:
+
+```json
+{
+  "planId": "uuid"
+}
+```
+
 ## Módulos Listar módulos por tesis
 
 Endpoint:

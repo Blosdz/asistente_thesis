@@ -19,7 +19,7 @@ export async function obtenerDashboardEstudianteBase() {
     usuariosApi.me(),
     tesisApi.listar(),
     pagosApi.listar(),
-    reunionesApi.listar(),
+    reunionesApi.listarEstudiante(),
     asesoresApi.listar(),
   ]);
 
@@ -53,15 +53,21 @@ export async function obtenerMisCitasEstudiante({
   fechaInicio = null,
   fechaFin = null,
 } = {}) {
-  return asArray(await reunionesApi.listar({ fechaInicio, fechaFin }), 'reuniones');
+  const citas = asArray(await reunionesApi.listarEstudiante(), 'reuniones');
+  return citas.filter((cita) => {
+    const inicio = new Date(cita.inicio);
+    if (fechaInicio && inicio < new Date(fechaInicio)) return false;
+    if (fechaFin && inicio > new Date(fechaFin)) return false;
+    return true;
+  });
 }
 
 export async function obtenerHistorialValidacionesCitaEstudiante() {
-  pendingEndpoint('Historial de validaciones de cita del estudiante');
+  return asArray(await reunionesApi.listarValidacionesEstudiante(), 'data');
 }
 
 export async function obtenerDetalleCitaEstudiante() {
-  pendingEndpoint('Detalle de cita de estudiante');
+  pendingEndpoint('Detalle de cita de estudiante sin reunionId');
 }
 
 export async function cancelarCitaEstudiante(reunionId, motivo = null) {

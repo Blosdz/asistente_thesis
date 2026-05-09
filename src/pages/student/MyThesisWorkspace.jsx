@@ -315,7 +315,13 @@ export default function MyThesisWorkspace() {
     return () => {
       ignore = true;
     };
-  }, [createForm, showCreateModal]);
+  }, [
+    createForm.plan_id,
+    createForm.tipo_tesis_id,
+    createForm.nivel_academico,
+    createForm.requiere_analisis_estadistico,
+    showCreateModal,
+  ]);
 
   const handleCreateThesis = async () => {
     if (!createForm.titulo.trim()) {
@@ -323,8 +329,17 @@ export default function MyThesisWorkspace() {
       return;
     }
 
-    if (!perfilEstudiante?.estudiante_id) {
-      toast.error('Completa tu perfil de estudiante antes de crear la tesis');
+    if (
+      !createForm.plan_id ||
+      !createForm.tipo_tesis_id ||
+      !createForm.nivel_academico
+    ) {
+      toast.error('Selecciona plan, tipo de tesis y nivel académico');
+      return;
+    }
+
+    if (quoting) {
+      toast.error('Espera a que termine la cotización');
       return;
     }
 
@@ -336,7 +351,6 @@ export default function MyThesisWorkspace() {
     try {
       setCreating(true);
       const newThesis = await crearTesisConPlan({
-        estudiante_id: perfilEstudiante.estudiante_id,
         titulo: createForm.titulo.trim(),
         descripcion: createForm.descripcion.trim() || null,
         plan_id: createForm.plan_id,
@@ -345,10 +359,10 @@ export default function MyThesisWorkspace() {
         requiere_analisis_estadistico: createForm.requiere_analisis_estadistico,
         universidad_id: perfilEstudiante?.universidad_id || null,
         programa_id: null,
-        estado_tesis: 'borrador',
+        estado_tesis: 'pendiente_pago',
       });
 
-      toast.success('Tesis creada en borrador');
+      toast.success('Tesis creada y pago generado');
       setShowCreateModal(false);
       resetCreateFlow();
 
@@ -475,17 +489,6 @@ export default function MyThesisWorkspace() {
     });
   }, [createdPaymentSummary?.pago_id, navigate]);
 
-  const canSubmitCreateFlow =
-    !creating &&
-    !quoting &&
-    !loadingCatalogs &&
-    !!perfilEstudiante?.estudiante_id &&
-    !!createForm.titulo.trim() &&
-    !!createForm.plan_id &&
-    !!createForm.tipo_tesis_id &&
-    !!createForm.nivel_academico &&
-    !!quoteData;
-
   const createThesisModal = (
     <Modal
       open={showCreateModal}
@@ -496,7 +499,7 @@ export default function MyThesisWorkspace() {
       primaryAction={{
         label: creating ? 'Creando...' : 'Crear tesis y generar pago',
         onClick: handleCreateThesis,
-        disabled: !canSubmitCreateFlow,
+        disabled: creating,
       }}
       secondaryAction={{
         label: 'Cancelar',
@@ -645,11 +648,9 @@ export default function MyThesisWorkspace() {
               Datos usados al crear
             </p>
             <p className="mt-2">
-              Estudiante del perfil:{' '}
+              Estudiante autenticado:{' '}
               <span className="font-medium text-slate-700">
-                {perfilEstudiante?.estudiante_id
-                  ? 'Se enviará el estudiante registrado'
-                  : 'No disponible, primero completa tu perfil'}
+                Se tomará desde tu sesión activa
               </span>
             </p>
             <p className="mt-2">

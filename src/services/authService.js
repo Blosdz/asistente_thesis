@@ -131,15 +131,29 @@ export async function getCurrentSession() {
   return buildSession(token, normalizeUser(getStoredUser()));
 }
 
-export async function enviarResetPassword() {
-  pendingEndpoint('Recuperación de contraseña por correo');
+export async function enviarResetPassword(email) {
+  return authApi.solicitarResetPassword({ email });
 }
 
 export async function cambiarPassword(password, options = {}) {
   if (!options.contrasenaActual) {
-    pendingEndpoint(
-      'Cambio de contraseña sin contraseña actual / flujo de recuperación',
-    );
+    const token =
+      options.token ||
+      (typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('token') ||
+          new URLSearchParams(window.location.hash.replace(/^#/, '')).get('token')
+        : null);
+
+    if (!token) {
+      pendingEndpoint(
+        'Cambio de contraseña sin contraseña actual / flujo de recuperación',
+      );
+    }
+
+    return authApi.resetPassword({
+      token,
+      contrasenaNueva: password,
+    });
   }
 
   return authApi.cambiarPassword({
@@ -171,6 +185,8 @@ export function esFlujoRecuperacionPassword() {
     hashParams.get('type') === 'recovery' ||
     searchParams.has('code') ||
     searchParams.has('token_hash') ||
+    searchParams.has('token') ||
+    hashParams.has('token') ||
     hashParams.has('access_token')
   );
 }

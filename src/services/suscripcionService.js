@@ -1,6 +1,7 @@
+import { suscripcionesApi } from '../api/suscripciones.api';
+
+const unwrap = (data) => data?.data || data?.suscripcion || data;
+
 export async function obtenerMiSuscripcion() {
-  console.warn(
-    'Suscripción pendiente: no hay endpoint NestJS documentado. Devolviendo null.',
-  );
-  return null;
+  return unwrap(await suscripcionesApi.miSuscripcion());
 }

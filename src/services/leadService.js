@@ -1,5 +1,7 @@
-import { pendingEndpoint } from '../api/client';
+import { leadsApi } from '../api/leads.api';
 
-export async function registrarLeadEstudiante() {
-  pendingEndpoint('Registro de leads de estudiante');
+const unwrap = (data) => data?.data || data?.lead || data;
+
+export async function registrarLeadEstudiante(payload) {
+  return unwrap(await leadsApi.registrarEstudiante(payload));
 }

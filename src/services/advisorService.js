@@ -1,7 +1,11 @@
 import { asesoresApi } from '../api/asesores.api';
+import { disponibilidadApi } from '../api/disponibilidad.api';
 import { documentosApi } from '../api/documentos.api';
+import { observacionesApi } from '../api/observaciones.api';
 import { pendingEndpoint } from '../api/client';
+import { relacionesApi } from '../api/relaciones.api';
 import { reunionesApi } from '../api/reuniones.api';
+import { sugerenciasApi } from '../api/sugerencias.api';
 import { tesisApi } from '../api/tesis.api';
 import { usuariosApi } from '../api/usuarios.api';
 
@@ -13,6 +17,26 @@ const asArray = (data, key = null) => {
 };
 
 const unwrap = (data) => data?.data || data?.usuario || data?.asesor || data;
+
+const addRelacionAlias = (item) =>
+  item
+    ? {
+        ...item,
+        relacion_id: item.relacion_id || item.relacionId || item.id || null,
+      }
+    : item;
+
+const flattenTesisConAsesores = (rows) =>
+  rows.flatMap((tesis) => {
+    const asesores = Array.isArray(tesis?.asesores) ? tesis.asesores : [];
+    if (asesores.length === 0) return [];
+
+    return asesores.map((asesor) => ({
+      ...asesor,
+      tesis_id: tesis.id || tesis.tesis_id,
+      tesis_titulo: tesis.titulo,
+    }));
+  });
 
 function pickPerfilAsesor(usuario) {
   return (
@@ -64,24 +88,24 @@ export async function obtenerAsesores() {
   return asArray(await asesoresApi.listar(), 'asesores');
 }
 
-export async function vincularmeConAsesorPorSlug() {
-  pendingEndpoint('Vinculación con asesor por slug');
+export async function vincularmeConAsesorPorSlug(slug, payload = {}) {
+  return unwrap(await relacionesApi.vincularPorSlug(slug, payload));
 }
 
-export async function vincularmeConAsesorPorCodigo() {
-  pendingEndpoint('Vinculación con asesor por código');
+export async function vincularmeConAsesorPorCodigo(codigo, payload = {}) {
+  return unwrap(await relacionesApi.vincularPorCodigo(codigo, payload));
 }
 
 export async function generarCodigoAsesor() {
-  pendingEndpoint('Generación de código público de asesor');
+  return unwrap(await asesoresApi.generarCodigoPublico());
 }
 
 export async function obtenerMiCodigoPublicoAsesor() {
-  pendingEndpoint('Código público del asesor');
+  return unwrap(await asesoresApi.miCodigoPublico());
 }
 
 export async function obtenerPerfilAsesor() {
-  const data = await usuariosApi.me();
+  const data = await usuariosApi.obtenerPerfilAsesor();
   return mapearPerfilAsesor(pickPerfilAsesor(unwrap(data)));
 }
 
@@ -105,63 +129,106 @@ export async function guardarPerfilAsesor(perfil) {
   return mapearPerfilAsesor(pickPerfilAsesor(unwrap(data))) || data;
 }
 
-export async function crearScheduleAsesor() {
-  pendingEndpoint('Creación de horario de asesor');
+export async function crearScheduleAsesor(params) {
+  return crearEspacioLibreAsesor(params);
 }
 
-export async function obtenerHorariosDisponiblesAsesor() {
-  pendingEndpoint('Horarios disponibles de asesor');
+export async function obtenerHorariosDisponiblesAsesor(asesorId, range = {}) {
+  const now = new Date();
+  const defaultEnd = new Date(now);
+  defaultEnd.setDate(defaultEnd.getDate() + 45);
+
+  return obtenerBloquesDisponibles({
+    asesorId,
+    desde: range.desde || now.toISOString(),
+    hasta: range.hasta || defaultEnd.toISOString(),
+  });
 }
 
-export async function obtenerHorariosPresustentacionAsesor() {
-  pendingEndpoint('Horarios de presustentación de asesor');
+export async function obtenerHorariosPresustentacionAsesor(asesorId, range = {}) {
+  return obtenerHorariosDisponiblesAsesor(asesorId, range);
 }
 
 export async function crearCitaAsesoria(params) {
+  const asesorId = params?.p_asesor_id || params?.asesorId;
   const inicio = params?.p_inicio || params?.inicio;
   const fin = params?.p_fin || params?.fin;
 
-  if (!inicio || !fin) {
-    pendingEndpoint('Creación de cita sin inicio/fin documentados');
+  if (!asesorId || !inicio || !fin) {
+    pendingEndpoint('Creación de cita sin asesor/inicio/fin documentados');
   }
 
   return unwrap(
-    await reunionesApi.crear({
+    await reunionesApi.crearAsesoria({
+      asesorId,
       disponibilidadId: params?.p_disponibilidad_id || params?.disponibilidadId || null,
+      tarifaId: params?.p_tarifa_id || params?.tarifaId || null,
       inicio,
       fin,
+      duracionMinutos: params?.p_duracion_minutos || params?.duracionMinutos || null,
+      costoReunion: params?.p_costo_reunion || params?.costoReunion || null,
       tesisId: params?.p_tesis_id || params?.tesisId || null,
       motivo: params?.p_motivo || params?.motivo || 'Asesoría',
       modalidad: params?.p_modalidad || params?.modalidad || 'virtual',
       lugar: params?.p_lugar || params?.lugar || null,
-      enlaceReunion: params?.p_enlace_reunion || params?.enlaceReunion || null,
       notas: params?.p_notas || params?.notas || null,
     }),
   );
 }
 
-export async function obtenerHistorialValidacionesCitaAsesor() {
-  pendingEndpoint('Historial de validaciones de cita del asesor');
+export async function obtenerHistorialValidacionesCitaAsesor(status = null) {
+  return asArray(await reunionesApi.listarValidacionesAsesor(status), 'data');
 }
 
-export async function responderReservaCita() {
-  pendingEndpoint('Respuesta de reserva de cita');
+export async function responderReservaCita(validationCitaId, accion) {
+  return unwrap(await reunionesApi.responderReserva(validationCitaId, accion));
 }
 
-export async function aprobarPagoReservaCita() {
-  pendingEndpoint('Aprobación de pago de reserva de cita');
+export async function aprobarPagoReservaCita(validationCitaId, payload = {}) {
+  return unwrap(
+    await reunionesApi.aprobarPagoReserva(validationCitaId, {
+      enlaceReunion: payload.enlace_reunion || payload.enlaceReunion || null,
+      lugar: payload.lugar || null,
+      notas: payload.notas || null,
+    }),
+  );
 }
 
-export async function crearObservacionTesisEnriquecida() {
-  pendingEndpoint('Observaciones enriquecidas de tesis');
+export async function crearObservacionTesisEnriquecida(params) {
+  return unwrap(
+    await observacionesApi.crear({
+      tesisId: params?.tesisId || params?.p_tesis_id,
+      documentoTesisId:
+        params?.documentoTesisId || params?.p_documento_tesis_id || null,
+      texto: params?.texto || params?.p_texto || params?.contenido || '',
+      titulo: params?.titulo || params?.p_titulo || null,
+      contenidoHtml: params?.contenidoHtml || params?.p_contenido_html || null,
+      contenidoDelta:
+        params?.contenidoDelta || params?.p_contenido_delta || null,
+    }),
+  );
 }
 
-export async function listarHistorialObservacionesTesis() {
-  pendingEndpoint('Historial de observaciones de tesis');
+export async function listarHistorialObservacionesTesis(tesisId) {
+  return asArray(await observacionesApi.historial(tesisId));
 }
 
-export async function obtenerBloquesDisponibles() {
-  pendingEndpoint('Bloques disponibles de asesor');
+export async function obtenerBloquesDisponibles({
+  asesorId,
+  desde,
+  hasta,
+} = {}) {
+  if (!asesorId || !desde || !hasta) {
+    pendingEndpoint('Bloques disponibles de asesor sin asesorId/desde/hasta');
+  }
+
+  const data = asArray(await disponibilidadApi.bloques(asesorId, { desde, hasta }));
+  return data.map((slot) => ({
+    ...slot,
+    inicio_bloque: slot.inicio_bloque || slot.inicio,
+    fin_bloque: slot.fin_bloque || slot.fin,
+    estado: slot.estado || 'libre',
+  }));
 }
 
 export async function crearCitaEstudianteAsesor(params) {
@@ -169,35 +236,40 @@ export async function crearCitaEstudianteAsesor(params) {
 }
 
 export async function obtenerEstudiantesAsesor() {
-  pendingEndpoint('Estudiantes del asesor');
+  return asArray(await asesoresApi.estudiantes());
 }
 
 export async function obtenerEstudiantesMisAsesorias() {
-  pendingEndpoint('Estudiantes de mis asesorías');
+  return obtenerEstudiantesAsesor();
 }
 
-export async function cambiarEstadoRelacion() {
-  pendingEndpoint('Cambio de estado de relación asesor-estudiante');
+export async function cambiarEstadoRelacion(relacionId, estado) {
+  return unwrap(await relacionesApi.cambiarEstado(relacionId, estado));
 }
 
 export async function obtenerMisAsesores() {
-  pendingEndpoint('Mis asesores');
+  return asArray(await asesoresApi.misAsesores()).map(addRelacionAlias);
 }
 
-export async function asignarTesisAsesor() {
-  pendingEndpoint('Asignación de tesis a asesor');
+export async function asignarTesisAsesor(tesisId, asesorId, rol = 'principal') {
+  return unwrap(
+    await tesisApi.asignarAsesor(tesisId, {
+      asesorId,
+      rol,
+    }),
+  );
 }
 
-export async function asignarMiTesisAAsesor() {
-  pendingEndpoint('Asignación de mi tesis a asesor');
+export async function asignarMiTesisAAsesor(tesisId, asesorId, rol = 'principal') {
+  return asignarTesisAsesor(tesisId, asesorId, rol);
 }
 
 export async function obtenerMisTesisConAsesores() {
-  return asArray(await tesisApi.listar(), 'tesis');
+  return flattenTesisConAsesores(asArray(await tesisApi.listarConAsesores(), 'tesis'));
 }
 
 export async function obtenerTesisAsignadasAsesor() {
-  return asArray(await tesisApi.listar(), 'tesis');
+  return asArray(await tesisApi.listarAsignadasAsesor(), 'tesis');
 }
 
 export async function getTesisAsesor() {
@@ -205,19 +277,30 @@ export async function getTesisAsesor() {
 }
 
 export async function getDocumentosApoyo(tesisId) {
-  return asArray(await documentosApi.listarPorTesis(tesisId), 'documentos');
+  return asArray(await documentosApi.listarApoyo(tesisId), 'documentos');
 }
 
 export async function obtenerDocumentosTesisAsignada(tesisId) {
-  return getDocumentosApoyo(tesisId);
+  return asArray(await documentosApi.listarPorTesisAsignada(tesisId), 'documentos');
 }
 
-export async function registrarSugerenciaAsesor() {
-  pendingEndpoint('Registro de sugerencias de asesor');
+export async function registrarSugerenciaAsesor(params) {
+  const detalle = params?.detalle || params?.sugerencia || '';
+  return unwrap(
+    await sugerenciasApi.crear({
+      tesisId: params?.tesisId || params?.p_tesis_id,
+      documentoTesisId:
+        params?.documentoTesisId || params?.p_documento_tesis_id || null,
+      tipoSugerenciaId:
+        params?.tipoSugerenciaId || params?.p_tipo_sugerencia_id || null,
+      sugerencia: params?.sugerencia || detalle,
+      detalle,
+    }),
+  );
 }
 
-export async function obtenerSugerenciasTesisAsignada() {
-  pendingEndpoint('Sugerencias de tesis asignada');
+export async function obtenerSugerenciasTesisAsignada(tesisId) {
+  return asArray(await sugerenciasApi.listarValidacion(tesisId));
 }
 
 export async function obtenerSugerenciasAsesor(tesisId) {
@@ -225,11 +308,21 @@ export async function obtenerSugerenciasAsesor(tesisId) {
 }
 
 export async function listarTiposSugerenciaAsesor() {
-  pendingEndpoint('Tipos de sugerencia de asesor');
+  return asArray(await sugerenciasApi.tipos());
 }
 
-export async function validarAplicacionSugerenciaAsesor() {
-  pendingEndpoint('Validación de aplicación de sugerencia');
+export async function validarAplicacionSugerenciaAsesor({
+  sugerenciaId,
+  aprobado,
+  comentarioAsesor = null,
+  comentario = null,
+}) {
+  return unwrap(
+    await sugerenciasApi.actualizarEstado(sugerenciaId, {
+      estado: aprobado ? 'verificado' : 'rechazado',
+      comentario: comentarioAsesor || comentario || null,
+    }),
+  );
 }
 
 export async function actualizarEstadoSugerenciaAsesor(sugerenciaId, aplicado) {
@@ -239,14 +332,46 @@ export async function actualizarEstadoSugerenciaAsesor(sugerenciaId, aplicado) {
   });
 }
 
-export async function crearEspacioLibreAsesor() {
-  pendingEndpoint('Creación de espacio libre de asesor');
+export async function crearEspacioLibreAsesor(params) {
+  const diasSemana = params?.p_dias_semana || params?.diasSemana;
+  const basePayload = {
+    asesorId: params?.p_asesor_id || params?.asesorId || undefined,
+    inicio: params?.p_inicio || params?.inicio,
+    fin: params?.p_fin || params?.fin,
+    usaBloques: params?.p_usa_bloques ?? params?.usaBloques ?? true,
+    duracionBloqueMinutos:
+      params?.p_duracion_bloque_minutos ||
+      params?.duracionBloqueMinutos ||
+      undefined,
+    recurrente: params?.p_recurrente ?? params?.recurrente ?? false,
+    fechaInicio: params?.p_fecha_inicio || params?.fechaInicio || undefined,
+    fechaFin: params?.p_fecha_fin || params?.fechaFin || undefined,
+  };
+
+  if (basePayload.recurrente && Array.isArray(diasSemana) && diasSemana.length > 0) {
+    const results = await Promise.all(
+      diasSemana.map((diaSemana) =>
+        disponibilidadApi.crear({
+          ...basePayload,
+          diaSemana,
+        }),
+      ),
+    );
+    return results.map(unwrap);
+  }
+
+  return unwrap(
+    await disponibilidadApi.crear({
+      ...basePayload,
+      diaSemana: params?.p_dia_semana ?? params?.diaSemana ?? undefined,
+    }),
+  );
 }
 
 export async function obtenerMisEspaciosLibresAsesor() {
-  pendingEndpoint('Espacios libres del asesor');
+  return asArray(await disponibilidadApi.misEspacios());
 }
 
-export async function desactivarEspacioLibreAsesor() {
-  pendingEndpoint('Desactivación de espacio libre de asesor');
+export async function desactivarEspacioLibreAsesor(disponibilidadId) {
+  return unwrap(await disponibilidadApi.desactivar(disponibilidadId));
 }

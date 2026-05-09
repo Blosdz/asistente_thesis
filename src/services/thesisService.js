@@ -1,6 +1,8 @@
 import { documentosApi } from '../api/documentos.api';
-import { pendingEndpoint } from '../api/client';
 import { tesisApi } from '../api/tesis.api';
+import { catalogosApi } from '../api/catalogos.api';
+import { pagosApi } from '../api/pagos.api';
+import { sugerenciasApi } from '../api/sugerencias.api';
 
 const asArray = (data) => {
   if (Array.isArray(data)) return data;
@@ -23,15 +25,34 @@ export async function crearMiTesis(payload) {
 }
 
 export async function obtenerTiposTesisActivos() {
-  pendingEndpoint('Tipos de tesis activos');
+  return asArray(await catalogosApi.obtenerTiposTesis(), 'data');
 }
 
-export async function cotizarTesisPlan() {
-  pendingEndpoint('Cotización de tesis con plan');
+export async function cotizarTesisPlan(payload) {
+  const data = await pagosApi.cotizar({
+    planId: payload.plan_id,
+    tipoTesisId: payload.tipo_tesis_id,
+    nivelAcademico: payload.nivel_academico,
+    requiereAnalisisEstadistico: payload.requiere_analisis_estadistico ?? true,
+  });
+
+  return unwrap(data);
 }
 
-export async function crearTesisConPlan() {
-  pendingEndpoint('Creación de tesis con plan');
+export async function crearTesisConPlan(payload) {
+  const data = await tesisApi.crearConPlan({
+    titulo: payload.titulo,
+    descripcion: payload.descripcion ?? null,
+    universidadId: payload.universidad_id || payload.universidadId || null,
+    programaId: payload.programa_id || payload.programaId || null,
+    planId: payload.plan_id,
+    tipoTesisId: payload.tipo_tesis_id,
+    nivelAcademico: payload.nivel_academico,
+    requiereAnalisisEstadistico:
+      payload.requiere_analisis_estadistico ?? true,
+  });
+
+  return unwrap(data);
 }
 
 export async function obtenerMisTesis() {
@@ -50,8 +71,18 @@ export async function obtenerDocumentosMiTesis(tesisId) {
   return asArray(await documentosApi.listarPorTesis(tesisId));
 }
 
-export async function subirDocumentoAGoogleDrive() {
-  pendingEndpoint('Subida binaria de documentos');
+export async function subirDocumentoAGoogleDrive({
+  tesisId,
+  file,
+  modo = 'tesis',
+  tipoDocumento = null,
+}) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('modo', modo);
+  if (tipoDocumento) formData.append('tipo_documento', tipoDocumento);
+
+  return unwrap(await documentosApi.subirArchivo(tesisId, formData));
 }
 
 export async function registrarDocumentoTesis({
@@ -82,14 +113,27 @@ export async function obtenerDocumentosComplementarios(tesisId) {
   return obtenerDocumentosMiTesis(tesisId);
 }
 
-export async function crearSugerenciaAsesor() {
-  pendingEndpoint('Creación de sugerencias de asesor');
+export async function crearSugerenciaAsesor(payload) {
+  const data = await sugerenciasApi.crear({
+    tesisId: payload.tesis_id || payload.tesisId,
+    documentoTesisId: payload.documento_tesis_id || payload.documentoTesisId || null,
+    sugerencia: payload.sugerencia || payload.titulo || payload.descripcion,
+    detalle: payload.detalle || payload.descripcion || null,
+    tipoSugerenciaId: payload.tipo_sugerencia_id || payload.tipoSugerenciaId || null,
+  });
+
+  return unwrap(data);
 }
 
-export async function obtenerSugerenciasMiTesis() {
-  pendingEndpoint('Listado de sugerencias de tesis');
+export async function obtenerSugerenciasMiTesis(tesisId) {
+  return asArray(await sugerenciasApi.listarPorTesis(tesisId));
 }
 
-export async function marcarSugerenciaAplicadaEstudiante() {
-  pendingEndpoint('Marcado de sugerencias aplicadas');
+export async function marcarSugerenciaAplicadaEstudiante(sugerenciaId, comentario = null) {
+  return unwrap(
+    await sugerenciasApi.marcarAplicada(sugerenciaId, {
+      aplicado: true,
+      comentario,
+    }),
+  );
 }

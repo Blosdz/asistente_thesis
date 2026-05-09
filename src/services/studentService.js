@@ -37,7 +37,7 @@ function mapearPerfil(raw) {
 }
 
 export async function obtenerPerfilEstudiante() {
-  const data = await usuariosApi.me();
+  const data = await usuariosApi.obtenerPerfilEstudiante();
   return mapearPerfil(pickPerfil(unwrapUsuario(data)));
 }
 

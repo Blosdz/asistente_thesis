@@ -1,5 +1,4 @@
-import { pagosApi } from '../api/pagos.api';
-import { pendingEndpoint } from '../api/client';
+import { adminApi } from '../api/admin.api';
 
 const asArray = (data) => {
   if (Array.isArray(data)) return data;
@@ -11,16 +10,15 @@ const asArray = (data) => {
 const unwrap = (data) => data?.data || data?.pago || data;
 
 export async function adminListarUsuarios() {
-  pendingEndpoint('Listado administrativo de usuarios');
+  return asArray(await adminApi.listarUsuarios());
 }
 
 export async function adminListarPagos() {
-  return asArray(await pagosApi.listar());
+  return asArray(await adminApi.listarPagos());
 }
 
 export async function adminObtenerPago(pagoId) {
-  const pagos = await adminListarPagos();
-  return pagos.find((pago) => pago?.pago_id === pagoId || pago?.id === pagoId) || null;
+  return unwrap(await adminApi.obtenerPago(pagoId));
 }
 
 export async function adminVerificarPago(
@@ -31,7 +29,7 @@ export async function adminVerificarPago(
   } = {},
 ) {
   return unwrap(
-    await pagosApi.verificar(pagoId, {
+    await adminApi.verificarPago(pagoId, {
       aprobado: estado === true || estado === 'aprobado' || estado === 'verificado',
       notaVerificacion,
     }),
@@ -39,9 +37,22 @@ export async function adminVerificarPago(
 }
 
 export async function adminVerificarPagoPlan(pagoId, options = {}) {
-  return adminVerificarPago(pagoId, options);
+  return unwrap(
+    await adminApi.verificarPagoPlan(pagoId, {
+      aprobado:
+        options.estado === true ||
+        options.estado === 'aprobado' ||
+        options.estado === 'verificado',
+      notaVerificacion: options.notaVerificacion ?? null,
+    }),
+  );
 }
 
-export async function validarCitaAsesoriaAdmin() {
-  pendingEndpoint('Validación administrativa de citas');
+export async function validarCitaAsesoriaAdmin(reunionId, estado = 'confirmado', nota = null) {
+  return unwrap(
+    await adminApi.actualizarEstadoReunion(reunionId, {
+      estado,
+      nota,
+    }),
+  );
 }
