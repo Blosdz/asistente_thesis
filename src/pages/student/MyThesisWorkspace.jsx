@@ -202,26 +202,43 @@ export default function MyThesisWorkspace() {
   }, []);
 
   const cargarCatalogosCreacion = useCallback(async () => {
-    try {
-      setLoadingCatalogs(true);
-      const [planes, tipos, perfil] = await Promise.all([
-        obtenerPlanesDisponibles(),
-        obtenerTiposTesisActivos(),
-        obtenerPerfilEstudiante().catch(() => null),
-      ]);
+    setLoadingCatalogs(true);
 
-      setPlanesDisponibles(planes || []);
-      setTiposTesis(tipos || []);
-      setPerfilEstudiante(perfil || null);
-    } catch (error) {
-      console.error('Error loading thesis creation catalogs:', error);
-      toast.error('No se pudieron cargar los catálogos de creación.');
+    const [planesResult, tiposResult, perfilResult] = await Promise.allSettled([
+      obtenerPlanesDisponibles(),
+      obtenerTiposTesisActivos(),
+      obtenerPerfilEstudiante(),
+    ]);
+
+    if (planesResult.status === 'fulfilled') {
+      setPlanesDisponibles(planesResult.value || []);
+    } else {
+      console.error('Error loading available plans:', planesResult.reason);
       setPlanesDisponibles([]);
-      setTiposTesis([]);
-      setPerfilEstudiante(null);
-    } finally {
-      setLoadingCatalogs(false);
     }
+
+    if (tiposResult.status === 'fulfilled') {
+      setTiposTesis(tiposResult.value || []);
+    } else {
+      console.error('Error loading thesis types:', tiposResult.reason);
+      setTiposTesis([]);
+    }
+
+    if (perfilResult.status === 'fulfilled') {
+      setPerfilEstudiante(perfilResult.value || null);
+    } else {
+      console.error('Error loading student profile:', perfilResult.reason);
+      setPerfilEstudiante(null);
+    }
+
+    if (
+      planesResult.status === 'rejected' ||
+      tiposResult.status === 'rejected'
+    ) {
+      toast.error('No se pudieron cargar todos los catálogos de creación.');
+    }
+
+    setLoadingCatalogs(false);
   }, []);
 
   const resetCreateFlow = useCallback(() => {
@@ -239,7 +256,8 @@ export default function MyThesisWorkspace() {
 
   const openCreateModal = useCallback(() => {
     setShowCreateModal(true);
-  }, []);
+    cargarCatalogosCreacion();
+  }, [cargarCatalogosCreacion]);
 
   useEffect(() => {
     fetchTheses();
@@ -367,8 +385,8 @@ export default function MyThesisWorkspace() {
       resetCreateFlow();
 
       await fetchTheses();
-      if (newThesis?.tesis_id) {
-        setSelectedThesisId(newThesis.tesis_id);
+      if (newThesis?.tesis_id || newThesis?.id) {
+        setSelectedThesisId(newThesis?.tesis_id || newThesis?.id);
       }
 
       setCreatedPaymentSummary(newThesis);
@@ -680,6 +698,21 @@ export default function MyThesisWorkspace() {
               <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Cargando catálogos...
+              </div>
+            ) : !planesDisponibles.length || !tiposTesis.length ? (
+              <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                <p className="font-semibold">
+                  No se pudieron cargar todos los catálogos.
+                </p>
+                <p className="mt-1">
+                  Reintenta la carga para mostrar planes y tipos de tesis.
+                </p>
+                <Button
+                  onClick={cargarCatalogosCreacion}
+                  className="mt-4 h-10 rounded-xl px-4"
+                >
+                  Reintentar
+                </Button>
               </div>
             ) : quoting ? (
               <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">

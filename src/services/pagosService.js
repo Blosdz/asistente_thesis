@@ -11,6 +11,24 @@ const asArray = (data) => {
 
 const unwrap = (data) => data?.data || data?.pago || data;
 
+const normalizePayment = (payment) => {
+  if (!payment || typeof payment !== 'object') return payment;
+
+  return {
+    ...payment,
+    pago_id: payment.pago_id || payment.id || null,
+    estado_pago: payment.estado_pago || payment.estado || 'pendiente',
+    plan_id: payment.plan_id || payment.planId || null,
+    validation_cita_id:
+      payment.validation_cita_id || payment.validationCitaId || null,
+    estado_reunion: payment.estado_reunion || payment.estadoReunion || null,
+    inicio_reunion:
+      payment.inicio_reunion || payment.reunion_inicio || payment.start_at || null,
+    fin_reunion:
+      payment.fin_reunion || payment.reunion_fin || payment.end_at || null,
+  };
+};
+
 export async function obtenerPlanesDisponibles() {
   return asArray(await pagosApi.obtenerPlanes(), 'data');
 }
@@ -30,7 +48,7 @@ export async function iniciarPagoPlan({
 }
 
 export async function obtenerMisPagosEstudiante() {
-  return asArray(await pagosApi.listar());
+  return asArray(await pagosApi.listar()).map(normalizePayment);
 }
 
 export async function registrarVoucherPago({
@@ -44,7 +62,8 @@ export async function registrarVoucherPago({
   tamanoBytes = null,
   paymentMethod = null,
 } = {}) {
-  return unwrap(
+  return normalizePayment(
+    unwrap(
     await pagosApi.registrarVoucher(pagoId, {
       codigoOperacion: codigoOperacion || operationCode || null,
       documentoDriveId: driveId,
@@ -54,6 +73,7 @@ export async function registrarVoucherPago({
       tamanoBytesVoucher: tamanoBytes,
       paymentMethod,
     }),
+    ),
   );
 }
 
@@ -76,7 +96,7 @@ export async function subirVoucherPago({
     formData.append('operation_code', codigoOperacion || operationCode);
   }
 
-  return unwrap(await pagosApi.subirVoucher(pagoId, formData));
+  return normalizePayment(unwrap(await pagosApi.subirVoucher(pagoId, formData)));
 }
 
 export async function disponibilidadAsesorSemana() {
