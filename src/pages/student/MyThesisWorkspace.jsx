@@ -17,10 +17,10 @@ import PaymentGatewayModal from '../../components/student/workspace/PaymentGatew
 import {
   cotizarTesisPlan,
   crearTesisConPlan,
-  obtenerDocumentosMiTesis,
   obtenerMisTesis,
   obtenerSugerenciasMiTesis,
   obtenerTiposTesisActivos,
+  obtenerTodosDocumentosMiTesis,
   marcarSugerenciaAplicadaEstudiante,
 } from '../../services/thesisService';
 import {
@@ -158,11 +158,16 @@ export default function MyThesisWorkspace() {
     async (thesisId) => {
       try {
         setLoading(true);
-        const docs = await obtenerDocumentosMiTesis(thesisId);
+        const docs = await obtenerTodosDocumentosMiTesis(thesisId);
         setDocuments(docs || []);
 
         if (docs && docs.length > 0) {
-          const latestInfo = docs[0];
+          const latestInfo =
+            docs.find(
+              (doc) =>
+                (doc.source || doc.tipo_documento_categoria || 'tesis') ===
+                'tesis',
+            ) || docs[0];
           setCurrentVersion(latestInfo);
 
           const previewSource =

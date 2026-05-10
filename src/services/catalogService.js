@@ -16,3 +16,16 @@ export async function obtenerUniversidades() {
     return universities;
   }
 }
+
+export async function obtenerEspecialidades() {
+  try {
+    const data = await catalogosApi.listarEspecialidades();
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.data)) return data.data;
+    if (Array.isArray(data?.especialidades)) return data.especialidades;
+    return data ? [data] : [];
+  } catch (error) {
+    console.warn('No se pudo cargar especialidades desde NestJS.', error);
+    return [];
+  }
+}

@@ -14,6 +14,55 @@ const asArray = (data) => {
 
 const unwrap = (data) => data?.data || data?.tesis || data?.documento || data;
 
+const getDocumentDate = (document) =>
+  document?.creado_en ||
+  document?.created_at ||
+  document?.actualizado_en ||
+  document?.updated_at ||
+  '';
+
+const getDocumentTime = (document) => {
+  const time = new Date(getDocumentDate(document)).getTime();
+  return Number.isNaN(time) ? 0 : time;
+};
+
+const normalizeDocument = (document, source = 'tesis') => {
+  if (!document || typeof document !== 'object') return document;
+
+  return {
+    ...document,
+    source: document.source || document.tipo_documento_categoria || source,
+    tipo_documento_categoria:
+      document.tipo_documento_categoria || document.source || source,
+    tesis_id: document.tesis_id || document.thesis_id || null,
+    nombre:
+      document.nombre ||
+      document.nombre_archivo ||
+      document.file_name ||
+      'Documento sin nombre',
+    nombre_archivo:
+      document.nombre_archivo ||
+      document.nombre ||
+      document.file_name ||
+      'Documento sin nombre',
+    url_google_doc:
+      document.url_google_doc ||
+      document.url_archivo_drive ||
+      document.webViewLink ||
+      null,
+    url_archivo_drive:
+      document.url_archivo_drive ||
+      document.url_google_doc ||
+      document.webViewLink ||
+      null,
+    tipo_documento: document.tipo_documento || document.tipo || null,
+    created_at: document.created_at || document.creado_en || null,
+  };
+};
+
+const sortDocumentsByDateDesc = (documents) =>
+  [...documents].sort((a, b) => getDocumentTime(b) - getDocumentTime(a));
+
 export async function crearMiTesis(payload) {
   const data = await tesisApi.crear({
     universidadId: payload.universidad_id || payload.universidadId || null,
@@ -68,7 +117,28 @@ export async function actualizarEstadoTesis(tesisId, estado) {
 }
 
 export async function obtenerDocumentosMiTesis(tesisId) {
-  return asArray(await documentosApi.listarPorTesis(tesisId));
+  return sortDocumentsByDateDesc(
+    asArray(await documentosApi.listarPorTesis(tesisId)).map((document) =>
+      normalizeDocument(document, 'tesis'),
+    ),
+  );
+}
+
+export async function obtenerDocumentosApoyoTesis(tesisId) {
+  return sortDocumentsByDateDesc(
+    asArray(await documentosApi.listarApoyo(tesisId)).map((document) =>
+      normalizeDocument(document, 'apoyo'),
+    ),
+  );
+}
+
+export async function obtenerTodosDocumentosMiTesis(tesisId) {
+  const [tesisDocuments, supportDocuments] = await Promise.all([
+    obtenerDocumentosMiTesis(tesisId),
+    obtenerDocumentosApoyoTesis(tesisId),
+  ]);
+
+  return sortDocumentsByDateDesc([...tesisDocuments, ...supportDocuments]);
 }
 
 export async function subirDocumentoAGoogleDrive({
@@ -109,8 +179,12 @@ export async function registrarDocumentoTesis({
   );
 }
 
+export async function crearCarpetaDriveParaTesis(tesisId) {
+  return unwrap(await documentosApi.crearCarpetaDrive(tesisId));
+}
+
 export async function obtenerDocumentosComplementarios(tesisId) {
-  return obtenerDocumentosMiTesis(tesisId);
+  return obtenerDocumentosApoyoTesis(tesisId);
 }
 
 export async function crearSugerenciaAsesor(payload) {

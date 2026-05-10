@@ -5,6 +5,10 @@ export const catalogosApi = {
     return apiRequest('/catalogos/universidades', { auth: false });
   },
 
+  listarEspecialidades() {
+    return apiRequest('/catalogos/especialidades', { auth: false });
+  },
+
   obtenerTiposTesis() {
     return apiRequest('/catalogos/tipos-tesis', { auth: false });
   },

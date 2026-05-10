@@ -1,8 +1,34 @@
 import { apiRequest } from './client';
 
+function buildQuery(params: Record<string, unknown> = {}) {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return;
+    searchParams.set(key, String(value));
+  });
+
+  const query = searchParams.toString();
+  return query ? `?${query}` : '';
+}
+
 export const asesoresApi = {
-  listar() {
-    return apiRequest('/asesores', { auth: false });
+  listar(params: Record<string, unknown> = {}) {
+    return apiRequest(`/asesores${buildQuery(params)}`, { auth: false });
+  },
+
+  vincularPorSlug(slug: string, payload: Record<string, unknown> = {}) {
+    return apiRequest('/asesores/vincular/slug', {
+      method: 'POST',
+      body: { ...payload, slug },
+    });
+  },
+
+  vincularPorCodigo(codigo: string, payload: Record<string, unknown> = {}) {
+    return apiRequest('/asesores/vincular/codigo', {
+      method: 'POST',
+      body: { ...payload, codigo },
+    });
   },
 
   misAsesores() {

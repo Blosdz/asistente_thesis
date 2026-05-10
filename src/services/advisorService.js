@@ -88,12 +88,16 @@ export async function obtenerAsesores() {
   return asArray(await asesoresApi.listar(), 'asesores');
 }
 
+export async function buscarAsesores(filtros = {}) {
+  return asArray(await asesoresApi.listar(filtros), 'asesores');
+}
+
 export async function vincularmeConAsesorPorSlug(slug, payload = {}) {
-  return unwrap(await relacionesApi.vincularPorSlug(slug, payload));
+  return unwrap(await asesoresApi.vincularPorSlug(slug, payload));
 }
 
 export async function vincularmeConAsesorPorCodigo(codigo, payload = {}) {
-  return unwrap(await relacionesApi.vincularPorCodigo(codigo, payload));
+  return unwrap(await asesoresApi.vincularPorCodigo(codigo, payload));
 }
 
 export async function generarCodigoAsesor() {

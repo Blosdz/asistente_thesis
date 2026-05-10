@@ -1,7 +1,7 @@
 import { usuariosApi } from '../api/usuarios.api';
 
 function unwrapUsuario(data) {
-  return data?.usuario || data?.user || data?.data?.usuario || data;
+  return data?.data || data?.usuario || data?.user || data?.data?.usuario || data;
 }
 
 function pickPerfil(usuario) {

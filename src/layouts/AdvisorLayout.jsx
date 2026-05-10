@@ -26,6 +26,14 @@ function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
+function getCodigoPublicoTexto(codigoPublico) {
+  return codigoPublico?.codigo_publico || codigoPublico?.r_codigo_publico || '';
+}
+
+function getCodigoPublicoExpira(codigoPublico) {
+  return codigoPublico?.expira_en || codigoPublico?.r_expira_en || null;
+}
+
 const AdvisorLayout = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -87,7 +95,7 @@ const AdvisorLayout = () => {
   const handleGenerateCodigo = async () => {
     if (codigoLoading) return;
 
-    if (codigoPublico?.r_codigo_publico) {
+    if (getCodigoPublicoTexto(codigoPublico)) {
       const confirmed = window.confirm(
         'Ya tienes un código activo. Si generas otro, el anterior se desactivará. ¿Deseas continuar?',
       );
@@ -108,9 +116,9 @@ const AdvisorLayout = () => {
     }
   };
 
-  const codigoTexto = codigoPublico?.r_codigo_publico;
-  const codigoExpira = codigoPublico?.r_expira_en
-    ? new Date(codigoPublico.r_expira_en).toLocaleDateString()
+  const codigoTexto = getCodigoPublicoTexto(codigoPublico);
+  const codigoExpira = getCodigoPublicoExpira(codigoPublico)
+    ? new Date(getCodigoPublicoExpira(codigoPublico)).toLocaleDateString()
     : null;
 
   const handleCopyCodigo = async () => {

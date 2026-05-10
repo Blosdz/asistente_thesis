@@ -79,10 +79,10 @@ const Profile = () => {
   const handleSave = async () => {
     try {
       setLoading(true);
-      await guardarPerfilEstudiante(formData);
-      // Refresh profile data
-      const data = await obtenerPerfilEstudiante();
-      if (data && data.length > 0) setPerfil(data[0]);
+      const saved = await guardarPerfilEstudiante(formData);
+      if (saved) {
+        setPerfil(saved);
+      }
       setIsEditing(false);
     } catch (error) {
       console.error('Error saving profile:', error);

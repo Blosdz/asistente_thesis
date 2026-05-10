@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { ArrowRight, CalendarDays, CheckCircle2, Users } from 'lucide-react';
 
@@ -9,12 +9,16 @@ import AdvisorCatalogSection from '../../components/student/advisors/AdvisorCata
 import MyAdvisorsSection from '../../components/student/advisors/MyAdvisorsSection';
 import AdvisorScheduleSection from '../../components/student/advisors/AdvisorScheduleSection';
 import {
+  buscarAsesores,
   crearCitaAsesoria,
-  obtenerAsesores,
   obtenerHorariosDisponiblesAsesor,
   obtenerMisAsesores,
   vincularmeConAsesorPorSlug,
 } from '../../services/advisorService';
+import {
+  obtenerEspecialidades,
+  obtenerUniversidades,
+} from '../../services/catalogService';
 import { obtenerMiSuscripcion } from '../../services/suscripcionService';
 import {
   buildSlotKey,
@@ -48,8 +52,13 @@ export default function Advisors() {
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedUniversity, setSelectedUniversity] = useState('');
+  const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const [selectedCareer, setSelectedCareer] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const deferredSearchValue = useDeferredValue(searchValue);
+  const [universityOptions, setUniversityOptions] = useState([]);
+  const [specialtyOptions, setSpecialtyOptions] = useState([]);
 
   const [selectedAdvisorId, setSelectedAdvisorId] = useState(null);
   const [slotView, setSlotView] = useState('this_week');
@@ -73,24 +82,65 @@ export default function Advisors() {
   }, []);
 
   useEffect(() => {
+    const loadFilterOptions = async () => {
+      try {
+        const [universities, specialties] = await Promise.all([
+          obtenerUniversidades(),
+          obtenerEspecialidades(),
+        ]);
+
+        setUniversityOptions(universities || []);
+        setSpecialtyOptions(specialties || []);
+      } catch (error) {
+        console.error(error);
+        toast.error('No se pudieron cargar los filtros de asesores');
+      }
+    };
+
+    loadFilterOptions();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
     const loadCatalog = async () => {
       try {
         setLoadingCatalog(true);
-        const data = await obtenerAsesores();
+        const data = await buscarAsesores({
+          buscar: deferredSearchValue.trim(),
+          universidadId: selectedUniversity,
+          especialidadId: selectedSpecialty,
+          carrera: selectedCareer,
+          nivelAcademico: selectedLevel,
+        });
         const normalized = (data || [])
           .map(normalizeCatalogAdvisor)
           .filter((advisor) => advisor.id);
+
+        if (cancelled) return;
         setCatalogAdvisors(normalized);
       } catch (error) {
+        if (cancelled) return;
         console.error(error);
         toast.error('No se pudo cargar el catálogo de asesores');
       } finally {
+        if (cancelled) return;
         setLoadingCatalog(false);
       }
     };
 
     loadCatalog();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    deferredSearchValue,
+    selectedCareer,
+    selectedLevel,
+    selectedSpecialty,
+    selectedUniversity,
+  ]);
 
   useEffect(() => {
     const loadMyAdvisorList = async () => {
@@ -145,7 +195,13 @@ export default function Advisors() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchValue, selectedUniversity, selectedCareer]);
+  }, [
+    deferredSearchValue,
+    selectedCareer,
+    selectedLevel,
+    selectedSpecialty,
+    selectedUniversity,
+  ]);
 
   const relationsByAdvisorId = useMemo(
     () => new Map(myAdvisors.map((advisor) => [advisor.id, advisor])),
@@ -161,36 +217,14 @@ export default function Advisors() {
     ? relationsByAdvisorId.get(selectedAdvisor.id) || null
     : null;
 
-  const universityOptions = useMemo(
-    () => getUniqueOptions(catalogAdvisors, 'university'),
-    [catalogAdvisors],
-  );
-
   const careerOptions = useMemo(
     () => getUniqueOptions(catalogAdvisors, 'career'),
     [catalogAdvisors],
   );
 
-  const filteredCatalog = useMemo(() => {
-    const query = searchValue.trim().toLowerCase();
+  const filteredCatalog = catalogAdvisors;
 
-    return catalogAdvisors.filter((advisor) => {
-      const matchesSearch =
-        !query ||
-        [advisor.name, advisor.publicCode]
-          .filter(Boolean)
-          .some((value) => value.toLowerCase().includes(query));
-
-      const matchesUniversity =
-        !selectedUniversity || advisor.university === selectedUniversity;
-
-      const matchesCareer = !selectedCareer || advisor.career === selectedCareer;
-
-      return matchesSearch && matchesUniversity && matchesCareer;
-    });
-  }, [catalogAdvisors, searchValue, selectedUniversity, selectedCareer]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredCatalog.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(catalogAdvisors.length / PAGE_SIZE));
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -200,11 +234,15 @@ export default function Advisors() {
 
   const paginatedCatalog = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
-    return filteredCatalog.slice(start, start + PAGE_SIZE);
-  }, [currentPage, filteredCatalog]);
+    return catalogAdvisors.slice(start, start + PAGE_SIZE);
+  }, [catalogAdvisors, currentPage]);
 
   const hasActiveFilters = Boolean(
-    searchValue.trim() || selectedUniversity || selectedCareer,
+    searchValue.trim() ||
+      selectedUniversity ||
+      selectedSpecialty ||
+      selectedCareer ||
+      selectedLevel,
   );
 
   const loadSlotsForAdvisor = useCallback(async (advisor) => {
@@ -345,7 +383,9 @@ export default function Advisors() {
   const handleClearFilters = useCallback(() => {
     setSearchValue('');
     setSelectedUniversity('');
+    setSelectedSpecialty('');
     setSelectedCareer('');
+    setSelectedLevel('');
   }, []);
 
   const handleContactAdvisor = useCallback(
@@ -461,9 +501,14 @@ export default function Advisors() {
               onSearchChange={setSearchValue}
               selectedUniversity={selectedUniversity}
               onUniversityChange={setSelectedUniversity}
+              selectedSpecialty={selectedSpecialty}
+              onSpecialtyChange={setSelectedSpecialty}
               selectedCareer={selectedCareer}
               onCareerChange={setSelectedCareer}
+              selectedLevel={selectedLevel}
+              onLevelChange={setSelectedLevel}
               universityOptions={universityOptions}
+              specialtyOptions={specialtyOptions}
               careerOptions={careerOptions}
               resultCount={filteredCatalog.length}
               hasActiveFilters={hasActiveFilters}

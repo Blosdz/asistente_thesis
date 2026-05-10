@@ -2,7 +2,7 @@ import { apiRequest } from './client';
 
 export const disponibilidadApi = {
   crear(payload: unknown) {
-    return apiRequest('/disponibilidad', {
+    return apiRequest('/asesores/disponibilidad', {
       method: 'POST',
       body: payload,
     });

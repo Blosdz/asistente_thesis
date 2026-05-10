@@ -22,7 +22,7 @@ const docTypes = [
   { value: 'rubrica', label: 'Rúbrica', icon: Sparkles },
   { value: 'criterios', label: 'Criterios', icon: ClipboardList },
   { value: 'formatoAPA', label: 'Formato APA', icon: FileText },
-  { value: 'vancouver', label: 'Vancouver', icon: FileText },
+  { value: 'Vancouver', label: 'Vancouver', icon: FileText },
   { value: 'fuente', label: 'Fuente', icon: Database },
 ];
 
@@ -226,7 +226,7 @@ const AdditionalDocuments = () => {
                       Proyecto activo
                     </span>
                     <Select
-                      className="rounded-xl border border-slate-200 py-2.5 pl-3.5 pr-9 text-sm font-semibold text-slate-900 shadow-sm"
+                      className="rounded-xl border border-slate-200 py-2.5 pl-3.5 pr-9 text-sm font-semibold text-slate-900 shadow-sm disabled:opacity-60"
                       value={selectedThesisId}
                       onChange={(e) => setSelectedThesisId(e.target.value)}
                     >

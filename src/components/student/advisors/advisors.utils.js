@@ -24,6 +24,7 @@ const uniqueList = (values) => [...new Set(values.filter(Boolean))];
 const getAdvisorName = (item) =>
   cleanText(
     item?.nombre_mostrar ||
+      item?.nombreMostrar ||
       [item?.nombres, item?.apellidos].filter(Boolean).join(' '),
     'Asesor académico',
   );
@@ -31,6 +32,7 @@ const getAdvisorName = (item) =>
 const getPublicCode = (item) =>
   cleanText(
     item?.codigo_publico ||
+      item?.codigoPublico ||
       item?.codigo ||
       item?.codigo_asesor ||
       item?.slug ||
@@ -40,13 +42,16 @@ const getPublicCode = (item) =>
 
 const getUniversityName = (item) =>
   cleanText(
-    item?.universidad_nombre || item?.universidad || item?.facultad_nombre,
+    item?.universidad_nombre ||
+      item?.universidadNombre ||
+      item?.universidad ||
+      item?.facultad_nombre,
     'Universidad no especificada',
   );
 
 const getCareerName = (item) =>
   cleanText(
-    item?.carrera || item?.especialidad_nombre || item?.rol,
+    item?.carrera || item?.especialidad_nombre || item?.especialidadNombre || item?.rol,
     'Asesoría de tesis',
   );
 
@@ -56,19 +61,21 @@ const getBio = (item) =>
     'Perfil disponible para acompañamiento académico y revisión de tesis.',
   );
 
-const getAvatar = (item) => cleanText(item?.foto_url, fallbackAvatar);
+const getAvatar = (item) => cleanText(item?.foto_url || item?.fotoUrl, fallbackAvatar);
 
 export const normalizeCatalogAdvisor = (item) => {
-  const id = item?.asesor_id || item?.id;
+  const id = item?.asesor_id || item?.asesorId || item?.id;
   const name = getAdvisorName(item);
   const publicCode = getPublicCode(item);
   const career = getCareerName(item);
   const university = getUniversityName(item);
-  const level = cleanText(item?.nivel_academico || item?.especialidad, null);
+  const level = cleanText(item?.nivel_academico || item?.nivelAcademico || item?.especialidad, null);
   const slug = cleanText(item?.slug, null);
 
   return {
     id,
+    universityId: item?.universidad_id || item?.universidadId || null,
+    specialtyId: item?.especialidad_id || item?.especialidadId || null,
     slug,
     publicCode,
     name,
@@ -77,10 +84,10 @@ export const normalizeCatalogAdvisor = (item) => {
     level,
     bio: getBio(item),
     avatar: getAvatar(item),
-    tags: uniqueList([level, cleanText(item?.especialidad_nombre, null)]).slice(
-      0,
-      3,
-    ),
+    tags: uniqueList([
+      level,
+      cleanText(item?.especialidad_nombre || item?.especialidadNombre, null),
+    ]).slice(0, 3),
     raw: item,
   };
 };

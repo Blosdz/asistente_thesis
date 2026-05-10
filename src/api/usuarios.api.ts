@@ -6,22 +6,22 @@ export const usuariosApi = {
   },
 
   obtenerPerfilEstudiante() {
-    return apiRequest('/perfil/estudiante');
+    return apiRequest('/perfil');
   },
 
   obtenerPerfilAsesor() {
-    return apiRequest('/perfil/asesor');
+    return apiRequest('/perfil');
   },
 
   guardarPerfilEstudiante(payload: unknown) {
-    return apiRequest('/perfil/estudiante', {
+    return apiRequest('/perfil', {
       method: 'PUT',
       body: payload,
     });
   },
 
   guardarPerfilAsesor(payload: unknown) {
-    return apiRequest('/perfil/asesor', {
+    return apiRequest('/perfil', {
       method: 'PUT',
       body: payload,
     });
