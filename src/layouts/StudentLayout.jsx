@@ -1,12 +1,14 @@
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  LogOut,
-  User as UserIcon,
+  BarChart3,
+  BookOpenCheck,
+  CalendarCheck2,
   CreditCard,
   FileText,
-  BarChart3,
+  Home,
+  LogOut,
   Settings,
-  Bell,
+  User as UserIcon,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { getCurrentUser, logout } from '../services/authService';
@@ -19,8 +21,6 @@ function cn(...inputs) {
 
 const StudentLayout = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const menuRef = useRef(null);
@@ -28,8 +28,7 @@ const StudentLayout = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const currentUser = await getCurrentUser();
-        setUser(currentUser);
+        await getCurrentUser();
       } catch (error) {
         console.error('Failed to fetch user:', error);
         navigate('/login');
@@ -64,48 +63,43 @@ const StudentLayout = () => {
     {
       label: 'Dashboard',
       path: '/student/dashboard',
+      icon: <Home size={16} />,
     },
     {
       label: 'Mi Tesis',
       path: '/student/my-thesis',
-      icon: <FileText size={18} />,
+      icon: <BookOpenCheck size={16} />,
     },
     {
       label: 'Documentos',
       path: '/student/documents',
-      icon: <FileText size={18} />,
+      icon: <FileText size={16} />,
     },
     {
       label: 'Asesorías',
-      // path: '/student/citas',
       path: '/student/asesorias',
-      // icon: <Calendar size={18} />,
+      icon: <CalendarCheck2 size={16} />,
     },
-    // {
-    //   label: 'Planes',
-    //   path: '/student/planes',
-    //   icon: <BarChart3 size={18} />,
-    // },
     {
       label: 'Presustentación',
       path: '/student/services',
-      icon: <Settings size={18} />,
+      icon: <Settings size={16} />,
     },
     {
       label: 'Pagos',
       path: '/student/payments',
-      icon: <CreditCard size={18} />,
+      icon: <CreditCard size={16} />,
     },
     {
       label: 'Estadística',
       path: '/student/statistics',
-      icon: <BarChart3 size={18} />,
+      icon: <BarChart3 size={16} />,
     },
   ];
 
   if (isLoading) {
     return (
-      <div className="app-shell min-h-screen">
+      <div className="app-shell student-shell min-h-screen">
         <header className="app-topbar fixed top-0 z-50 w-full rounded-none">
           <div className="flex items-center justify-between px-8 h-20 w-full animate-pulse">
             <div className="h-6 w-32 bg-slate-200 rounded-full" />
@@ -117,7 +111,7 @@ const StudentLayout = () => {
             </div>
           </div>
         </header>
-        <main className="pt-24 px-8 space-y-6 animate-pulse">
+        <main className="relative z-10 pt-24 px-8 space-y-6 animate-pulse">
           <div className="h-10 w-56 bg-slate-200 rounded" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="h-48 bg-slate-200 rounded-2xl" />
@@ -130,31 +124,37 @@ const StudentLayout = () => {
   }
 
   return (
-    <div className="app-shell font-sans text-gray-900">
+    <div className="app-shell student-shell font-sans text-gray-900">
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
         <header className="app-topbar fixed top-0 z-50 w-full rounded-none">
-          <div className="flex items-center justify-between px-8 h-20 w-full">
-            <div className="text-2xl font-bold tracking-tighter text-slate-900 heading-ubuntu">
-              {/* ThesisFlow */}
+          <div className="flex min-h-20 w-full items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+            <div className="hidden min-w-0 flex-col sm:flex">
+              <span className="text-sm font-black tracking-[-0.01em] text-slate-950 heading-ubuntu">
+                AppThesis
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-blue-700">
+                Student
+              </span>
             </div>
 
-            <div className="app-nav-cluster hidden rounded-full px-2 py-1 md:flex">
-              <nav className="relative flex gap-2">
+            <div className="app-nav-cluster min-w-0 flex-1 px-1.5 py-1.5 md:max-w-fit">
+              <nav className="student-nav-scroll relative flex gap-1 overflow-x-auto md:overflow-visible">
                 {navItems.map((item) => (
                   <NavLink
                     key={item.path}
                     to={item.path}
                     className={({ isActive }) =>
                       cn(
-                        'top-nav-link app-nav-item px-4 py-1.5 rounded-full text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1eb]',
+                        'top-nav-link app-nav-item shrink-0 rounded-[14px] px-3 py-2 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[#eff6ff] lg:px-4 lg:text-sm',
                         isActive
                           ? 'app-nav-item-active'
                           : '',
                       )
                     }
                   >
-                    {item.label}
+                    {item.icon}
+                    <span>{item.label}</span>
                   </NavLink>
                 ))}
               </nav>
@@ -181,7 +181,7 @@ const StudentLayout = () => {
                     }}
                   >
                     <UserIcon size={16} />
-                    Profile
+                    Perfil
                   </button>
                   <button
                     className="flex w-full items-center gap-2 px-4 py-2 text-left text-red-600 hover:bg-white/70"
@@ -191,7 +191,7 @@ const StudentLayout = () => {
                     }}
                   >
                     <LogOut size={16} />
-                    Exit
+                    Salir
                   </button>
                 </div>
               )}

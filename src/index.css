@@ -381,32 +381,69 @@ body::after {
     background: radial-gradient(circle, rgba(251, 207, 232, 0.28) 0%, transparent 72%);
   }
 
+  .student-shell {
+    background:
+      radial-gradient(ellipse 70% 58% at 50% 8%, rgba(255, 255, 255, 0.94) 0%, rgba(59, 130, 246, 0.16) 24%, transparent 52%),
+      radial-gradient(ellipse 58% 64% at 14% 52%, rgba(255, 255, 255, 0.7) 0%, rgba(59, 130, 246, 0.14) 26%, transparent 56%),
+      radial-gradient(ellipse 58% 64% at 86% 62%, rgba(186, 230, 253, 0.46) 0%, rgba(59, 130, 246, 0.14) 28%, transparent 58%),
+      linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.96) 0%,
+        rgba(224, 239, 255, 0.76) 28%,
+        rgba(191, 219, 254, 0.8) 48%,
+        rgba(224, 239, 255, 0.74) 70%,
+        rgba(255, 255, 255, 0.96) 100%
+      );
+    background-color: #eff6ff;
+  }
+
+  .student-shell::before {
+    top: -8rem;
+    left: -16rem;
+    width: 42rem;
+    height: 42rem;
+    background:
+      radial-gradient(circle, rgba(191, 219, 254, 0.7) 0%, rgba(96, 165, 250, 0.2) 44%, transparent 72%);
+    filter: blur(86px);
+  }
+
+  .student-shell::after {
+    right: -15rem;
+    bottom: -8rem;
+    width: 44rem;
+    height: 44rem;
+    background:
+      radial-gradient(circle, rgba(186, 230, 253, 0.62) 0%, rgba(59, 130, 246, 0.18) 46%, transparent 72%);
+    filter: blur(92px);
+  }
+
   .app-topbar {
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.82) 0%,
-      rgba(244, 248, 252, 0.68) 100%
+      rgba(255, 255, 255, 0.88) 0%,
+      rgba(239, 246, 255, 0.68) 100%
     );
-    border-bottom: 1px solid rgba(255, 255, 255, 0.72);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.82);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.88),
-      0 20px 50px rgba(148, 163, 184, 0.12);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
+      inset 0 1px 0 rgba(255, 255, 255, 0.92),
+      0 20px 60px rgba(15, 23, 42, 0.1);
+    backdrop-filter: blur(30px) saturate(190%);
+    -webkit-backdrop-filter: blur(30px) saturate(190%);
   }
 
   .app-nav-cluster {
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.76) 0%,
-      rgba(243, 246, 250, 0.62) 100%
+      rgba(255, 255, 255, 0.78) 0%,
+      rgba(239, 246, 255, 0.58) 100%
     );
-    border: 1px solid rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(255, 255, 255, 0.84);
+    border-radius: 20px;
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.86),
-      0 14px 34px rgba(148, 163, 184, 0.12);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      0 14px 34px rgba(15, 23, 42, 0.1);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
   }
 
   .app-nav-item {
@@ -414,21 +451,21 @@ body::after {
   }
 
   .app-nav-item:hover {
-    background: rgba(255, 255, 255, 0.72);
+    background: rgba(255, 255, 255, 0.78);
     color: rgb(15, 23, 42);
   }
 
   .app-nav-item-active {
     background: linear-gradient(
       180deg,
-      rgba(255, 255, 255, 0.92) 0%,
-      rgba(231, 241, 255, 0.84) 100%
+      rgba(15, 23, 42, 0.96) 0%,
+      rgba(29, 78, 216, 0.9) 100%
     );
-    color: rgb(15, 23, 42);
-    border-color: rgba(255, 255, 255, 0.9);
+    color: rgb(255, 255, 255);
+    border-color: rgba(255, 255, 255, 0.86);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.94),
-      0 12px 28px rgba(125, 168, 214, 0.18);
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 12px 28px rgba(37, 99, 235, 0.2);
   }
 
   .app-icon-button {
@@ -1091,6 +1128,91 @@ body.landing-page::after {
   to {
     opacity: 1;
   }
+}
+
+.student-shell :is(.glass, .glass-card, .glass-panel, .liquid-glass, .liquid-glass-dark) {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.66) 0%,
+      rgba(239, 246, 255, 0.44) 100%
+    ) !important;
+  border: 1px solid rgba(255, 255, 255, 0.82) !important;
+  border-radius: 20px !important;
+  color: #0f172a;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.28),
+    0 24px 70px rgba(15, 23, 42, 0.1),
+    0 12px 34px rgba(37, 99, 235, 0.08) !important;
+  backdrop-filter: blur(34px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(34px) saturate(190%) !important;
+}
+
+.student-shell :is(.glass, .glass-card, .glass-panel, .liquid-glass, .liquid-glass-dark):hover {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.76) 0%,
+      rgba(239, 246, 255, 0.52) 100%
+    ) !important;
+  border-color: rgba(255, 255, 255, 0.92) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.34),
+    0 30px 82px rgba(15, 23, 42, 0.12),
+    0 14px 42px rgba(37, 99, 235, 0.1) !important;
+}
+
+.student-shell :is(.glass, .glass-card, .liquid-glass)::before {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.88),
+      rgba(255, 255, 255, 0.22) 42%,
+      transparent 72%
+    ) !important;
+  opacity: 0.74 !important;
+}
+
+.student-shell :is(.glass, .glass-card)::after {
+  background:
+    radial-gradient(circle at top left, rgba(191, 219, 254, 0.54), transparent 42%),
+    radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.12), transparent 38%) !important;
+  opacity: 0.88 !important;
+}
+
+.student-shell .app-topbar {
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.8) 0%,
+      rgba(239, 246, 255, 0.56) 100%
+    );
+  border-bottom-color: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(34px) saturate(195%);
+  -webkit-backdrop-filter: blur(34px) saturate(195%);
+}
+
+.student-shell .app-menu {
+  border-radius: 18px !important;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.82) 0%,
+      rgba(239, 246, 255, 0.66) 100%
+    ) !important;
+  border-color: rgba(255, 255, 255, 0.86) !important;
+  backdrop-filter: blur(30px) saturate(190%);
+  -webkit-backdrop-filter: blur(30px) saturate(190%);
+}
+
+.student-nav-scroll {
+  scrollbar-width: none;
+}
+
+.student-nav-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 body.landing-page {
