@@ -8,6 +8,9 @@ import {
   Plus,
   Sparkles,
   X,
+  MessageSquare,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import {
   obtenerMisTesis,
@@ -15,6 +18,7 @@ import {
   obtenerDocumentosMiTesis,
   subirDocumentoAGoogleDrive,
   obtenerSugerenciasMiTesis,
+  marcarSugerenciaAplicadaEstudiante,
 } from '../../services/thesisService';
 import { toast } from 'react-hot-toast';
 import {
@@ -22,6 +26,8 @@ import {
   getSuggestionStatusMeta,
   getSuggestionText,
   getSuggestionValidationState,
+  getSuggestionId,
+  canStudentSubmitSuggestion,
 } from '../../lib/suggestionValidation';
 
 const MyThesis = () => {
@@ -43,6 +49,12 @@ const MyThesis = () => {
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
   const [sugerencias, setSugerencias] = useState([]);
   const [loadingSugerencias, setLoadingSugerencias] = useState(false);
+  const [suggestionActionModal, setSuggestionActionModal] = useState({
+    open: false,
+    suggestion: null,
+    comment: '',
+    submitting: false,
+  });
 
   const buildPreviewUrl = useCallback((url, fileName = '') => {
     if (!url) return null;
@@ -214,6 +226,55 @@ const MyThesis = () => {
     }
   };
 
+  const handleMarcarSugerenciaAplicada = async () => {
+    if (suggestionActionModal.submitting) return;
+
+    const sugerenciaId = getSuggestionId(suggestionActionModal.suggestion);
+    if (!sugerenciaId) {
+      toast.error('No se pudo identificar la sugerencia');
+      return;
+    }
+
+    try {
+      setSuggestionActionModal((prev) => ({ ...prev, submitting: true }));
+
+      await marcarSugerenciaAplicadaEstudiante(
+        sugerenciaId,
+        suggestionActionModal.comment.trim() || null,
+      );
+
+      toast.success(
+        'Sugerencia marcada como aplicada. Espera la confirmación del asesor.',
+      );
+      setSuggestionActionModal({
+        open: false,
+        suggestion: null,
+        comment: '',
+        submitting: false,
+      });
+
+      // Recargar sugerencias
+      await (async () => {
+        try {
+          setLoadingSugerencias(true);
+          const data = await obtenerSugerenciasMiTesis(selectedThesisId);
+          setSugerencias(data || []);
+        } catch (err) {
+          console.error('Error fetching suggestions:', err);
+        } finally {
+          setLoadingSugerencias(false);
+        }
+      })();
+    } catch (error) {
+      console.error('Error marking suggestion as applied:', error);
+      toast.error(
+        error?.message || 'No se pudo marcar la sugerencia como aplicada',
+      );
+    } finally {
+      setSuggestionActionModal((prev) => ({ ...prev, submitting: false }));
+    }
+  };
+
   const formatDate = (value) => {
     if (!value) return '—';
     const date = new Date(value);
@@ -364,10 +425,14 @@ const MyThesis = () => {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                     Documentos
                   </p>
-                  <h3 className="text-xl font-bold tracking-tight text-slate-900">Project Files</h3>
+                  <h3 className="text-xl font-bold tracking-tight text-slate-900">
+                    Project Files
+                  </h3>
                 </div>
                 <button
-                  onClick={() => document.getElementById('thesis-upload')?.click()}
+                  onClick={() =>
+                    document.getElementById('thesis-upload')?.click()
+                  }
                   className="text-blue-500 hover:bg-blue-50 p-2 rounded-full transition"
                   title="Subir nuevo documento"
                 >
@@ -394,7 +459,9 @@ const MyThesis = () => {
                   </div>
                 ))}
                 {documents.length === 0 && (
-                  <p className="text-xs text-slate-400">Sin archivos cargados.</p>
+                  <p className="text-xs text-slate-400">
+                    Sin archivos cargados.
+                  </p>
                 )}
               </div>
             </section>
@@ -415,7 +482,9 @@ const MyThesis = () => {
               </div>
 
               {loadingSugerencias ? (
-                <p className="text-sm text-slate-500">Cargando sugerencias...</p>
+                <p className="text-sm text-slate-500">
+                  Cargando sugerencias...
+                </p>
               ) : totalSuggestions === 0 ? (
                 <div className="border border-dashed border-slate-200 rounded-xl p-4 text-sm text-slate-500 bg-white/50">
                   No hay sugerencias registradas para esta tesis.
@@ -427,12 +496,18 @@ const MyThesis = () => {
 
                     return (
                       <article
-                        key={item.id || item.sugerencia_id || `${selectedThesisId}-${idx}`}
+                        key={
+                          item.id ||
+                          item.sugerencia_id ||
+                          `${selectedThesisId}-${idx}`
+                        }
                         className="bg-white/70 border border-white/80 rounded-2xl p-4 hover:border-blue-100 transition"
                       >
                         <div className="flex gap-3 mb-2">
                           <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                            {getSuggestionAdvisorName(item).charAt(0).toUpperCase()}
+                            {getSuggestionAdvisorName(item)
+                              .charAt(0)
+                              .toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
@@ -441,10 +516,16 @@ const MyThesis = () => {
                                   {getSuggestionAdvisorName(item)}
                                 </p>
                                 <p className="text-[11px] text-slate-500">
-                                  {formatDate(item.creado_en || item.created_at || item.r_creado_en)}
+                                  {formatDate(
+                                    item.creado_en ||
+                                      item.created_at ||
+                                      item.r_creado_en,
+                                  )}
                                 </p>
                               </div>
-                              <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${status.badgeClass}`}>
+                              <span
+                                className={`text-[10px] font-bold px-2 py-1 rounded-full ${status.badgeClass}`}
+                              >
                                 {status.label}
                               </span>
                             </div>
@@ -455,7 +536,8 @@ const MyThesis = () => {
                         </p>
                         {(item.nombre_documento || item.documento_tesis_id) && (
                           <p className="text-[11px] text-slate-500 mt-2">
-                            Documento: {item.nombre_documento || item.documento_tesis_id}
+                            Documento:{' '}
+                            {item.nombre_documento || item.documento_tesis_id}
                           </p>
                         )}
                         {item.comentario_asesor && (
@@ -519,9 +601,12 @@ const MyThesis = () => {
           </section>
           <aside className="col-span-12 lg:col-span-3 space-y-8">
             <section className="rounded-2xl p-6 border border-white/60 bg-white/30 backdrop-blur-2xl">
-              <h3 className="text-lg font-bold tracking-tight mb-4">Subir documento</h3>
+              <h3 className="text-lg font-bold tracking-tight mb-4">
+                Subir documento
+              </h3>
               <p className="text-sm text-slate-500 mb-4">
-                Sube la version principal de tu tesis para mantener el historial actualizado.
+                Sube la version principal de tu tesis para mantener el historial
+                actualizado.
               </p>
               <label
                 className={`flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl font-semibold text-sm text-white shadow-lg transition-all ${
@@ -544,13 +629,17 @@ const MyThesis = () => {
             </section>
 
             <section className="rounded-2xl p-6 border border-white/60 bg-white/30 backdrop-blur-2xl">
-              <h3 className="text-lg font-bold tracking-tight mb-4">Version History</h3>
+              <h3 className="text-lg font-bold tracking-tight mb-4">
+                Version History
+              </h3>
               <div className="relative pl-6 space-y-6 before:absolute before:left-[10px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200">
                 {documents.slice(0, 3).map((doc, idx) => (
                   <div key={doc.id} className="relative">
                     <div
                       className={`absolute -left-[18px] top-1 w-3 h-3 rounded-full ${
-                        idx === 0 ? 'bg-blue-500 border-4 border-white' : 'bg-slate-300'
+                        idx === 0
+                          ? 'bg-blue-500 border-4 border-white'
+                          : 'bg-slate-300'
                       }`}
                     />
                     {idx === 0 && (
@@ -567,7 +656,9 @@ const MyThesis = () => {
                   </div>
                 ))}
                 {documents.length === 0 && (
-                  <p className="text-xs text-slate-400">Sin versiones todavia.</p>
+                  <p className="text-xs text-slate-400">
+                    Sin versiones todavia.
+                  </p>
                 )}
               </div>
             </section>
@@ -837,6 +928,7 @@ const MyThesis = () => {
               ) : (
                 sugerencias.map((item, idx) => {
                   const status = getSuggestionStatusMeta(item);
+                  const canApply = canStudentSubmitSuggestion(item);
 
                   return (
                     <article
@@ -845,21 +937,34 @@ const MyThesis = () => {
                         item.sugerencia_id ||
                         `${selectedThesisId}-${idx}`
                       }
-                      className="bg-white/70 border border-white/80 rounded-2xl p-4"
+                      className="bg-white/70 border border-white/80 rounded-2xl p-4 space-y-3"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <p className="text-sm font-semibold text-slate-900">
-                          {getSuggestionAdvisorName(item)}
-                        </p>
-                        <span className={`rounded-full px-2 py-1 text-[10px] font-bold ${status.badgeClass}`}>
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {getSuggestionAdvisorName(item)}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {new Date(
+                              item.creado_en ||
+                                item.created_at ||
+                                item.r_creado_en,
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span
+                          className={`rounded-full px-2 py-1 text-[10px] font-bold whitespace-nowrap ${status.badgeClass}`}
+                        >
                           {status.label}
                         </span>
                       </div>
-                      <p className="mt-3 text-sm text-gray-800 leading-relaxed">
+
+                      <p className="text-sm text-gray-800 leading-relaxed">
                         {getSuggestionText(item)}
                       </p>
+
                       {item.comentario_asesor && (
-                        <div className="mt-3 rounded-xl border border-rose-100 bg-rose-50 px-3 py-2">
+                        <div className="rounded-xl border border-rose-100 bg-rose-50 px-3 py-2">
                           <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-rose-700">
                             Comentario del asesor
                           </p>
@@ -868,21 +973,120 @@ const MyThesis = () => {
                           </p>
                         </div>
                       )}
-                      <div className="mt-3 text-xs text-gray-500 flex flex-wrap gap-3">
-                        <span>
-                          Fecha: {formatDate(item.creado_en || item.created_at)}
-                        </span>
-                        {(item.nombre_documento || item.documento_tesis_id) && (
-                          <span>
-                            Documento:{' '}
-                            {item.nombre_documento || item.documento_tesis_id}
-                          </span>
-                        )}
-                      </div>
+
+                      {item.comentario_estudiante && (
+                        <div className="rounded-xl border border-sky-100 bg-sky-50 px-3 py-2">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-sky-700">
+                            Tu comentario
+                          </p>
+                          <p className="mt-1 text-xs text-sky-900 leading-relaxed">
+                            {item.comentario_estudiante}
+                          </p>
+                        </div>
+                      )}
+
+                      {canApply && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSuggestionActionModal({
+                              open: true,
+                              suggestion: item,
+                              comment: '',
+                              submitting: false,
+                            })
+                          }
+                          className="w-full mt-2 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold transition hover:bg-blue-700"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Marcar como aplicada
+                        </button>
+                      )}
                     </article>
                   );
                 })
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {suggestionActionModal.open && (
+        <div className="ios-overlay fixed inset-0 z-[10000] flex items-center justify-center p-4">
+          <div className="glass-card w-full max-w-md p-6 relative animate-in zoom-in-95 duration-200 space-y-4">
+            <button
+              onClick={() =>
+                setSuggestionActionModal({
+                  ...suggestionActionModal,
+                  open: false,
+                })
+              }
+              className="absolute top-4 right-4 rounded-full p-2 text-gray-400 transition-colors hover:text-gray-700"
+              title="Cerrar"
+            >
+              <X size={20} />
+            </button>
+
+            <div>
+              <h4 className="text-lg font-bold text-gray-900">
+                Confirmar aplicación de sugerencia
+              </h4>
+              <p className="text-xs text-gray-500 mt-1">
+                Indica que ya has corregido lo sugerido por tu asesor
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+              <p className="text-xs text-blue-600 font-semibold mb-1">
+                Sugerencia
+              </p>
+              <p className="text-sm text-blue-900">
+                {getSuggestionText(suggestionActionModal.suggestion)}
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Tu comentario (opcional)
+              </label>
+              <textarea
+                rows="3"
+                value={suggestionActionModal.comment}
+                onChange={(e) =>
+                  setSuggestionActionModal({
+                    ...suggestionActionModal,
+                    comment: e.target.value,
+                  })
+                }
+                placeholder="Indica dónde está la correccion o proporciona más contexto..."
+                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() =>
+                  setSuggestionActionModal({
+                    ...suggestionActionModal,
+                    open: false,
+                  })
+                }
+                className="flex-1 px-4 py-2 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleMarcarSugerenciaAplicada}
+                disabled={suggestionActionModal.submitting}
+                className="flex-1 px-4 py-2 rounded-xl bg-blue-600 text-white text-sm font-semibold transition hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                {suggestionActionModal.submitting
+                  ? 'Guardando...'
+                  : 'Confirmar'}
+              </button>
             </div>
           </div>
         </div>

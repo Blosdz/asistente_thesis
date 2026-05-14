@@ -1,20 +1,35 @@
-import { universities } from '../data/universities';
 import { catalogosApi } from '../api/catalogos.api';
+import { obtenerUniversidadesLeads } from './leadService';
 
 export async function obtenerUniversidades() {
   try {
     const data = await catalogosApi.listarUniversidades();
-    if (Array.isArray(data)) return data;
-    if (Array.isArray(data?.data)) return data.data;
-    if (Array.isArray(data?.universidades)) return data.universidades;
-    return data ? [data] : [];
+    if (Array.isArray(data) && data.length > 0) return data;
+    if (Array.isArray(data?.data) && data.data.length > 0) return data.data;
+    if (Array.isArray(data?.universidades) && data.universidades.length > 0) {
+      return data.universidades;
+    }
+    if (data && !Array.isArray(data)) return [data];
   } catch (error) {
     console.warn(
-      'No se pudo cargar universidades desde NestJS. Usando fallback local.',
+      'No se pudo cargar universidades desde el endpoint de catálogos.',
       error,
     );
-    return universities;
   }
+
+  try {
+    const data = await obtenerUniversidadesLeads();
+    if (Array.isArray(data) && data.length > 0) return data;
+    if (Array.isArray(data?.data) && data.data.length > 0) return data.data;
+    if (Array.isArray(data?.universidades) && data.universidades.length > 0) {
+      return data.universidades;
+    }
+    if (data && !Array.isArray(data)) return [data];
+  } catch (error) {
+    console.warn('No se pudo cargar universidades desde el endpoint de leads.', error);
+  }
+
+  return [];
 }
 
 export async function obtenerEspecialidades() {

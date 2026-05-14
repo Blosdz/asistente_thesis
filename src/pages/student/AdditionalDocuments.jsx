@@ -188,7 +188,7 @@ const AdditionalDocuments = () => {
   const getDocumentIcon = useCallback((doc) => {
     const fileName = getDocumentName(doc);
     const ext = fileName.split('.').pop()?.toLowerCase();
-    const iconClass = 'w-5 h-5 text-slate-600';
+    const iconClass = 'w-5 h-5 text-slate-100';
 
     if (['csv', 'xls', 'xlsx'].includes(ext)) {
       return <Database className={iconClass} />;
@@ -207,7 +207,7 @@ const AdditionalDocuments = () => {
   }, [documents.length]);
 
   return (
-    <div className="relative w-full flex-1 px-4 py-4 text-slate-900 animate-fade-in sm:px-5 lg:px-8 lg:py-3">
+    <div className="documents-page relative w-full flex-1 px-4 py-4 text-slate-900 animate-fade-in sm:px-5 lg:px-8 lg:py-3">
       <div className="mx-auto flex max-w-7xl flex-col gap-4">
         {loading ? (
           <div className="flex flex-1 items-center justify-center py-24">
@@ -249,23 +249,24 @@ const AdditionalDocuments = () => {
                   Helper Document Categories
                 </h3>
                 <div className="space-y-3">
-                  <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5">
-                    <div className="mb-2.5 flex items-center justify-between gap-3">
+                  <div className=" rounded-xl p-3.5">
+                    <div className="bg-sky-400/10  items-center border border-cyan-200 text-black justify-between gap-3 mb-2.5 p-4 rounded-xl">
                       <div className="min-w-0">
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black">
                           Filtro activo
                         </p>
-                        <p className="mt-0.5 truncate text-sm font-semibold text-slate-900">
+                        <p className="mt-0.5 truncate text-sm font-semibold text-black">
                           {activeFilterMeta?.label || allDocumentsFilter.label}
                         </p>
                       </div>
-                      <span className="rounded-full border border-blue-100 bg-white px-2 py-0.5 text-[11px] font-bold text-blue-600">
+                      <span className="rounded-full border border-white/20 bg-slate-200 px-2 py-0.5 text-[11px] font-bold text-black">
                         {activeFilterMeta?.count || 0}
                       </span>
                     </div>
 
                     <Select
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-900 shadow-sm"
+                      //className="documents-dark-select w-full rounded-xl px-3.5 py-2.5 text-sm font-semibold shadow-sm"
+                      className="bg-sky-400/10 border border-cyan-200 text-black rounded-xl  w-full px-3.5 py-2.5 text-sm"
                       value={activeFilter}
                       onChange={(e) => setActiveFilter(e.target.value)}
                     >
@@ -277,12 +278,12 @@ const AdditionalDocuments = () => {
                     </Select>
                   </div>
 
-                  <div className="rounded-xl border border-slate-200 bg-white p-3.5">
+                  <div className=" bg-gradient-to-br from-blue-100 via-white to-blue-100 rounded-xl p-3.5">
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-black">
                         Vista rápida
                       </p>
-                      <span className="text-[11px] font-medium text-slate-400">
+                      <span className="text-[11px] font-medium text-black">
                         {documents.length} archivo(s)
                       </span>
                     </div>
@@ -299,13 +300,13 @@ const AdditionalDocuments = () => {
                               onClick={() => setActiveFilter(type.value)}
                               className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[11px] font-semibold transition ${
                                 activeFilter === type.value
-                                  ? 'border-blue-200 bg-blue-50 text-blue-700'
-                                  : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                                  ? 'border-white/40 bg-white/18 text-black'
+                                  : 'border-white/15 bg-white/8 text-black hover:border-white/35 hover:bg-white/14 hover:text-slate-400'
                               }`}
                             >
                               <Icon className="h-3 w-3" />
                               <span>{type.label}</span>
-                              <span className="rounded-full bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-500">
+                              <span className="rounded-full bg-white/12 px-1.5 py-0.5 text-[10px] font-bold text-white">
                                 {type.count}
                               </span>
                             </button>
@@ -313,7 +314,7 @@ const AdditionalDocuments = () => {
                         })}
                       </div>
                     ) : (
-                      <p className="mt-3 text-sm text-slate-500">
+                      <p className="mt-3 text-sm text-black">
                         Cuando subas documentos aparecerán aquí las categorías más usadas.
                       </p>
                     )}
@@ -325,23 +326,25 @@ const AdditionalDocuments = () => {
             <article className="flex flex-col gap-4 lg:col-span-8">
               <Card className="p-4 sm:p-6 lg:p-6">
                 <div className="group relative mb-5">
-                  <div className="relative flex flex-col items-center justify-center rounded-[24px] border border-dashed border-slate-200 p-6 text-center sm:p-8">
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-blue-100 transition-transform duration-500 group-hover:scale-105">
-                      <Upload className="h-6 w-6 text-blue-500" />
+                  <div className="bg-sky-400/10 relative flex flex-col items-center justify-center rounded-[24px] p-6 text-center sm:p-8">
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/10 text-black transition-transform duration-500 group-hover:scale-105">
+                      <Upload className="h-6 w-6 text-black" />
                     </div>
-                    <h3 className="mb-1.5 text-lg font-bold text-slate-900">
+                    <h3 className="mb-1.5 text-lg font-bold text-black">
                       Suelta para comenzar la carga
                     </h3>
-                    <p className="mb-4 max-w-xl text-sm text-slate-500">
+                    <p className="mb-4 max-w-xl text-sm text-black">
                       Sube reglamentos, instrumentos, rúbricas y demás
                       documentos de apoyo.
                     </p>
                     <div className="mb-4 w-full max-w-sm text-left">
-                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                      <label className="mb-2 block text-[11px] font-bold uppercase tracking-[0.2em] text-black">
                         Tipo de documento
                       </label>
                       <Select
-                        className="w-full rounded-xl border border-slate-200 py-2.5 pl-3.5 pr-9 text-sm font-semibold text-slate-900 shadow-sm"
+                        //className="documents-dark-select w-full rounded-xl py-2.5 pl-3.5 pr-9 text-sm font-semibold shadow-sm"
+
+                        className="bg-sky-400/10 border border-cyan-200 text-black rounded-xl  w-full px-3.5 py-2.5 text-sm"
                         value={docType}
                         onChange={(e) => setDocType(e.target.value)}
                       >
@@ -386,7 +389,7 @@ const AdditionalDocuments = () => {
                   </div>
 
                   {filteredDocuments.length === 0 ? (
-                    <div className="min-h-[200px] flex items-center justify-center rounded-2xl border border-dashed border-slate-200 text-sm text-slate-500">
+                    <div className="bg-sky-400/15 min-h-[200px] flex items-center justify-center rounded-2xl px-6 text-center text-sm text-black">
                       {activeFilter === 'todos'
                         ? 'Aún no has subido documentos para esta tesis.'
                         : 'No hay documentos en esta categoría todavía.'}
@@ -401,17 +404,17 @@ const AdditionalDocuments = () => {
                         return (
                           <div
                             key={doc.id}
-                            className="flex items-center justify-between rounded-xl border border-slate-200 p-3 transition-colors hover:border-blue-200"
+                            className="bg-sky-400/10 flex items-center justify-between rounded-xl p-3 transition-colors"
                           >
                             <div className="flex min-w-0 items-center gap-3">
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-100">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10">
                                 {getDocumentIcon(doc)}
                               </div>
                               <div className="min-w-0">
-                                <p className="text-sm font-semibold text-slate-900 truncate">
+                                <p className="text-sm font-semibold text-black truncate">
                                   {fileName}
                                 </p>
-                                <p className="text-xs text-slate-500">
+                                <p className="text-xs text-black">
                                   {getDocumentTypeLabel(doc)}
                                 </p>
                               </div>
@@ -421,13 +424,13 @@ const AdditionalDocuments = () => {
                                 href={fileUrl}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center justify-center gap-1 text-xs font-semibold text-slate-700 rounded-full border border-slate-200 px-3 py-2 hover:border-blue-200 hover:text-blue-600 transition-colors"
+                                className="inline-flex items-center justify-center gap-1 rounded-full border border-white/20 bg-white/10 px-3 py-2 text-xs font-semibold text-white/80 transition-colors hover:border-white/35 hover:bg-white/15 hover:text-white"
                               >
                                 Abrir
                                 <ExternalLink className="w-3.5 h-3.5" />
                               </a>
                             ) : (
-                              <span className="text-xs text-slate-400">
+                              <span className="text-xs text-white/45">
                                 Sin URL
                               </span>
                             )}

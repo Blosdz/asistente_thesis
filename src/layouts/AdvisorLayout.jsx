@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import {
   Users,
   CalendarDays,
@@ -19,12 +19,7 @@ import {
   obtenerMiCodigoPublicoAsesor,
 } from '../services/advisorService';
 import { toast } from 'react-hot-toast';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs) {
-  return twMerge(clsx(inputs));
-}
+import AnimatedTopNav from '../components/navigation/AnimatedTopNav';
 
 function getCodigoPublicoTexto(codigoPublico) {
   return codigoPublico?.codigo_publico || codigoPublico?.r_codigo_publico || '';
@@ -196,26 +191,13 @@ const AdvisorLayout = () => {
               </p>
             </div>
 
-            <div className="app-nav-cluster hidden rounded-full px-2 py-1 md:flex">
-              <nav className="relative flex gap-2">
-                {navItems.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={({ isActive }) =>
-                      cn(
-                        'top-nav-link app-nav-item px-4 py-1.5 rounded-full text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1eb]',
-                        isActive
-                          ? 'app-nav-item-active'
-                          : '',
-                      )
-                    }
-                  >
-                    {item.label}
-                  </NavLink>
-                ))}
-              </nav>
-            </div>
+            <AnimatedTopNav
+              ariaLabel="Navegación de asesor"
+              className="hidden rounded-full px-2 py-1 md:flex"
+              items={navItems}
+              linkClassName="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1eb]"
+              navClassName="gap-2"
+            />
 
             <div className="relative flex items-center gap-4" ref={menuRef}>
               <button

@@ -15,6 +15,7 @@ import { Input } from '../../components/ui/input';
 import { Select, SelectItem } from '../../components/ui/select';
 import Modal from '../../components/ui/modal';
 import {
+  adminAprobarPagoReserva,
   adminListarPagos,
   adminObtenerPago,
   adminVerificarPago,
@@ -84,6 +85,9 @@ const formatDateTime = (value) => {
 
 const formatStatusLabel = (value) =>
   (value || 'sin_estado').replaceAll('_', ' ');
+
+const getPaymentId = (payment) =>
+  payment?.pago_id || payment?.id || payment?.payment_id || payment?.paymentId || null;
 
 const isPlanPayment = (payment) => {
   const metadata = payment?.metadata || {};
@@ -180,7 +184,7 @@ const buildMeetPayload = (payment, reunionId, notaVerificacion) => {
 
   return {
     reunion_id: reunionId,
-    pago_id: payment?.pago_id,
+    pago_id: getPaymentId(payment),
     validation_cita_id: extractValidationCitaId(payment),
     advisor_id: payment?.asesor_id || payment?.metadata?.advisor_id || null,
     advisor_name: advisorName,
@@ -368,7 +372,7 @@ const AdminPayments = () => {
   const handleVerifyPayment = async () => {
     if (submittingVerification) return;
 
-    const pagoId = verificationModal.payment?.pago_id;
+    const pagoId = getPaymentId(verificationModal.payment);
     if (!pagoId) {
       toast.error('No se pudo identificar el pago');
       return;
@@ -379,22 +383,25 @@ const AdminPayments = () => {
       const notaVerificacion = verificationModal.nota.trim() || null;
 
       const paymentDetail =
-        selectedPayment?.pago_id === pagoId
+        getPaymentId(selectedPayment) === pagoId
           ? selectedPayment
           : await adminObtenerPago(pagoId);
       const isPlanFlow = isPlanPayment(paymentDetail);
       const validationCitaId = extractValidationCitaId(paymentDetail);
       const isReservationPayment = Boolean(validationCitaId) && !isPlanFlow;
 
-      const result = isPlanFlow
-        ? await adminVerificarPagoPlan(pagoId, {
-            estado: verificationModal.estado,
-            notaVerificacion,
-          })
-        : await adminVerificarPago(pagoId, {
-            estado: verificationModal.estado,
-            notaVerificacion,
-          });
+      const result =
+        isReservationPayment && verificationModal.estado === 'validado'
+          ? await adminAprobarPagoReserva(validationCitaId)
+          : isPlanFlow
+            ? await adminVerificarPagoPlan(pagoId, {
+                estado: verificationModal.estado,
+                notaVerificacion,
+              })
+            : await adminVerificarPago(pagoId, {
+                estado: verificationModal.estado,
+                notaVerificacion,
+              });
 
       let meetMessage = null;
 
@@ -440,7 +447,7 @@ const AdminPayments = () => {
       closeVerificationModal();
       await loadPayments();
 
-      if (selectedPayment?.pago_id === pagoId) {
+      if (getPaymentId(selectedPayment) === pagoId) {
         const data = await adminObtenerPago(pagoId);
         setSelectedPayment(data);
       }
@@ -488,7 +495,7 @@ const AdminPayments = () => {
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6">
+        <Card className="rounded-[26px] border border-white/80 p-6">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Total pagos
           </p>
@@ -496,7 +503,7 @@ const AdminPayments = () => {
             {counters.total}
           </p>
         </Card>
-        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6">
+        <Card className="rounded-[26px] border border-white/80 p-6">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Pendientes
           </p>
@@ -504,7 +511,7 @@ const AdminPayments = () => {
             {counters.pendientes}
           </p>
         </Card>
-        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6">
+        <Card className="rounded-[26px] border border-white/80 p-6">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Voucher subido
           </p>
@@ -512,7 +519,7 @@ const AdminPayments = () => {
             {counters.vouchersSubidos}
           </p>
         </Card>
-        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6">
+        <Card className="rounded-[26px] border border-white/80 p-6">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Validados
           </p>
@@ -520,7 +527,7 @@ const AdminPayments = () => {
             {counters.verificados}
           </p>
         </Card>
-        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6 md:col-span-4">
+        <Card className="rounded-[26px] border border-white/80 p-6 md:col-span-4">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Monto total
           </p>
@@ -530,7 +537,7 @@ const AdminPayments = () => {
         </Card>
       </section>
 
-      <Card className="overflow-hidden rounded-[32px] border border-white/80 bg-white/80 p-0 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+      <Card className="overflow-hidden rounded-[32px] border border-white/80 p-0 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
         <div className="flex flex-col gap-4 border-b border-slate-200/70 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full max-w-md">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -590,8 +597,11 @@ const AdminPayments = () => {
               )}
 
               {!loading &&
-                filteredPayments.map((item) => (
-                  <tr key={item.pago_id} className="hover:bg-slate-50/80">
+                filteredPayments.map((item) => {
+                  const paymentId = getPaymentId(item);
+
+                  return (
+                  <tr key={paymentId || item.codigo_operacion} className="hover:bg-slate-50/80">
                     <td className="px-6 py-5 align-top">
                       <div className="flex items-start gap-3">
                         <div className="inline-flex rounded-2xl bg-slate-100 p-3 text-slate-700">
@@ -610,7 +620,7 @@ const AdminPayments = () => {
                             {getPaymentTypeMeta(item).label}
                           </span>
                           <p className="mt-1 font-mono text-[11px] text-slate-400">
-                            {item.codigo_operacion || item.pago_id}
+                            {item.codigo_operacion || paymentId}
                           </p>
                         </div>
                       </div>
@@ -650,7 +660,8 @@ const AdminPayments = () => {
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
-                          onClick={() => openDetail(item.pago_id)}
+                          onClick={() => openDetail(paymentId)}
+                          disabled={!paymentId}
                           className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
                         >
                           <Eye className="h-4 w-4" />
@@ -667,7 +678,8 @@ const AdminPayments = () => {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
             </tbody>
           </table>
         </div>
@@ -835,7 +847,7 @@ const AdminPayments = () => {
               {verificationModal.payment?.pagador_nombre || 'Usuario'}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              {verificationModal.payment?.codigo_operacion || verificationModal.payment?.pago_id}
+              {verificationModal.payment?.codigo_operacion || getPaymentId(verificationModal.payment)}
             </p>
             {verificationIsPlan ? (
               <p className="mt-2 text-xs text-emerald-600">

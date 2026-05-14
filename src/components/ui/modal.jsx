@@ -59,6 +59,8 @@ const Modal = ({
 
   useEffect(() => {
     if (!open) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     // Focus the close button when modal opens
     if (closeBtnRef.current) {
       closeBtnRef.current.focus();
@@ -69,7 +71,10 @@ const Modal = ({
       }
     };
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKey);
+    };
   }, [open]);
 
   if (!open || typeof document === 'undefined') return null;
@@ -77,11 +82,11 @@ const Modal = ({
   const descClass = sizeMap[descriptionSize] || sizeMap.md;
   const modalWidthClass = widthMap[modalWidth] || widthMap.md;
   const defaultContentClass =
-    'flex max-h-[min(88vh,960px)] flex-col gap-6 overflow-y-auto p-6 text-center sm:p-8 lg:p-10';
+    'ios-scroll flex min-h-0 max-h-[calc(100dvh-2rem)] flex-col gap-6 overflow-y-auto p-6 text-center sm:max-h-[calc(100dvh-3rem)] sm:p-8 lg:p-10';
   const modalContent = (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[9999] flex h-full w-full items-center justify-center p-4 sm:p-6"
+      className="fixed inset-0 z-[9999] flex h-dvh w-full items-center justify-center overflow-hidden p-4 sm:p-6"
       onClick={(e) => {
         if (e.target === overlayRef.current) {
           onClose?.();
@@ -90,7 +95,7 @@ const Modal = ({
     >
       <div className="ios-overlay absolute inset-0" />
       <div
-        className={`glass-card-login relative z-10 w-full ${modalWidthClass} overflow-hidden animate-in fade-in zoom-in-95 duration-300 ${panelClassName}`}
+        className={`glass-card-login relative z-10 flex max-h-[calc(100dvh-2rem)] w-full ${modalWidthClass} flex-col overflow-hidden !p-0 animate-in fade-in zoom-in-95 duration-300 sm:max-h-[calc(100dvh-3rem)] ${panelClassName}`}
       >
         <button
           ref={closeBtnRef}

@@ -152,7 +152,7 @@ const AdminUsers = () => {
       </section>
 
       <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6">
+        <Card className="rounded-[26px] border border-white/80 p-6">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Total
           </p>
@@ -160,7 +160,7 @@ const AdminUsers = () => {
             {counters.total}
           </p>
         </Card>
-        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6">
+        <Card className="rounded-[26px] border border-white/80 p-6">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Estudiantes
           </p>
@@ -168,7 +168,7 @@ const AdminUsers = () => {
             {counters.estudiante}
           </p>
         </Card>
-        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6">
+        <Card className="rounded-[26px] border border-white/80 p-6">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Asesores
           </p>
@@ -176,7 +176,7 @@ const AdminUsers = () => {
             {counters.asesor}
           </p>
         </Card>
-        <Card className="rounded-[26px] border border-white/80 bg-white/80 p-6">
+        <Card className="rounded-[26px] border border-white/80 p-6">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
             Verificados
           </p>
@@ -186,7 +186,7 @@ const AdminUsers = () => {
         </Card>
       </section>
 
-      <Card className="overflow-hidden rounded-[32px] border border-white/80 bg-white/80 p-0 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+      <Card className="overflow-hidden rounded-[32px] border border-white/80 p-0 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
         <div className="flex flex-col gap-4 border-b border-slate-200/70 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full max-w-md">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />

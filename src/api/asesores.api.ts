@@ -39,6 +39,10 @@ export const asesoresApi = {
     return apiRequest('/asesores/estudiantes');
   },
 
+  estudiante(estudianteId: string) {
+    return apiRequest(`/asesores/estudiantes/${estudianteId}`);
+  },
+
   generarCodigoPublico() {
     return apiRequest('/asesores/codigo-publico', {
       method: 'POST',

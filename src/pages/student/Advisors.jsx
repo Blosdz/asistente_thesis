@@ -485,7 +485,7 @@ export default function Advisors() {
     : null;
 
   return (
-    <div className="relative w-full px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
+    <div className="student-advisors-page relative w-full px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-[1480px] flex-col gap-6">
 
         <AdvisorsQuickActions
@@ -592,7 +592,7 @@ export default function Advisors() {
         }}
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="advisor-inner-blue rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
               Asesor
             </p>
@@ -604,7 +604,7 @@ export default function Advisors() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+          <div className="advisor-inner-blue rounded-2xl border border-slate-200 bg-slate-50 p-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
               Horario
             </p>
@@ -619,7 +619,7 @@ export default function Advisors() {
           </div>
         </div>
 
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="advisor-inner-blue mt-4 rounded-2xl border border-slate-200 bg-white p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
             Fecha
           </p>
@@ -654,7 +654,7 @@ export default function Advisors() {
           </div>
 
           {reservationSummary ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <div className="advisor-inner-blue rounded-2xl border border-slate-200 bg-white p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-slate-950">
@@ -669,7 +669,7 @@ export default function Advisors() {
                 </span>
               </div>
 
-              <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
+              <div className="advisor-inner-blue mt-4 flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
                 <div className="flex items-center gap-2 text-slate-600">
                   <CalendarDays className="h-4 w-4" />
                   <span className="text-sm">{reservationSummary.timeRange}</span>

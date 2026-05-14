@@ -5,7 +5,6 @@ import {
   ArrowRight,
   CalendarClock,
   CheckCircle2,
-  Clock3,
   CreditCard,
   ExternalLink,
   FileText,
@@ -30,11 +29,6 @@ const formatterFechaCorta = new Intl.DateTimeFormat('es-PE', {
   day: '2-digit',
   month: 'short',
   year: 'numeric',
-});
-
-const formatterHora = new Intl.DateTimeFormat('es-PE', {
-  hour: '2-digit',
-  minute: '2-digit',
 });
 
 const resumenInicial = {
@@ -104,6 +98,7 @@ const getThesisDescription = (tesis) =>
   cleanText(tesis?.descripcion || tesis?.tema || tesis?.resumen, '');
 
 const getMeetingStart = (cita) =>
+  cita?.inicio ||
   cita?.start_at ||
   cita?.inicio_reunion ||
   cita?.fecha_inicio ||
@@ -111,6 +106,7 @@ const getMeetingStart = (cita) =>
   null;
 
 const getMeetingEnd = (cita) =>
+  cita?.fin ||
   cita?.end_at ||
   cita?.fin_reunion ||
   cita?.fecha_fin ||
@@ -125,7 +121,8 @@ const getMeetingStatus = (cita) =>
 
 const getMeetingAdvisorName = (cita) =>
   cleanText(
-    cita?.asesor_nombre ||
+      cita?.asesor_nombre ||
+      cita?.advisor_nombre ||
       cita?.nombre_asesor ||
       cita?.proximo_asesor_nombre ||
       cita?.nombre_mostrar,
@@ -295,10 +292,11 @@ export default function Dashboard() {
         label: 'Citas próximas',
         value: String(toNumber(dashboard.resumen.cantidad_citas_proximas)).padStart(2, '0'),
         note: proximaCita?.inicio
-          ? formatterFechaCorta.format(new Date(proximaCita.inicio))
+          ? proximaCita.enlace || formatterFechaCorta.format(new Date(proximaCita.inicio))
           : 'Sin reuniones programadas',
+        href: proximaCita?.enlace || null,
         icon: CalendarClock,
-        tone: 'text-violet-600 bg-violet-50 border-violet-100',
+        tone: 'text-violet-800 bg-violet-100 border-violet-300 shadow-violet-500/15',
       },
       {
         label: 'Pagos pendientes',
@@ -308,21 +306,21 @@ export default function Dashboard() {
             ? 'Revisa voucher, validación o pago por completar'
             : 'No tienes pagos pendientes',
         icon: CreditCard,
-        tone: 'text-amber-600 bg-amber-50 border-amber-100',
+        tone: 'text-amber-800 bg-amber-100 border-amber-300 shadow-amber-500/15',
       },
       {
         label: 'Documentos recientes',
         value: String(toNumber(dashboard.resumen.documentos_recientes)).padStart(2, '0'),
         note: 'Documentos vinculados a tu tesis',
         icon: FileText,
-        tone: 'text-emerald-600 bg-emerald-50 border-emerald-100',
+        tone: 'text-emerald-800 bg-emerald-100 border-emerald-300 shadow-emerald-500/15',
       },
       {
         label: 'Tesis activa',
         value: tesisActiva ? 'Activa' : 'Sin tesis',
         note: tesisActiva?.titulo || 'Crea o selecciona tu tesis',
         icon: CheckCircle2,
-        tone: 'text-blue-600 bg-blue-50 border-blue-100',
+        tone: 'text-blue-800 bg-blue-100 border-blue-300 shadow-blue-500/15',
       },
     ],
     [dashboard.resumen, pagosPendientes.length, proximaCita, tesisActiva],
@@ -371,12 +369,12 @@ export default function Dashboard() {
             return (
               <Card
                 key={item.label}
-                className="rounded-[28px] border border-white/80 bg-white/75 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.05)]"
+                className="rounded-[28px] border border-white/80 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.05)]"
               >
                 <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${item.tone}`}
+                  className={`flex h-12 w-12 items-center justify-center rounded-2xl border shadow-lg ${item.tone}`}
                 >
-                  <Icon className="h-5 w-5" />
+                  <Icon className="h-6 w-6" strokeWidth={2.55} />
                 </div>
                 <p className="mt-5 text-sm font-semibold text-slate-500">
                   {item.label}
@@ -384,7 +382,20 @@ export default function Dashboard() {
                 <p className="mt-2 text-3xl font-black tracking-tight text-slate-900">
                   {loading ? '--' : item.value}
                 </p>
-                <p className="mt-2 text-sm text-slate-500">{item.note}</p>
+                {item.href ? (
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex max-w-full items-center gap-1 truncate text-sm font-semibold text-blue-700 hover:text-blue-800"
+                    title={item.href}
+                  >
+                    <span className="truncate">{item.note}</span>
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                  </a>
+                ) : (
+                  <p className="mt-2 text-sm text-slate-500">{item.note}</p>
+                )}
               </Card>
             );
           })}
@@ -392,19 +403,19 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <section className="space-y-8 lg:col-span-8">
-            <Card className="glass relative overflow-hidden rounded-[32px] p-8 md:p-10">
-              <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-blue-500/10 blur-3xl" />
+            <Card className="relative overflow-hidden rounded-[32px] !p-5 sm:!p-6 lg:!p-7">
+              <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full bg-blue-500/10 blur-3xl" />
 
               <div className="relative z-10">
-                <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                   <div className="max-w-2xl">
-                    <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-600">
+                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-blue-600 sm:text-sm">
                       Tesis activa
                     </p>
-                    <h2 className="mt-2 font-['Ubuntu'] text-3xl font-bold tracking-tight text-slate-900">
+                    <h2 className="mt-2 font-['Ubuntu'] text-2xl font-bold tracking-tight text-slate-900 md:text-3xl">
                       {tesisActiva?.titulo || 'Aún no tienes una tesis activa'}
                     </h2>
-                    <p className="mt-3 text-sm leading-7 text-slate-500">
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
                       {tesisActiva
                         ? 'Tu tesis ya está vinculada a tu espacio de trabajo. Desde aquí puedes revisar documentos, sugerencias y el avance general.'
                         : 'Cuando crees o selecciones una tesis, aquí verás su título, estado y accesos rápidos para continuar tu proceso.'}
@@ -414,17 +425,17 @@ export default function Dashboard() {
                   <button
                     type="button"
                     onClick={() => navigate('/student/my-thesis')}
-                    className="ios-accent-button inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-bold"
+                    className="ios-accent-button inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-bold sm:w-auto"
                   >
                     Abrir espacio de tesis
                     <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
 
-                <div className="mt-8 grid gap-4 md:grid-cols-3">
-                  <div className="glass rounded-2xl p-5">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                      <FileText className="h-5 w-5" />
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="bg-sky-400/10 p-4 rounded-2xl border border-slate-200 text-black">
+                    <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl border border-blue-300 bg-blue-100 text-blue-800 shadow-md shadow-blue-500/15">
+                      <FileText className="h-5 w-5" strokeWidth={2.55} />
                     </div>
                     <p className="text-sm font-bold text-slate-900">Estado</p>
                     <p className="mt-1 text-xs text-slate-500">
@@ -432,9 +443,9 @@ export default function Dashboard() {
                     </p>
                   </div>
 
-                  <div className="glass rounded-2xl p-5">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                      <CheckCircle2 className="h-5 w-5" />
+                  <div className="bg-sky-400/10 p-4 rounded-2xl border border-slate-200 text-black">
+                    <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-300 bg-emerald-100 text-emerald-800 shadow-md shadow-emerald-500/15">
+                      <CheckCircle2 className="h-5 w-5" strokeWidth={2.55} />
                     </div>
                     <p className="text-sm font-bold text-slate-900">
                       Documentos recientes
@@ -444,9 +455,9 @@ export default function Dashboard() {
                     </p>
                   </div>
 
-                  <div className="glass rounded-2xl p-5">
-                    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                      <CalendarClock className="h-5 w-5" />
+                  <div className="bg-sky-400/10 p-4 rounded-2xl border border-slate-200 text-black">
+                    <div className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl border border-violet-300 bg-violet-100 text-violet-800 shadow-md shadow-violet-500/15">
+                      <CalendarClock className="h-5 w-5" strokeWidth={2.55} />
                     </div>
                     <p className="text-sm font-bold text-slate-900">
                       Próxima reunión
@@ -456,13 +467,25 @@ export default function Dashboard() {
                         ? formatterFechaLarga.format(new Date(proximaCita.inicio))
                         : 'Sin cita agendada'}
                     </p>
+                    {proximaCita?.enlace && (
+                      <a
+                        href={proximaCita.enlace}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-2 inline-flex max-w-full items-center gap-1 truncate text-xs font-semibold text-blue-700 hover:text-blue-800"
+                        title={proximaCita.enlace}
+                      >
+                        <span className="truncate">{proximaCita.enlace}</span>
+                        <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
             </Card>
 
             <div className="grid gap-6 xl:grid-cols-2">
-              <Card className="rounded-[32px] border border-white/70 bg-white/75 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              <Card className="rounded-[32px] border border-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -472,17 +495,18 @@ export default function Dashboard() {
                       Mis tesis
                     </h3>
                   </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                    <FileText className="h-5 w-5" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-blue-300 bg-blue-100 text-blue-800 shadow-lg shadow-blue-500/15">
+                    <FileText className="h-6 w-6" strokeWidth={2.55} />
                   </div>
                 </div>
+
 
                 <div className="mt-6 space-y-3">
                   {tesisNormalizadas.length > 0 ? (
                     tesisNormalizadas.slice(0, 3).map((tesis) => (
                       <div
                         key={tesis.id || tesis.titulo}
-                        className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+                        className="rounded-2xl border border-slate-200 bg-sky-400/10 p-4"
                       >
                         <p className="text-sm font-bold text-slate-900">
                           {tesis.titulo}
@@ -505,7 +529,7 @@ export default function Dashboard() {
                 </div>
               </Card>
 
-              <Card className="rounded-[32px] border border-white/70 bg-white/75 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              <Card className="rounded-[32px] border border-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -515,8 +539,8 @@ export default function Dashboard() {
                       Próximas reuniones
                     </h3>
                   </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
-                    <CalendarClock className="h-5 w-5" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-violet-300 bg-violet-100 text-violet-800 shadow-lg shadow-violet-500/15">
+                    <CalendarClock className="h-6 w-6" strokeWidth={2.55} />
                   </div>
                 </div>
 
@@ -525,7 +549,7 @@ export default function Dashboard() {
                     citasProximas.map((cita) => (
                       <div
                         key={cita.id || cita.inicio}
-                        className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+                        className="rounded-2xl border border-slate-200 bg-sky-400/10 p-4"
                       >
                         <p className="text-sm font-bold text-slate-900">
                           {cita.asesorNombre}
@@ -536,6 +560,18 @@ export default function Dashboard() {
                         <p className="mt-2 text-xs text-slate-500">
                           Estado: {humanizeToken(cita.estado)}
                         </p>
+                        {cita.enlace && (
+                          <a
+                            href={cita.enlace}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-2 inline-flex max-w-full items-center gap-1 truncate text-xs font-semibold text-blue-700 hover:text-blue-800"
+                            title={cita.enlace}
+                          >
+                            <span className="truncate">{cita.enlace}</span>
+                            <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                          </a>
+                        )}
                       </div>
                     ))
                   ) : (
@@ -550,14 +586,14 @@ export default function Dashboard() {
                   onClick={() => navigate('/student/citas')}
                   className="ios-secondary-button mt-6 inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold"
                 >
-                  Ver todas las citas
+                  Ver reuniones
                   <ArrowRight className="h-4 w-4" />
                 </button>
               </Card>
             </div>
 
             <div className="grid gap-6 xl:grid-cols-2">
-              <Card className="rounded-[32px] border border-white/70 bg-white/75 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              <Card className="rounded-[32px] border border-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -567,8 +603,8 @@ export default function Dashboard() {
                       Pagos del estudiante
                     </h3>
                   </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
-                    <CreditCard className="h-5 w-5" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-amber-300 bg-amber-100 text-amber-800 shadow-lg shadow-amber-500/15">
+                    <CreditCard className="h-6 w-6" strokeWidth={2.55} />
                   </div>
                 </div>
 
@@ -577,7 +613,7 @@ export default function Dashboard() {
                     pagosPendientes.slice(0, 3).map((pago) => (
                       <div
                         key={pago.id || pago.concepto}
-                        className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+                        className="rounded-2xl border border-slate-200 bg-sky-400/10 p-4"
                       >
                         <p className="text-sm font-bold text-slate-900">
                           {pago.concepto}
@@ -616,7 +652,7 @@ export default function Dashboard() {
                 </button>
               </Card>
 
-              <Card className="rounded-[32px] border border-white/70 bg-white/75 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+              <Card className="rounded-[32px] border border-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -626,8 +662,8 @@ export default function Dashboard() {
                       Mis asesores
                     </h3>
                   </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700">
-                    <Users className="h-5 w-5" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300 bg-cyan-100 text-cyan-800 shadow-lg shadow-cyan-500/15">
+                    <Users className="h-6 w-6" strokeWidth={2.55} />
                   </div>
                 </div>
 
@@ -636,7 +672,7 @@ export default function Dashboard() {
                     asesoresNormalizados.slice(0, 3).map((asesor) => (
                       <div
                         key={asesor.relacionId || asesor.id || asesor.name}
-                        className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4"
+                        className="rounded-2xl border border-slate-200 bg-sky-400/10 p-4"
                       >
                         <p className="text-sm font-bold text-slate-900">
                           {asesor.name}
@@ -674,74 +710,9 @@ export default function Dashboard() {
               loading={loading}
             />
 
-            <Card className="rounded-[32px] border border-white/70 bg-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
-                    Próxima reunión
-                  </p>
-                  <h3 className="mt-3 text-xl font-bold text-slate-900">
-                    {proximaCita?.inicio ? 'Agenda confirmada' : 'Aún sin cita'}
-                  </h3>
-                </div>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
-                  <Clock3 className="h-5 w-5" />
-                </div>
-              </div>
-
-              <p className="mt-4 text-sm leading-6 text-slate-500">
-                {proximaCita?.inicio
-                  ? formatterFechaLarga.format(new Date(proximaCita.inicio))
-                  : 'Cuando tengas una nueva reunión asignada aparecerá aquí con su fecha, estado y acceso rápido.'}
-              </p>
-
-              {proximaCita?.asesorNombre && (
-                <p className="mt-2 text-sm font-semibold text-slate-700">
-                  {proximaCita.asesorNombre}
-                </p>
-              )}
-
-              {proximaCita?.inicio && (
-                <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600">
-                  <p>
-                    Estado: {humanizeToken(proximaCita.estado)}
-                  </p>
-                  <p className="mt-1">
-                    Horario: {formatterHora.format(new Date(proximaCita.inicio))}
-                    {proximaCita.fin && hasValidDate(proximaCita.fin)
-                      ? ` - ${formatterHora.format(new Date(proximaCita.fin))}`
-                      : ''}
-                  </p>
-                </div>
-              )}
-
-              <div className="mt-6 space-y-3">
-                <button
-                  type="button"
-                  onClick={() => navigate('/student/citas')}
-                  className="ios-secondary-button flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold transition"
-                >
-                  Ver detalle de citas
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-
-                {proximaCita?.enlace && (
-                  <a
-                    href={proximaCita.enlace}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                  >
-                    Abrir enlace de reunión
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                )}
-              </div>
-            </Card>
-
-            <Card className="rounded-[32px] border border-white/70 bg-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <Card className="rounded-[32px] border border-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <p className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
-                <Sparkles className="h-4 w-4 text-blue-600" />
+                <Sparkles className="h-5 w-5 text-blue-800" strokeWidth={2.55} />
                 Perfil del estudiante
               </p>
 

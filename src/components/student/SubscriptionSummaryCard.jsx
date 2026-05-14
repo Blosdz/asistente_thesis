@@ -114,7 +114,7 @@ export default function SubscriptionSummaryCard({
         <>
           {coverageMeta && (
             <div
-              className={`rounded-2xl border font-semibold ${
+              className={`advisor-inner-blue rounded-2xl border font-semibold ${
                 compact ? 'mt-3 px-3 py-2 text-xs' : 'mt-4 px-4 py-3 text-sm'
               } ${
                 coverageMeta.available > 0
@@ -134,7 +134,7 @@ export default function SubscriptionSummaryCard({
             }`}
           >
             <div
-              className={`rounded-2xl border border-slate-200 bg-white/80 ${
+              className={`advisor-inner-blue rounded-2xl border border-slate-200 bg-white/80 ${
                 compact ? 'p-3' : 'p-4'
               }`}
             >
@@ -154,7 +154,7 @@ export default function SubscriptionSummaryCard({
             </div>
 
             <div
-              className={`rounded-2xl border border-slate-200 bg-white/80 ${
+              className={`advisor-inner-blue rounded-2xl border border-slate-200 bg-white/80 ${
                 compact ? 'p-3' : 'p-4'
               }`}
             >
@@ -175,7 +175,7 @@ export default function SubscriptionSummaryCard({
           </div>
 
           <div
-            className={`flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/70 text-slate-600 ${
+            className={`advisor-inner-blue flex items-center gap-2 rounded-2xl border border-slate-200 bg-white/70 text-slate-600 ${
               compact ? 'mt-3 px-3 py-2 text-xs' : 'mt-4 px-4 py-3 text-sm'
             }`}
           >
@@ -185,7 +185,7 @@ export default function SubscriptionSummaryCard({
         </>
       ) : (
         <div
-          className={`rounded-2xl border border-dashed border-slate-200 bg-white/70 text-slate-600 ${
+          className={`advisor-inner-blue rounded-2xl border border-dashed border-slate-200 bg-white/70 text-slate-600 ${
             compact ? 'mt-3 px-3 py-3 text-xs' : 'mt-4 px-4 py-4 text-sm'
           }`}
         >

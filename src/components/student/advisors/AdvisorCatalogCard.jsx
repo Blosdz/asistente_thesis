@@ -69,7 +69,7 @@ export default function AdvisorCatalogCard({
             {advisor.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700"
+                className="advisor-inner-blue rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-semibold text-blue-700"
               >
                 {tag}
               </span>
@@ -85,8 +85,8 @@ export default function AdvisorCatalogCard({
             onClick={() => onSelect(advisor.id)}
             className={`inline-flex h-10 items-center gap-2 rounded-xl border px-3 text-sm font-semibold ${
               isSelected
-                ? 'border-blue-200 bg-blue-50 text-blue-700'
-                : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                ? 'advisor-inner-blue advisor-inner-blue-active border-blue-200 bg-blue-50 text-blue-700'
+                : 'advisor-inner-blue border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
             }`}
           >
             <CheckCircle2 className="h-4 w-4" />

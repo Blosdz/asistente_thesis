@@ -13,10 +13,26 @@ import { Button } from '../../components/ui/button';
 import { Select, SelectItem } from '../../components/ui/select';
 import { toast } from 'react-hot-toast';
 import {
-  obtenerEstudiantesAsesor,
-  obtenerEstudiantesMisAsesorias,
+  obtenerDetalleEstudianteAsesor,
   cambiarEstadoRelacion as cambiarEstadoRelacionAPI,
 } from '../../services/advisorService';
+
+const DetailField = ({ icon: Icon, label, value, multiline = false }) => (
+  <div className="app-dark-card rounded-xl px-3.5 py-2.5">
+    <label className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] opacity-60">
+      <Icon className="h-3.5 w-3.5" />
+      {label}
+    </label>
+    <p
+      className={[
+        'break-words text-sm font-semibold leading-5 opacity-95',
+        multiline ? 'min-h-[70px]' : 'min-h-[20px]',
+      ].join(' ')}
+    >
+      {value || 'No registrado'}
+    </p>
+  </div>
+);
 
 const AdvisorStudentDetail = () => {
   const { studentId } = useParams();
@@ -31,53 +47,11 @@ const AdvisorStudentDetail = () => {
     const fetchDetail = async () => {
       try {
         setLoading(true);
-        
-
-        
-        const [base, details] = await Promise.all([
-          obtenerEstudiantesAsesor(),
-          obtenerEstudiantesMisAsesorias().catch(() => []),
-        ]);
-
-        const selected = base.find((item) => item.r_estudiante_id === studentId);
-        const detailSelected = details.find(
-          (item) => item.r_estudiante_id === studentId,
-        );
+        const selected = await obtenerDetalleEstudianteAsesor(studentId);
 
         setStudent(selected || null);
-        setDetail(detailSelected || null);
-        
-        
-        // Guardar el ID de la relación - buscar entre todos los campos
-        if (selected) {
-          // Buscar el campo que sea el ID de la relación (probablemente r_id o similar)
-          let idRelacion = null;
-          
-          // Prioridad: buscar campos con 'relacion' en el nombre
-          if (selected.r_relacion_id) idRelacion = selected.r_relacion_id;
-          else if (selected.relacion_id) idRelacion = selected.relacion_id;
-          else if (selected.id) idRelacion = selected.id;
-          else if (selected.r_id) idRelacion = selected.r_id;
-          
-          // Si aún no encuentra, buscar el primer campo UUID disponible que sea 'id'
-          if (!idRelacion) {
-            for (const [key, value] of Object.entries(selected)) {
-              if ((key === 'id' || key.endsWith('_id')) && typeof value === 'string' && value.length === 36) {
-                idRelacion = value;
-                console.log(`Usando campo: ${key}`);
-                break;
-              }
-            }
-          }
-          
-          if (idRelacion) {
-            setRelationId(idRelacion);
-            console.log('✓ Relation ID encontrado:', idRelacion);
-          } else {
-            console.warn('✗ No se encontró ID de relación válido');
-            console.table(selected);
-          }
-        }
+        setDetail(selected || null);
+        setRelationId(selected?.r_relacion_id || selected?.relacion_id || null);
       } catch (error) {
         console.error(error);
         toast.error('No se pudo cargar el detalle del estudiante.');
@@ -90,35 +64,36 @@ const AdvisorStudentDetail = () => {
   }, [studentId]);
 
   const cambiarEstadoRelacion = async (nuevoEstado) => {
-    console.log('RelationId actual:', relationId);
-    console.log('Nuevo estado:', nuevoEstado);
-    
     if (!relationId) {
-      toast.error('No se encontró el ID de la relación. Verifica la consola para debug.');
+      toast.error('No se encontró el ID de la relación.');
       return;
     }
 
     try {
       setChangingState(true);
-      toast.loading('Actualizando estado...', { id: 'estado-change' });
-
-      await cambiarEstadoRelacionAPI(relationId, nuevoEstado);
-
-      // Actualizar estado local optimistamente
-      setStudent((prev) => ({
-        ...prev,
-        r_estado_relacion: nuevoEstado,
-      }));
-
-      toast.success(
-        `Estado cambiado a "${nuevoEstado}" correctamente.`,
+      toast.loading(
+        nuevoEstado === 'activo'
+          ? 'Aceptando estudiante...'
+          : 'Rechazando solicitud...',
         { id: 'estado-change' },
       );
 
-      // Recargar datos después de 1 segundo
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      const updated = await cambiarEstadoRelacionAPI(relationId, nuevoEstado);
+
+      if (nuevoEstado === 'cancelado') {
+        toast.success('Solicitud rechazada y vínculo eliminado.', {
+          id: 'estado-change',
+        });
+        navigate('/advisor/students');
+        return;
+      }
+
+      setStudent(updated || ((prev) => ({ ...prev, r_estado_relacion: nuevoEstado })));
+      setDetail(updated || ((prev) => ({ ...prev, r_estado_relacion: nuevoEstado })));
+
+      toast.success('Estudiante aceptado y vinculado a su tesis.', {
+        id: 'estado-change',
+      });
     } catch (err) {
       console.error('Error al cambiar estado:', err);
       toast.error(`Error: ${err.message || 'No se pudo cambiar el estado.'}`, {
@@ -132,6 +107,12 @@ const AdvisorStudentDetail = () => {
   const fullName = useMemo(() => {
     return `${student?.r_nombres || ''} ${student?.r_apellidos || ''}`.trim();
   }, [student]);
+
+  const estadoRelacion =
+    detail?.r_estado_relacion || student?.r_estado_relacion || 'pendiente';
+  const ultimaReunion = detail?.r_reunion_inicio
+    ? new Date(detail.r_reunion_inicio).toLocaleString()
+    : 'Sin reuniones';
 
   if (loading) {
     return (
@@ -156,118 +137,94 @@ const AdvisorStudentDetail = () => {
   }
 
   return (
-    <div className="w-full flex flex-col gap-6 py-10 px-6 text-slate-900">
+    <div className="flex w-full flex-col items-center gap-5 px-4 py-8 text-slate-900">
       <Button
         variant="link"
         onClick={() => navigate('/advisor/students')}
-        className="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-medium"
+        className="w-full max-w-xl justify-start gap-2 text-slate-500 hover:text-slate-800 font-medium"
       >
         <ArrowLeft size={18} /> Volver a estudiantes
       </Button>
 
-      <div className="glass-card rounded-3xl p-8 flex flex-col gap-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="glass-card w-full max-w-xl rounded-[26px] p-4 md:p-5">
+        <div className="flex flex-col gap-4 border-b border-white/35 pb-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-ios-blue/10 text-ios-blue flex items-center justify-center font-bold text-2xl">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-ios-blue/10 text-xl font-bold text-ios-blue">
               {fullName?.[0] || 'E'}
             </div>
-            <div>
-              <h1 className="text-2xl font-extrabold text-slate-900">
+            <div className="min-w-0 flex-1">
+              <h1 className="truncate text-lg font-extrabold text-slate-900">
                 {fullName || 'Estudiante'}
               </h1>
-              <p className="text-sm text-slate-500">ID: {student.r_estudiante_id}</p>
+              <p className="mt-1 truncate text-xs font-semibold text-slate-500">
+                ID: {student.r_estudiante_id}
+              </p>
+              <div className="mt-3 grid max-w-[240px] grid-cols-4 gap-2">
+                <span className="h-1.5 rounded-full bg-ios-blue" />
+                <span className="h-1.5 rounded-full bg-emerald-300" />
+                <span className="h-1.5 rounded-full bg-cyan-300" />
+                <span className="h-1.5 rounded-full bg-slate-300" />
+              </div>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold uppercase">
+          <div className="grid gap-2 sm:grid-cols-[1fr_180px]">
+            <span className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-100 px-3 py-2 text-xs font-bold uppercase text-emerald-700">
               <BadgeCheck size={14} />
-              {detail?.r_estado_relacion || student.r_estado_relacion || 'pendiente'}
+              {estadoRelacion}
             </span>
-            {student.r_estado_relacion === 'pendiente' && (
-              <Select
-                className="py-2 pl-3 pr-8 text-xs font-bold text-slate-700 w-48"
-                value={student.r_estado_relacion || 'pendiente'}
-                onChange={(e) => cambiarEstadoRelacion(e.target.value)}
-                disabled={changingState}
-              >
-                <SelectItem value="pendiente" disabled>
-                  Cambiar estado...
-                </SelectItem>
-                <SelectItem value="activo">
-                  ✓ Aceptar estudiante
-                </SelectItem>
-                <SelectItem value="cancelado">
-                  ✗ Rechazar
-                </SelectItem>
-              </Select>
+            {relationId && (
+              <div className="app-dark-card rounded-xl p-2">
+                <Select
+                  className="w-full rounded-lg px-3 py-2 text-xs font-bold"
+                  value=""
+                  onChange={(e) => cambiarEstadoRelacion(e.target.value)}
+                  disabled={changingState}
+                >
+                  <SelectItem value="" disabled>
+                    Seleccionar
+                  </SelectItem>
+                  <SelectItem value="activo">Aceptar</SelectItem>
+                  <SelectItem value="cancelado">Negar</SelectItem>
+                </Select>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white/60 border border-white/60 rounded-2xl p-5">
-            <div className="flex items-start gap-3">
-              <GraduationCap className="w-5 h-5 text-slate-400 mt-0.5" />
-              <div>
-                <p className="text-xs font-bold uppercase text-slate-400">Carrera</p>
-                <p className="font-semibold text-slate-800">
-                  {student.r_carrera || 'No registrada'}
-                </p>
-              </div>
+        <form
+          className="mt-4 flex flex-col gap-4"
+          onSubmit={(event) => event.preventDefault()}
+        >
+          <section className="grid gap-3 sm:grid-cols-2">
+            <h2 className="sm:col-span-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-600">
+              Información del estudiante
+            </h2>
+            <DetailField icon={User} label="Nombres" value={student.r_nombres} />
+            <DetailField icon={User} label="Apellidos" value={student.r_apellidos} />
+            <div className="sm:col-span-2">
+              <DetailField icon={GraduationCap} label="Carrera" value={student.r_carrera} />
             </div>
-          </div>
+            <div className="sm:col-span-2">
+              <DetailField icon={Mail} label="Correo" value={student.r_email || 'No disponible'} />
+            </div>
+          </section>
 
-          <div className="bg-white/60 border border-white/60 rounded-2xl p-5">
-            <div className="flex items-start gap-3">
-              <Mail className="w-5 h-5 text-slate-400 mt-0.5" />
-              <div>
-                <p className="text-xs font-bold uppercase text-slate-400">Correo</p>
-                <p className="font-semibold text-slate-800">
-                  {student.r_email || 'No disponible'}
-                </p>
-              </div>
+          <section className="grid gap-3 sm:grid-cols-2">
+            <h2 className="sm:col-span-2 text-[11px] font-extrabold uppercase tracking-[0.18em] text-slate-600">
+              Información académica
+            </h2>
+            <div className="sm:col-span-2">
+              <DetailField
+                icon={BookOpen}
+                label="Tesis actual"
+                value={detail?.r_tesis_titulo || 'Sin título registrado'}
+                multiline
+              />
             </div>
-          </div>
-
-          <div className="bg-white/60 border border-white/60 rounded-2xl p-5">
-            <div className="flex items-start gap-3">
-              <User className="w-5 h-5 text-slate-400 mt-0.5" />
-              <div>
-                <p className="text-xs font-bold uppercase text-slate-400">Estado relación</p>
-                <p className="font-semibold text-slate-800">
-                  {detail?.r_estado_relacion || student.r_estado_relacion || 'pendiente'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white/60 border border-white/60 rounded-2xl p-5">
-            <div className="flex items-start gap-3">
-              <BookOpen className="w-5 h-5 text-slate-400 mt-0.5" />
-              <div>
-                <p className="text-xs font-bold uppercase text-slate-400">Tesis actual</p>
-                <p className="font-semibold text-slate-800">
-                  {detail?.r_tesis_titulo || 'Sin título registrado'}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white/60 border border-white/60 rounded-2xl p-5">
-            <div className="flex items-start gap-3">
-              <Calendar className="w-5 h-5 text-slate-400 mt-0.5" />
-              <div>
-                <p className="text-xs font-bold uppercase text-slate-400">Última reunión</p>
-                <p className="font-semibold text-slate-800">
-                  {detail?.r_reunion_inicio
-                    ? new Date(detail.r_reunion_inicio).toLocaleString()
-                    : 'Sin reuniones'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+            <DetailField icon={BadgeCheck} label="Estado de tesis" value={detail?.r_tesis_estado} />
+            <DetailField icon={Calendar} label="Última reunión" value={ultimaReunion} />
+          </section>
+        </form>
       </div>
     </div>
   );

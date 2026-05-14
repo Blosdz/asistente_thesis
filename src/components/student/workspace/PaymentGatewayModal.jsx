@@ -197,11 +197,11 @@ export default function PaymentGatewayModal({
       showDefaultHeader={false}
       showDefaultActions={false}
       panelClassName="rounded-[32px] border-none shadow-[0_35px_110px_-62px_rgba(148,163,184,0.28)]"
-      contentClassName="max-h-[min(92vh,980px)] overflow-y-auto p-0 text-left"
+      contentClassName="max-h-[calc(100dvh-2rem)] overflow-y-auto p-0 text-left sm:max-h-[calc(100dvh-3rem)]"
       closeButtonClassName="top-4 right-4"
       closeIconClassName="text-slate-600"
     >
-      <div className="overflow-hidden">
+      <div className="overflow-hidden rounded-[32px]">
         <section className="bg-[linear-gradient(180deg,rgba(255,255,255,0.86)_0%,rgba(235,244,255,0.72)_100%)] px-6 py-6 text-slate-900 sm:px-7 sm:py-7">
           <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
             <div className="space-y-4">
@@ -247,7 +247,7 @@ export default function PaymentGatewayModal({
           </div>
         </div>
 
-        <div className="grid gap-6 px-6 py-6  sm:px-7 sm:py-7">
+        <div className="grid gap-6 px-6 py-6 sm:px-7 sm:py-7">
           <section className="space-y-5">
             <div className="space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">

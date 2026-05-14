@@ -9,7 +9,7 @@ export default function AcademicAIPanel({
 }) {
   return (
     <div className="space-y-4">
-      <Card className="rounded-[28px] border-none bg-white p-6 shadow-[0_24px_50px_-38px_rgba(15,23,42,0.35)]">
+      <Card className="rounded-[28px] border-none p-6 shadow-[0_24px_50px_-38px_rgba(15,23,42,0.35)]">
         <div className="flex items-center gap-3">
           <div className="ios-avatar-glass flex h-10 w-10 items-center justify-center rounded-full">
             <Sparkles className="h-4 w-4" />

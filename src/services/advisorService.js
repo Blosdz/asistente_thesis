@@ -26,6 +26,34 @@ const addRelacionAlias = (item) =>
       }
     : item;
 
+const normalizarEstudianteAsesor = (item) => {
+  if (!item) return item;
+
+  const relacionId = item.r_relacion_id || item.relacion_id || item.relacionId || item.id || null;
+  const estudianteId =
+    item.r_estudiante_id || item.estudiante_id || item.estudianteId || null;
+  const estado = item.r_estado_relacion || item.estado || 'pendiente';
+
+  return {
+    ...item,
+    id: item.id || relacionId,
+    relacion_id: relacionId,
+    r_relacion_id: relacionId,
+    r_estudiante_id: estudianteId,
+    r_estado_relacion: estado,
+    r_nombres: item.r_nombres || item.nombres || '',
+    r_apellidos: item.r_apellidos || item.apellidos || '',
+    r_carrera: item.r_carrera || item.carrera || '',
+    r_email: item.r_email || item.email || '',
+    r_universidad_nombre:
+      item.r_universidad_nombre || item.universidad_nombre || item.universidadNombre || '',
+    r_tesis_id: item.r_tesis_id || item.tesis_id || item.tesisId || null,
+    r_tesis_titulo: item.r_tesis_titulo || item.tesis_titulo || item.titulo || '',
+    r_tesis_estado: item.r_tesis_estado || item.tesis_estado || '',
+    r_reunion_inicio: item.r_reunion_inicio || item.reunion_inicio || null,
+  };
+};
+
 const flattenTesisConAsesores = (rows) =>
   rows.flatMap((tesis) => {
     const asesores = Array.isArray(tesis?.asesores) ? tesis.asesores : [];
@@ -240,15 +268,21 @@ export async function crearCitaEstudianteAsesor(params) {
 }
 
 export async function obtenerEstudiantesAsesor() {
-  return asArray(await asesoresApi.estudiantes());
+  return asArray(await asesoresApi.estudiantes()).map(normalizarEstudianteAsesor);
 }
 
 export async function obtenerEstudiantesMisAsesorias() {
   return obtenerEstudiantesAsesor();
 }
 
+export async function obtenerDetalleEstudianteAsesor(studentId) {
+  return normalizarEstudianteAsesor(unwrap(await asesoresApi.estudiante(studentId)));
+}
+
 export async function cambiarEstadoRelacion(relacionId, estado) {
-  return unwrap(await relacionesApi.cambiarEstado(relacionId, estado));
+  return normalizarEstudianteAsesor(
+    unwrap(await relacionesApi.cambiarEstado(relacionId, estado)),
+  );
 }
 
 export async function obtenerMisAsesores() {

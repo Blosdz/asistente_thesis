@@ -1,4 +1,4 @@
-import { reunionesApi } from '../api/reuniones.api';
+import { apiRequest } from '../api/client';
 
 const unwrap = (data) => data?.data || data;
 
@@ -9,5 +9,9 @@ export async function crearGoogleMeetAdmin(payload = {}) {
     throw new Error('Se requiere reunion_id para crear Google Meet');
   }
 
-  return unwrap(await reunionesApi.crearGoogleMeet(reunionId));
+  return unwrap(
+    await apiRequest(`/reuniones/${reunionId}/google-meet/crear`, {
+      method: 'POST',
+    }),
+  );
 }

@@ -263,8 +263,8 @@ function EstadoBadge({ activo }) {
     <span
       className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
         activo === false
-          ? 'bg-rose-50 text-rose-700'
-          : 'bg-emerald-50 text-emerald-700'
+          ? 'border border-rose-300/50 bg-rose-500/20 text-white'
+          : 'border border-emerald-300/50 bg-emerald-500/20 text-white'
       }`}
     >
       {activo === false ? 'Inactivo' : 'Activo'}
@@ -669,7 +669,7 @@ export default function AdvisorCalendar() {
   };
 
   return (
-    <div className="relative flex w-full flex-1 flex-col items-center overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
+    <div className="advisor-calendar-page relative flex w-full flex-1 flex-col items-center overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0 opacity-70">
         <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-blue-100 blur-3xl" />
         <div className="absolute right-0 top-24 h-80 w-80 rounded-full bg-indigo-100 blur-3xl" />
@@ -706,7 +706,7 @@ export default function AdvisorCalendar() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-          <Card className="glass-panel lg:col-span-8 rounded-[32px] border border-white/60 bg-white/20 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.06)] sm:p-8">
+          <Card className="glass-panel lg:col-span-8 rounded-[32px] border border-white/60 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.06)] sm:p-8">
             <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500/90">
@@ -739,27 +739,27 @@ export default function AdvisorCalendar() {
             </div>
 
             <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="rounded-2xl border border-white/50 bg-white/30 p-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              <div className="app-dark-card rounded-2xl p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em]">
                   Espacios activos
                 </p>
-                <p className="mt-2 text-2xl font-black tracking-tight text-slate-900">
+                <p className="mt-2 text-2xl font-black tracking-tight">
                   {espaciosActivos.length}
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/50 bg-white/30 p-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              <div className="app-dark-card rounded-2xl p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em]">
                   Horas disponibles
                 </p>
-                <p className="mt-2 text-2xl font-black tracking-tight text-slate-900">
+                <p className="mt-2 text-2xl font-black tracking-tight">
                   {horasDisponibles}
                 </p>
               </div>
-              <div className="rounded-2xl border border-white/50 bg-white/30 p-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              <div className="app-dark-card rounded-2xl p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em]">
                   Día seleccionado
                 </p>
-                <p className="mt-2 text-sm font-bold capitalize text-slate-900">
+                <p className="mt-2 text-sm font-bold capitalize">
                   {formatterDiaLargo.format(selectedDate)}
                 </p>
               </div>
@@ -769,7 +769,7 @@ export default function AdvisorCalendar() {
               {diasSemana.map((day) => (
                 <div
                   key={day}
-                  className="rounded-xl border border-white/30 bg-white/30 py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500"
+                  className="app-dark-card rounded-xl py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em]"
                 >
                   {day}
                 </div>
@@ -792,9 +792,9 @@ export default function AdvisorCalendar() {
                     className={[
                       'relative min-h-[110px] rounded-[22px] border p-3 text-left transition-all lg:min-h-[130px]',
                       isSelected
-                        ? 'border-blue-400 bg-blue-50/80 shadow-[0_10px_30px_rgba(37,99,235,0.10)]'
-                        : 'border-white/40 bg-white/25 hover:border-white/60 hover:bg-white/35',
-                      isCurrentMonth ? 'text-slate-700' : 'text-slate-300',
+                        ? 'app-dark-card border-white/50 shadow-[0_10px_30px_rgba(37,99,235,0.16)]'
+                        : 'app-dark-card',
+                      isCurrentMonth ? '' : 'opacity-45',
                     ]
                       .filter(Boolean)
                       .join(' ')}
@@ -811,7 +811,7 @@ export default function AdvisorCalendar() {
                         {day.getDate()}
                       </span>
                       {blocks.length > 0 && (
-                        <span className="rounded-full bg-white/70 px-2 py-1 text-[10px] font-bold text-slate-500">
+                        <span className="rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-bold text-white">
                           {blocks.length}
                         </span>
                       )}
@@ -822,13 +822,13 @@ export default function AdvisorCalendar() {
                         {blocks.slice(0, 3).map((block, index) => (
                           <div
                             key={`${block.disponibilidad_id}-${block.inicio.toISOString()}-${index}`}
-                            className="truncate rounded-full bg-blue-100/90 px-2.5 py-1 text-[10px] font-bold text-blue-700"
+                            className="truncate rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white"
                           >
                             {formatterHora.format(block.inicio)}
                           </div>
                         ))}
                         {blocks.length > 3 && (
-                          <p className="text-[10px] font-bold text-slate-500">
+                          <p className="text-[10px] font-bold text-white">
                             +{blocks.length - 3} más
                           </p>
                         )}
@@ -841,7 +841,7 @@ export default function AdvisorCalendar() {
           </Card>
 
           <aside className="space-y-6 lg:col-span-4">
-            <Card className="glass-panel rounded-[32px] border border-white/60 bg-white/20 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <Card className="glass-panel rounded-[32px] border border-white/60 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <div className="mb-4">
                 <h4 className="text-xl font-bold text-slate-900">
                   Próximos espacios
@@ -853,21 +853,21 @@ export default function AdvisorCalendar() {
 
               <div className="space-y-4">
                 {proximosEspacios.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-white/50 bg-white/20 p-4 text-sm text-slate-500">
+                  <div className="app-dark-card rounded-2xl p-4 text-sm">
                     Aún no tienes espacios futuros registrados.
                   </div>
                 ) : (
                   proximosEspacios.map((espacio) => (
                     <div
                       key={`${espacio.disponibilidad_id}-${espacio.inicio_real}`}
-                      className="rounded-2xl border border-white/50 bg-white/35 p-4 shadow-sm"
+                      className="app-dark-card rounded-2xl p-4"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-bold text-slate-900">
+                          <p className="text-sm font-bold">
                             {formatterFecha.format(new Date(espacio.inicio_real))}
                           </p>
-                          <p className="mt-1 text-xs text-slate-500">
+                          <p className="mt-1 text-xs">
                             {formatterHora.format(new Date(espacio.inicio_real))} -{' '}
                             {formatterHora.format(new Date(espacio.fin_real))}
                           </p>
@@ -880,7 +880,7 @@ export default function AdvisorCalendar() {
               </div>
             </Card>
 
-            <Card className="glass-panel rounded-[32px] border border-white/60 bg-white/20 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <Card className="glass-panel rounded-[32px] border border-white/60 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <div className="mb-4 flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
@@ -899,7 +899,7 @@ export default function AdvisorCalendar() {
                 {loading ? (
                   <p className="text-sm text-slate-500">Cargando espacios...</p>
                 ) : espaciosDelDia.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-white/50 bg-white/20 p-5 text-sm text-slate-500">
+                  <div className="app-dark-card rounded-2xl p-5 text-sm">
                     No tienes espacios registrados para este día. Crea una
                     franja libre para empezar a recibir reservas.
                   </div>
@@ -910,16 +910,16 @@ export default function AdvisorCalendar() {
                     return (
                       <div
                         key={`${espacio.disponibilidad_id}-${espacio.inicio_real}`}
-                        className="rounded-2xl border border-white/50 bg-white/35 p-4"
+                        className="app-dark-card rounded-2xl p-4"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="flex items-center gap-2 text-sm font-bold text-slate-800">
-                              <Clock3 className="h-4 w-4 text-blue-600" />
+                            <p className="flex items-center gap-2 text-sm font-bold">
+                              <Clock3 className="h-4 w-4" />
                               {formatterHora.format(new Date(espacio.inicio_real))} -{' '}
                               {formatterHora.format(new Date(espacio.fin_real))}
                             </p>
-                            <p className="mt-1 text-xs text-slate-500">
+                            <p className="mt-1 text-xs">
                               {espacio.duracion_bloque_minutos} min por bloque
                             </p>
                           </div>
@@ -930,20 +930,20 @@ export default function AdvisorCalendar() {
                           {blocks.slice(0, 8).map((block) => (
                             <span
                               key={`${espacio.disponibilidad_id}-${block.inicio.toISOString()}`}
-                              className="rounded-full bg-blue-100 px-3 py-1 text-[11px] font-semibold text-blue-700"
+                              className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white"
                             >
                               {formatterHora.format(block.inicio)} - {formatterHora.format(block.fin)}
                             </span>
                           ))}
                           {blocks.length > 8 && (
-                            <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600">
+                            <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white">
                               +{blocks.length - 8} bloques
                             </span>
                           )}
                         </div>
 
                         <div className="mt-3 flex items-center justify-between gap-3">
-                          <div className="text-[11px] text-slate-500">
+                          <div className="text-[11px] text-white">
                             {espacio.recurrente ? (
                               <span className="inline-flex items-center gap-1">
                                 <Repeat className="h-3.5 w-3.5" />

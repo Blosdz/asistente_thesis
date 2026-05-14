@@ -36,12 +36,12 @@ export default function AdvisorsQuickActions({
             onClick={() => onChange(action.id)}
             className={`group flex min-h-[20px] items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition-all ${
               isActive
-                ? 'border-blue-200 bg-blue-50/70 shadow-[0_14px_30px_-26px_rgba(37,99,235,0.35)]'
-                : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-[0_14px_30px_-28px_rgba(15,23,42,0.24)]'
+                ? 'advisor-inner-blue advisor-inner-blue-active border-blue-200 bg-blue-50/70 shadow-[0_14px_30px_-26px_rgba(37,99,235,0.35)]'
+                : 'advisor-inner-blue border-slate-200 bg-white hover:border-slate-300 hover:shadow-[0_14px_30px_-28px_rgba(15,23,42,0.24)]'
             }`}
           >
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/70 bg-white/78 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.88)] transition-colors group-hover:bg-white group-hover:text-sky-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-sky-200/70 bg-white/60 text-sky-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.88)] transition-colors group-hover:bg-white/75 group-hover:text-sky-700">
                 <Icon className="h-5 w-5" />
               </div>
               <p className="truncate text-sm font-semibold tracking-tight text-slate-950">

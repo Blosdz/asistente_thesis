@@ -37,7 +37,7 @@ export default function RelatedDocumentsPanel({
   onSelectDocument,
 }) {
   return (
-    <Card className="rounded-[28px] border-none bg-white p-6 shadow-[0_24px_50px_-38px_rgba(15,23,42,0.35)]">
+    <Card className="rounded-[28px] border-none p-6 shadow-[0_24px_50px_-38px_rgba(15,23,42,0.35)]">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">

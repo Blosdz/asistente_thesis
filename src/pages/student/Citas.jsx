@@ -233,7 +233,7 @@ export default function Citas() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-          <Card className="lg:col-span-8 rounded-[32px] border border-white/70 bg-white/80 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+          <Card className="lg:col-span-8 rounded-[32px] border border-white/70 p-8 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
             <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-4">
                 <h2 className="text-2xl font-bold capitalize text-slate-900">
@@ -342,7 +342,7 @@ export default function Citas() {
           </Card>
 
           <aside className="space-y-6 lg:col-span-4">
-            <Card className="rounded-[32px] border border-white/70 bg-white/80 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <Card className="rounded-[32px] border border-white/70 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
                 Día seleccionado
               </p>
@@ -391,7 +391,7 @@ export default function Citas() {
               </div>
             </Card>
 
-            <Card className="rounded-[32px] border border-white/70 bg-white/80 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+            <Card className="rounded-[32px] border border-white/70 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
               <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-500">
                 Próximo estado activo
               </p>

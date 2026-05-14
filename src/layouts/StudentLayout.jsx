@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import {
   BarChart3,
   BookOpenCheck,
@@ -12,12 +12,7 @@ import {
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { getCurrentUser, logout } from '../services/authService';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs) {
-  return twMerge(clsx(inputs));
-}
+import AnimatedTopNav from '../components/navigation/AnimatedTopNav';
 
 const StudentLayout = () => {
   const navigate = useNavigate();
@@ -138,27 +133,13 @@ const StudentLayout = () => {
               </span>
             </div>
 
-            <div className="app-nav-cluster min-w-0 flex-1 px-1.5 py-1.5 md:max-w-fit">
-              <nav className="student-nav-scroll relative flex gap-1 overflow-x-auto md:overflow-visible">
-                {navItems.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={({ isActive }) =>
-                      cn(
-                        'top-nav-link app-nav-item shrink-0 rounded-[14px] px-3 py-2 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[#eff6ff] lg:px-4 lg:text-sm',
-                        isActive
-                          ? 'app-nav-item-active'
-                          : '',
-                      )
-                    }
-                  >
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </NavLink>
-                ))}
-              </nav>
-            </div>
+            <AnimatedTopNav
+              ariaLabel="Navegación de estudiante"
+              className="min-w-0 flex-1 px-1.5 py-1.5 md:max-w-fit"
+              items={navItems}
+              linkClassName="shrink-0 rounded-full px-3 py-2 text-xs font-bold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[#eff6ff] lg:px-4 lg:text-sm"
+              navClassName="student-nav-scroll gap-1"
+            />
 
             <div className="flex items-center gap-4 relative" ref={menuRef}>
               <button

@@ -211,11 +211,11 @@ export default function VoucherUploadGatewayModal({
       showDefaultHeader={false}
       showDefaultActions={false}
       panelClassName="rounded-[32px] border-none shadow-[0_35px_110px_-62px_rgba(148,163,184,0.28)]"
-      contentClassName="max-h-[min(92vh,980px)] overflow-y-auto p-0 text-left"
+      contentClassName="max-h-[calc(100dvh-2rem)] overflow-y-auto p-0 text-left sm:max-h-[calc(100dvh-3rem)]"
       closeButtonClassName="top-4 right-4"
       closeIconClassName="text-slate-600"
     >
-      <div className="overflow-hidden">
+      <div className="overflow-hidden rounded-[32px]">
         <section className="bg-[linear-gradient(180deg,rgba(255,255,255,0.86)_0%,rgba(235,244,255,0.72)_100%)] px-6 py-6 text-slate-900 sm:px-7 sm:py-7">
           <div className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
             <div className="space-y-4">
@@ -261,7 +261,7 @@ export default function VoucherUploadGatewayModal({
           </div>
         </div>
 
-        <div className="grid gap-6 px-6 py-6  sm:px-7 sm:py-7">
+        <div className="grid gap-6 px-6 py-6 sm:px-7 sm:py-7">
           <section className="space-y-5">
             <div className="space-y-2">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
@@ -286,27 +286,29 @@ export default function VoucherUploadGatewayModal({
                 uploadSlot={uploadSlot}
               />
             </div>
-            <button
-              type="button"
-              onClick={() =>
-                onSubmit({
-                  paymentMethod: selectedMethod,
-                  operationCode: operationCode.trim(),
-                })
-              }
-              disabled={uploading}
-              className="ios-accent-button flex-1 rounded-[16px] px-5 py-3.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {primaryLabel}
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={uploading}
-              className="rounded-[16px] border border-slate-200 px-5 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Cancelar
-            </button>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() =>
+                  onSubmit({
+                    paymentMethod: selectedMethod,
+                    operationCode: operationCode.trim(),
+                  })
+                }
+                disabled={uploading}
+                className="ios-accent-button rounded-[16px] px-5 py-3.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {primaryLabel}
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={uploading}
+                className="rounded-[16px] border border-slate-200 px-5 py-3.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancelar
+              </button>
+            </div>
           </section>
         </div>
       </div>

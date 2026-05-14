@@ -450,7 +450,7 @@ export default function Services() {
     return (
       <div className="relative w-full px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
         <div className="mx-auto max-w-5xl">
-          <Card className="rounded-[32px] border border-slate-200 bg-white p-10 text-center shadow-[0_24px_60px_-46px_rgba(15,23,42,0.35)]">
+          <Card className="rounded-[32px] border border-slate-200 p-10 text-center shadow-[0_24px_60px_-46px_rgba(15,23,42,0.35)]">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500">
               <UserRound className="h-7 w-7" />
             </div>
@@ -472,7 +472,7 @@ export default function Services() {
       <div className="mx-auto flex max-w-[1480px] flex-col gap-6">
         <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
           <div className="space-y-5">
-            <Card className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.35)]">
+            <Card className="rounded-[28px] border border-slate-200 p-5 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.35)]">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Especialista asignado
               </p>
@@ -533,7 +533,7 @@ export default function Services() {
           </div>
 
           <div className="space-y-5">
-            <Card className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.35)]">
+            <Card className="rounded-[28px] border border-slate-200 p-5 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.35)]">
               <div className="flex flex-col gap-5">
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
@@ -654,7 +654,7 @@ export default function Services() {
               </div>
             </Card>
 
-            <Card className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.35)]">
+            <Card className="rounded-[28px] border border-slate-200 p-5 shadow-[0_18px_45px_-40px_rgba(15,23,42,0.35)]">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
                 Resumen de la solicitud
               </p>

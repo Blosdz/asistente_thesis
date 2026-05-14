@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -10,13 +10,8 @@ import {
   Settings,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { clsx } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { getCurrentUser, logout } from '../services/authService';
-
-function cn(...inputs) {
-  return twMerge(clsx(inputs));
-}
+import AnimatedTopNav from '../components/navigation/AnimatedTopNav';
 
 const navItems = [
   {
@@ -123,27 +118,13 @@ const AdminLayout = () => {
               </p>
             </div>
 
-            <div className="app-nav-cluster hidden rounded-full px-2 py-1 md:flex">
-              <nav className="relative flex gap-2">
-                {navItems.map((item) => (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={({ isActive }) =>
-                      cn(
-                        'top-nav-link app-nav-item inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1eb]',
-                        isActive
-                          ? 'app-nav-item-active'
-                          : '',
-                      )
-                    }
-                  >
-                    {item.icon}
-                    {item.label}
-                  </NavLink>
-                ))}
-              </nav>
-            </div>
+            <AnimatedTopNav
+              ariaLabel="Navegación de administración"
+              className="hidden rounded-full px-2 py-1 md:flex"
+              items={navItems}
+              linkClassName="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1eb]"
+              navClassName="gap-2"
+            />
 
             <div className="relative flex items-center gap-4" ref={menuRef}>
               <button

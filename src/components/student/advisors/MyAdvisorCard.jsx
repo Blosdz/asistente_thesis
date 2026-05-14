@@ -50,7 +50,7 @@ export default function MyAdvisorCard({
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl bg-slate-50 p-4">
+        <div className="advisor-inner-blue rounded-2xl bg-slate-50 p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
             Tesis vinculada
           </p>
@@ -58,7 +58,7 @@ export default function MyAdvisorCard({
             {advisor.thesisTitle || 'Aún no tienes una tesis vinculada con este asesor.'}
           </p>
         </div>
-        <div className="rounded-2xl bg-slate-50 p-4">
+        <div className="advisor-inner-blue rounded-2xl bg-slate-50 p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
             Código
           </p>
@@ -72,7 +72,7 @@ export default function MyAdvisorCard({
         {advisor.tags.map((tag) => (
           <span
             key={tag}
-            className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600"
+            className="advisor-inner-blue rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600"
           >
             {tag}
           </span>
@@ -85,8 +85,8 @@ export default function MyAdvisorCard({
           onClick={() => onSelect(advisor.id)}
           className={`inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border px-4 text-sm font-semibold transition ${
             isSelected
-              ? 'border-blue-200 bg-blue-50 text-blue-700'
-              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
+              ? 'advisor-inner-blue advisor-inner-blue-active border-blue-200 bg-blue-50 text-blue-700'
+              : 'advisor-inner-blue border-slate-200 bg-white text-slate-700 hover:bg-slate-50'
           }`}
         >
           <CheckCircle2 className="h-4 w-4" />

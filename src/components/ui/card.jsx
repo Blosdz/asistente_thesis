@@ -2,8 +2,17 @@ import { forwardRef } from 'react';
 
 const cn = (...classes) => classes.filter(Boolean).join(' ');
 
+const blocksGlassEffect = (className) =>
+  /^bg-(?:white|slate-\d+)(?:\/\S+)?$/.test(className);
+
+const cleanCardClassName = (className = '') =>
+  className
+    .split(/\s+/)
+    .filter((item) => item && !blocksGlassEffect(item))
+    .join(' ');
+
 export const Card = forwardRef(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn('glass p-6', className)} {...props} />
+  <div ref={ref} className={cn(' border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 shadow-[0_14px_40px_rgba(15,23,42,0.05) p-6', cleanCardClassName(className))} {...props} />
 ));
 
 Card.displayName = 'Card';

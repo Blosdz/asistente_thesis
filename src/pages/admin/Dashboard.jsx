@@ -8,16 +8,16 @@ const quickLinks = [
     description:
       'Revisa cuentas, roles y perfiles visibles de estudiantes y asesores.',
     to: '/admin/users',
-    icon: <Users className="h-5 w-5" />,
-    tone: 'bg-blue-50 text-blue-700',
+    icon: <Users className="h-6 w-6" strokeWidth={2.55} />,
+    tone: 'border-blue-300 bg-blue-100 text-blue-800 shadow-blue-500/15',
   },
   {
     title: 'Pagos',
     description:
       'Consulta vouchers, abre el detalle del pago y registra verificaciones.',
     to: '/admin/payments',
-    icon: <CreditCard className="h-5 w-5" />,
-    tone: 'bg-emerald-50 text-emerald-700',
+    icon: <CreditCard className="h-6 w-6" strokeWidth={2.55} />,
+    tone: 'border-emerald-300 bg-emerald-100 text-emerald-800 shadow-emerald-500/15',
   },
 ];
 
@@ -40,7 +40,7 @@ const AdminDashboard = () => {
           </div>
 
           <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
-            <ShieldCheck className="h-4 w-4" />
+            <ShieldCheck className="h-5 w-5" strokeWidth={2.55} />
             Acceso administrativo
           </div>
         </div>
@@ -49,9 +49,9 @@ const AdminDashboard = () => {
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {quickLinks.map((item) => (
           <Link key={item.to} to={item.to} className="group">
-            <Card className="h-full rounded-[28px] border border-white/80 bg-white/75 p-7 shadow-[0_18px_40px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)]">
+            <Card className="h-full rounded-[28px] border border-white/80 p-7 shadow-[0_18px_40px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-1 hover:shadow-[0_24px_50px_rgba(15,23,42,0.08)]">
               <div className="flex items-start justify-between gap-4">
-                <div className={`inline-flex rounded-2xl p-3 ${item.tone}`}>
+                <div className={`inline-flex rounded-2xl border p-3 shadow-lg ${item.tone}`}>
                   {item.icon}
                 </div>
                 <span className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400 transition group-hover:text-slate-600">

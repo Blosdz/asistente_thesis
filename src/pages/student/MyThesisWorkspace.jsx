@@ -805,7 +805,7 @@ export default function MyThesisWorkspace() {
   if (!loading && thesesList.length === 0) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-10">
-        <Card className="w-full max-w-xl rounded-[32px] border-none bg-white p-12 text-center shadow-[0_36px_90px_-58px_rgba(15,23,42,0.4)]">
+        <Card className="w-full max-w-xl rounded-[32px] border-none p-12 text-center shadow-[0_36px_90px_-58px_rgba(15,23,42,0.4)]">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-600">
             <FileText className="h-10 w-10" />
           </div>
@@ -836,7 +836,7 @@ export default function MyThesisWorkspace() {
   }
 
   return (
-    <div className="relative w-full px-4 pb-10 pt-2 text-slate-900 sm:px-6 lg:px-10">
+    <div className="my-thesis-workspace relative w-full px-4 pb-10 pt-2 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-[1760px] flex-col gap-8">
         <WorkspaceTopBar
           thesesList={thesesList}
@@ -859,7 +859,7 @@ export default function MyThesisWorkspace() {
               onOpenSuggestions={() => setShowSuggestionsModal(true)}
             />
 
-            <Card className="rounded-[28px] border-none bg-white p-6 shadow-[0_24px_50px_-38px_rgba(15,23,42,0.35)]">
+            <Card className="rounded-[28px] border-none p-6 shadow-[0_24px_50px_-38px_rgba(15,23,42,0.35)]">
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
                 Estado del workspace
               </p>

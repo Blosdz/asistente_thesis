@@ -17,7 +17,6 @@ import {
   obtenerPerfilAsesor,
 } from '../../services/advisorService';
 import { obtenerUniversidades } from '../../services/catalogService';
-import { universities as universitiesList } from '../../data/universities';
 import { clsx } from 'clsx';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -29,7 +28,7 @@ const AdvisorProfile = () => {
   const [perfil, setPerfil] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [universidades, setUniversidades] = useState(universitiesList);
+  const [universidades, setUniversidades] = useState([]);
   const [formData, setFormData] = useState({
     nombre_mostrar: '',
     universidad_id: '',
@@ -62,17 +61,24 @@ const AdvisorProfile = () => {
         const [currentUser, perfilData, unis] = await Promise.all([
           getCurrentUser(),
           obtenerPerfilAsesor().catch(() => null),
-          obtenerUniversidades().catch(() => universitiesList),
+          obtenerUniversidades().catch(() => []),
         ]);
 
         setUser(currentUser);
-        setUniversidades(unis && unis.length > 0 ? unis : universitiesList);
+        const universidadesCatalogo = Array.isArray(unis) ? unis : [];
+        setUniversidades(universidadesCatalogo);
 
         if (tienePerfilAsesor(perfilData)) {
+          const universidadId = universidadesCatalogo.some(
+            (universidad) => universidad.id === perfilData.universidad_id,
+          )
+            ? perfilData.universidad_id
+            : '';
+
           setPerfil(perfilData);
           setFormData({
             nombre_mostrar: perfilData.nombre_mostrar || '',
-            universidad_id: perfilData.universidad_id || '',
+            universidad_id: universidadId,
             slug: perfilData.slug || '',
             email_publico: perfilData.email_publico || currentUser?.email || '',
             biografia: perfilData.biografia || '',
@@ -120,8 +126,14 @@ const AdvisorProfile = () => {
     try {
       setLoading(true);
       const nextSlug = formData.slug || slugify(formData.nombre_mostrar || `${formData.nombres} ${formData.apellidos}`);
+      const universidadId = universidades.some(
+        (universidad) => universidad.id === formData.universidad_id,
+      )
+        ? formData.universidad_id
+        : '';
       const payload = {
         ...formData,
+        universidad_id: universidadId,
         slug: nextSlug,
       };
 
@@ -132,7 +144,7 @@ const AdvisorProfile = () => {
       setIsEditing(false);
     } catch (error) {
       console.error('Error saving advisor profile:', error);
-      alert('Error al guardar el perfil del asesor');
+      alert(error?.message || 'Error al guardar el perfil del asesor');
     } finally {
       setLoading(false);
     }
