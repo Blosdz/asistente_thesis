@@ -57,6 +57,31 @@ export async function crearMaterialCursoAsesor(cursoId, payload) {
   return unwrap(await cursosApi.crearMaterialCursoAsesor(cursoId, payload));
 }
 
+export async function subirMaterialesCursoAsesor({
+  cursoId,
+  files,
+  titulo = '',
+  descripcion = null,
+  tipo = 'documento',
+  orden = 1,
+  esVistaPrevia = false,
+}) {
+  const selectedFiles = Array.from(files || []);
+  if (!selectedFiles.length) {
+    throw new Error('Selecciona al menos un archivo para subir.');
+  }
+
+  const formData = new FormData();
+  selectedFiles.forEach((file) => formData.append('files', file));
+  formData.append('titulo', titulo || selectedFiles[0].name);
+  if (descripcion) formData.append('descripcion', descripcion);
+  formData.append('tipo', tipo);
+  formData.append('orden', String(orden || 1));
+  formData.append('esVistaPrevia', String(Boolean(esVistaPrevia)));
+
+  return asArray(await cursosApi.subirMaterialesCursoAsesor(cursoId, formData));
+}
+
 export async function listarMisCursosEstudiante() {
   return asArray(await cursosApi.misCursosEstudiante()).map(normalizeCourse);
 }

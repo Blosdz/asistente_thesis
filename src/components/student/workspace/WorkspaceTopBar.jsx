@@ -1,4 +1,4 @@
-import { Plus, ShieldCheck } from 'lucide-react';
+import { Plus, ShieldCheck,Component } from 'lucide-react';
 
 import { Button } from '../../ui/button';
 import { Select, SelectItem } from '../../ui/select';

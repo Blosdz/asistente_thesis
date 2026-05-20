@@ -30,6 +30,13 @@ export const cursosApi = {
     });
   },
 
+  subirMaterialesCursoAsesor(cursoId: string, formData: FormData) {
+    return apiRequest(`/cursos/asesor/${cursoId}/materiales/archivos`, {
+      method: 'POST',
+      body: formData,
+    });
+  },
+
   misCursosEstudiante() {
     return apiRequest('/cursos/mis-cursos');
   },

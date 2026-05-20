@@ -1,21 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import {
+  Archive,
   BookOpen,
   CheckCircle2,
   FilePlus2,
+  FileText,
+  FolderUp,
+  Image as ImageIcon,
   Link as LinkIcon,
   Loader2,
   Plus,
   RefreshCw,
+  Trash2,
+  UploadCloud,
+  Video,
 } from 'lucide-react';
 import {
   actualizarCursoAsesor,
   crearCursoAsesor,
-  crearMaterialCursoAsesor,
   formatCourseCurrency,
   listarMaterialesCursoAsesor,
   listarMisCursosAsesor,
+  subirMaterialesCursoAsesor,
 } from '../../services/cursosService';
 
 const initialCourse = {
@@ -30,9 +37,7 @@ const initialCourse = {
 const initialMaterial = {
   titulo: '',
   descripcion: '',
-  tipo: 'link',
-  urlExterna: '',
-  urlDrive: '',
+  tipo: 'documento',
   orden: 1,
   esVistaPrevia: true,
 };
@@ -44,6 +49,50 @@ const statusClass = {
   archivado: 'bg-rose-100 text-rose-700',
 };
 
+const materialTypeOptions = [
+  { value: 'documento', label: 'Documento' },
+  { value: 'video', label: 'Video' },
+  { value: 'plantilla', label: 'Plantilla' },
+  { value: 'imagen', label: 'Imagen' },
+  { value: 'zip', label: 'ZIP' },
+  { value: 'otro', label: 'Otro' },
+];
+
+const formatFileSize = (size = 0) => {
+  if (size >= 1024 * 1024) return `${(size / 1024 / 1024).toFixed(2)} MB`;
+  if (size >= 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${size} B`;
+};
+
+const getFileKey = (file) =>
+  `${file.webkitRelativePath || file.name}-${file.size}-${file.lastModified}`;
+
+const mergeFiles = (current, incoming) => {
+  const map = new Map(current.map((file) => [getFileKey(file), file]));
+  incoming.forEach((file) => map.set(getFileKey(file), file));
+  return Array.from(map.values());
+};
+
+const guessMaterialType = (file) => {
+  const mime = file?.type || '';
+  const extension = file?.name?.split('.').pop()?.toLowerCase() || '';
+
+  if (mime.startsWith('video/')) return 'video';
+  if (mime.startsWith('image/')) return 'imagen';
+  if (extension === 'zip') return 'zip';
+  return 'documento';
+};
+
+const MaterialIcon = ({ material }) => {
+  const type = material?.tipo || guessMaterialType(material);
+  const className = 'h-4 w-4';
+
+  if (type === 'video') return <Video className={className} />;
+  if (type === 'imagen') return <ImageIcon className={className} />;
+  if (type === 'zip') return <Archive className={className} />;
+  return <FileText className={className} />;
+};
+
 export default function AdvisorCourses() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +102,9 @@ export default function AdvisorCourses() {
   const [materialsLoading, setMaterialsLoading] = useState(false);
   const [courseForm, setCourseForm] = useState(initialCourse);
   const [materialForm, setMaterialForm] = useState(initialMaterial);
+  const [materialFiles, setMaterialFiles] = useState([]);
+  const [isDraggingMaterial, setIsDraggingMaterial] = useState(false);
+  const [uploadingMaterial, setUploadingMaterial] = useState(false);
 
   const selectedCourse = useMemo(
     () => courses.find((course) => course.id === selectedCourseId) || null,
@@ -100,6 +152,9 @@ export default function AdvisorCourses() {
 
   useEffect(() => {
     loadMaterials(selectedCourseId);
+    setMaterialForm(initialMaterial);
+    setMaterialFiles([]);
+    setIsDraggingMaterial(false);
   }, [selectedCourseId]);
 
   const handleCourseChange = (field, value) => {
@@ -108,6 +163,36 @@ export default function AdvisorCourses() {
 
   const handleMaterialChange = (field, value) => {
     setMaterialForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const addMaterialFiles = (files) => {
+    const incoming = Array.from(files || []).filter((file) => file.size > 0);
+    if (!incoming.length) return;
+
+    setMaterialFiles((current) => {
+      const next = mergeFiles(current, incoming);
+      if (current.length === 0 && incoming[0]) {
+        setMaterialForm((form) => ({
+          ...form,
+          tipo: guessMaterialType(incoming[0]),
+          titulo: form.titulo || incoming[0].name.replace(/\.[^.]+$/, ''),
+        }));
+      }
+      return next;
+    });
+  };
+
+  const removeMaterialFile = (fileToRemove) => {
+    const key = getFileKey(fileToRemove);
+    setMaterialFiles((current) =>
+      current.filter((file) => getFileKey(file) !== key),
+    );
+  };
+
+  const handleMaterialDrop = (event) => {
+    event.preventDefault();
+    setIsDraggingMaterial(false);
+    addMaterialFiles(event.dataTransfer.files);
   };
 
   const handleCreateCourse = async (event) => {
@@ -160,27 +245,36 @@ export default function AdvisorCourses() {
       return;
     }
 
-    if (!materialForm.titulo.trim()) {
-      toast.error('Escribe un título para el material');
+    if (!materialFiles.length) {
+      toast.error('Arrastra o selecciona al menos un archivo');
       return;
     }
 
     try {
-      const material = await crearMaterialCursoAsesor(selectedCourseId, {
-        ...materialForm,
-        titulo: materialForm.titulo.trim(),
+      setUploadingMaterial(true);
+      const uploaded = await subirMaterialesCursoAsesor({
+        cursoId: selectedCourseId,
+        files: materialFiles,
+        titulo: materialForm.titulo.trim() || materialFiles[0]?.name,
         descripcion: materialForm.descripcion.trim() || null,
-        urlExterna: materialForm.urlExterna.trim() || null,
-        urlDrive: materialForm.urlDrive.trim() || null,
+        tipo: materialForm.tipo,
         orden: Number(materialForm.orden || 1),
+        esVistaPrevia: materialForm.esVistaPrevia,
       });
-      setMaterials((current) => [...current, material]);
+      setMaterials((current) => [...current, ...uploaded]);
       setMaterialForm(initialMaterial);
+      setMaterialFiles([]);
       await loadCourses();
-      toast.success('Material agregado');
+      toast.success(
+        uploaded.length > 1
+          ? `${uploaded.length} materiales subidos`
+          : 'Material subido',
+      );
     } catch (error) {
       console.error(error);
-      toast.error(error.message || 'No se pudo agregar el material');
+      toast.error(error.message || 'No se pudo subir el material');
+    } finally {
+      setUploadingMaterial(false);
     }
   };
 
@@ -370,7 +464,7 @@ export default function AdvisorCourses() {
 
               <form
                 onSubmit={handleCreateMaterial}
-                className="mt-5 grid gap-3 lg:grid-cols-[1fr_150px]"
+                className="mt-5 grid gap-3 lg:grid-cols-[1fr_170px]"
               >
                 <input
                   className="input-pro w-full"
@@ -385,26 +479,148 @@ export default function AdvisorCourses() {
                   value={materialForm.tipo}
                   onChange={(event) => handleMaterialChange('tipo', event.target.value)}
                 >
-                  <option value="link">Link</option>
-                  <option value="video">Video</option>
-                  <option value="documento">Documento</option>
-                  <option value="plantilla">Plantilla</option>
-                  <option value="otro">Otro</option>
+                  {materialTypeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
-                <input
-                  className="input-pro w-full lg:col-span-2"
-                  placeholder="URL externa o recurso"
-                  value={materialForm.urlExterna}
+                <textarea
+                  className="input-pro min-h-20 w-full resize-none lg:col-span-2"
+                  placeholder="Descripción breve"
+                  value={materialForm.descripcion}
                   onChange={(event) =>
-                    handleMaterialChange('urlExterna', event.target.value)
+                    handleMaterialChange('descripcion', event.target.value)
                   }
                 />
+                <div className="grid gap-3 lg:col-span-2 sm:grid-cols-[140px_1fr]">
+                  <input
+                    className="input-pro w-full"
+                    type="number"
+                    min="1"
+                    step="1"
+                    placeholder="Orden"
+                    value={materialForm.orden}
+                    onChange={(event) =>
+                      handleMaterialChange('orden', event.target.value)
+                    }
+                  />
+                  <label className="flex min-h-11 cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={materialForm.esVistaPrevia}
+                      onChange={(event) =>
+                        handleMaterialChange('esVistaPrevia', event.target.checked)
+                      }
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600"
+                    />
+                    Vista previa para estudiantes
+                  </label>
+                </div>
+
+                <div
+                  onDragOver={(event) => {
+                    event.preventDefault();
+                    setIsDraggingMaterial(true);
+                  }}
+                  onDragLeave={() => setIsDraggingMaterial(false)}
+                  onDrop={handleMaterialDrop}
+                  className={`lg:col-span-2 rounded-[24px] border border-dashed p-5 transition ${
+                    isDraggingMaterial
+                      ? 'border-blue-400 bg-blue-50'
+                      : 'border-slate-300 bg-slate-50 hover:border-slate-400 hover:bg-white'
+                  }`}
+                >
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-[16px] border border-white bg-white text-blue-700 shadow-sm">
+                        <UploadCloud className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-950">
+                          Arrastra documentos, carpetas o videos
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          También puedes seleccionar archivos o una carpeta completa.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <label className="ios-secondary-button inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl px-3 text-sm font-semibold">
+                        <FilePlus2 className="h-4 w-4" />
+                        Archivos
+                        <input
+                          type="file"
+                          multiple
+                          className="sr-only"
+                          onChange={(event) => {
+                            addMaterialFiles(event.target.files);
+                            event.target.value = '';
+                          }}
+                        />
+                      </label>
+                      <label className="ios-secondary-button inline-flex h-10 cursor-pointer items-center gap-2 rounded-xl px-3 text-sm font-semibold">
+                        <FolderUp className="h-4 w-4" />
+                        Carpeta
+                        <input
+                          type="file"
+                          multiple
+                          webkitdirectory=""
+                          directory=""
+                          className="sr-only"
+                          onChange={(event) => {
+                            addMaterialFiles(event.target.files);
+                            event.target.value = '';
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  {materialFiles.length > 0 ? (
+                    <div className="mt-4 max-h-56 space-y-2 overflow-y-auto rounded-[18px] border border-slate-200 bg-white p-3">
+                      {materialFiles.map((file) => (
+                        <div
+                          key={getFileKey(file)}
+                          className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2"
+                        >
+                          <div className="flex min-w-0 items-center gap-3">
+                            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-slate-600">
+                              <MaterialIcon material={file} />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-slate-900">
+                                {file.webkitRelativePath || file.name}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {formatFileSize(file.size)}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeMaterialFile(file)}
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-slate-400 hover:bg-white hover:text-rose-600"
+                            aria-label={`Quitar ${file.name}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
                 <button
                   type="submit"
-                  className="ios-accent-button inline-flex h-11 items-center justify-center gap-2 rounded-2xl text-sm font-semibold lg:col-span-2"
+                  disabled={uploadingMaterial}
+                  className="ios-accent-button inline-flex h-11 items-center justify-center gap-2 rounded-2xl text-sm font-semibold disabled:opacity-60 lg:col-span-2"
                 >
-                  <FilePlus2 className="h-4 w-4" />
-                  Agregar material
+                  {uploadingMaterial ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <UploadCloud className="h-4 w-4" />
+                  )}
+                  Subir material
                 </button>
               </form>
 
@@ -419,15 +635,25 @@ export default function AdvisorCourses() {
                       key={material.id}
                       className="flex items-center justify-between gap-3 py-3"
                     >
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          {material.titulo}
-                        </p>
-                        <p className="text-xs text-slate-500">{material.tipo}</p>
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-100 text-slate-600">
+                          <MaterialIcon material={material} />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-900">
+                            {material.titulo}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {material.tipo}
+                            {material.nombre_archivo
+                              ? ` · ${material.nombre_archivo}`
+                              : ''}
+                          </p>
+                        </div>
                       </div>
-                      {(material.url_externa || material.url_drive) && (
+                      {(material.url_externa || material.url_storage || material.url_drive) && (
                         <a
-                          href={material.url_externa || material.url_drive}
+                          href={material.url_externa || material.url_storage || material.url_drive}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex h-9 items-center gap-2 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-700"

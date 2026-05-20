@@ -69,6 +69,10 @@ export async function registrarAsesor(email, password) {
   return registerByRole(email, password, 'asesor');
 }
 
+export async function verificarEmail(token) {
+  return authApi.verificarEmail(token);
+}
+
 export async function loginEstudiante(email, password) {
   return loginUsuario(email, password);
 }

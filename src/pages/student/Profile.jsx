@@ -10,12 +10,14 @@ import {
   BookOpen,
   Award,
   Loader2,
+  Upload,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getCurrentUser } from '../../services/authService';
 import {
   obtenerPerfilEstudiante,
   guardarPerfilEstudiante,
+  subirFotoPerfilEstudiante,
 } from '../../services/studentService';
 import { obtenerUniversidades } from '../../services/catalogService';
 import { universities as universitiesList } from '../../data/universities';
@@ -29,6 +31,7 @@ const Profile = () => {
   const [user, setUser] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
   // Catalogs
@@ -41,6 +44,7 @@ const Profile = () => {
     telefono: '',
     universidad_id: '',
     carrera: '',
+    foto_url: '',
   });
 
   useEffect(() => {
@@ -65,6 +69,7 @@ const Profile = () => {
             telefono: pData.telefono || '',
             universidad_id: pData.universidad_id || '',
             carrera: pData.carrera || '',
+            foto_url: pData.foto_url || '',
           });
         }
       } catch (error) {
@@ -96,6 +101,24 @@ const Profile = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handlePhotoUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingPhoto(true);
+      const fotoUrl = await subirFotoPerfilEstudiante(file);
+      setFormData((prev) => ({ ...prev, foto_url: fotoUrl }));
+      setPerfil((prev) => (prev ? { ...prev, foto_url: fotoUrl } : prev));
+    } catch (error) {
+      console.error('Error uploading student photo:', error);
+      alert(error?.message || 'Error al subir la foto');
+    } finally {
+      setUploadingPhoto(false);
+      event.target.value = '';
+    }
+  };
+
   if (loading && !perfil) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -121,8 +144,16 @@ const Profile = () => {
             {/* Background Blob */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-ios-blue/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
 
-            <div className="ios-avatar-glass relative z-10 flex h-32 w-32 items-center justify-center rounded-full text-4xl font-bold uppercase">
-              {perfil?.nombres?.[0] || user?.email?.[0] || 'S'}
+            <div className="ios-avatar-glass relative z-10 flex h-32 w-32 items-center justify-center overflow-hidden rounded-full text-4xl font-bold uppercase">
+              {formData.foto_url ? (
+                <img
+                  src={formData.foto_url}
+                  alt={perfil?.nombres || user?.email || 'Perfil'}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                perfil?.nombres?.[0] || user?.email?.[0] || 'S'
+              )}
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className="ios-accent-button absolute bottom-0 right-0 rounded-full border-4 border-white p-2.5 transition-transform hover:scale-110"
@@ -143,6 +174,21 @@ const Profile = () => {
             </div>
 
             <div className="w-full pt-6 border-t border-slate-200/50 flex flex-col gap-4 z-10">
+              <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white p-3 text-sm font-semibold text-slate-600 transition-colors hover:border-ios-blue hover:text-ios-blue">
+                {uploadingPhoto ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <Upload size={16} />
+                )}
+                {uploadingPhoto ? 'Subiendo...' : 'Subir foto'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  disabled={uploadingPhoto}
+                  className="hidden"
+                />
+              </label>
               <div className="flex items-center gap-3 text-sm text-slate-600">
                 <div className="w-8 h-8 rounded-lg bg-ios-blue/10 flex items-center justify-center text-ios-blue">
                   <Mail size={16} />

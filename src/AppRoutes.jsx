@@ -5,6 +5,7 @@ import LoadingSkeleton from './components/ui/LoadingSkeleton';
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const SignupPage = lazy(() => import('./pages/auth/SignupPage'));
+const VerifyEmailPage = lazy(() => import('./pages/auth/VerifyEmailPage'));
 const LandingPage = lazy(() => import('./components/landing/LandingPage'));
 const LeadChatLauncher = lazy(() => import('./components/landing/LeadChatLauncher'));
 const StudentLayout = lazy(() => import('./layouts/StudentLayout'));
@@ -51,7 +52,7 @@ const getFallbackVariant = () => {
     return 'landing';
   }
 
-  if (['/login', '/signup', '/reset-password'].includes(hashPath)) {
+  if (['/login', '/signup', '/reset-password', '/verify-email'].includes(hashPath)) {
     return 'auth';
   }
 
@@ -110,6 +111,7 @@ const AppRoutes = () => {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         <Route

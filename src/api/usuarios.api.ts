@@ -26,4 +26,11 @@ export const usuariosApi = {
       body: payload,
     });
   },
+
+  subirFotoPerfil(payload: FormData) {
+    return apiRequest('/perfil/foto', {
+      method: 'POST',
+      body: payload,
+    });
+  },
 };

@@ -17,6 +17,12 @@ export const authApi = {
     });
   },
 
+  verificarEmail(token: string) {
+    return apiRequest(`/auth/verify-email?token=${encodeURIComponent(token)}`, {
+      auth: false,
+    });
+  },
+
   cambiarPassword(payload: {
     contrasenaActual: string;
     contrasenaNueva: string;

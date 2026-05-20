@@ -196,9 +196,9 @@ export default function StudentCourses() {
                             {material.tipo}
                           </p>
                         </div>
-                        {(material.url_externa || material.url_drive) && (
+                        {(material.url_externa || material.url_storage || material.url_drive) && (
                           <a
-                            href={material.url_externa || material.url_drive}
+                            href={material.url_externa || material.url_storage || material.url_drive}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 px-3 text-xs font-bold text-slate-700"

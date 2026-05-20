@@ -30,6 +30,7 @@ function mapearPerfil(raw) {
     universidad_id:
       raw.universidad_id ?? raw.universidadId ?? raw.r_universidad_id ?? '',
     carrera: raw.carrera ?? raw.r_carrera ?? '',
+    foto_url: raw.foto_url ?? raw.fotoUrl ?? raw.r_foto_url ?? '',
     dni: raw.dni ?? raw.r_dni ?? '',
     telefono: raw.telefono ?? raw.r_telefono ?? '',
     creado_en: raw.creado_en ?? raw.r_creado_en ?? null,
@@ -47,9 +48,22 @@ export async function guardarPerfilEstudiante(perfil) {
     apellidos: perfil.apellidos,
     universidadId: perfil.universidad_id || perfil.universidadId || null,
     carrera: perfil.carrera,
+    fotoUrl: perfil.foto_url || perfil.fotoUrl || null,
     dni: perfil.dni,
     telefono: perfil.telefono,
   });
 
   return mapearPerfil(pickPerfil(unwrapUsuario(data))) || data;
+}
+
+export async function subirFotoPerfilEstudiante(file) {
+  if (!file) {
+    throw new Error('Selecciona una imagen para subir.');
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const data = unwrapUsuario(await usuariosApi.subirFotoPerfil(formData));
+  return data?.foto_url || data?.data?.foto_url || '';
 }

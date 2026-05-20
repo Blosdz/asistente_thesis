@@ -185,6 +185,18 @@ export async function guardarPerfilAsesor(perfil) {
   return mapearPerfilAsesor(pickPerfilAsesor(unwrap(data))) || data;
 }
 
+export async function subirFotoPerfilAsesor(file) {
+  if (!file) {
+    throw new Error('Selecciona una imagen para subir.');
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const data = unwrap(await usuariosApi.subirFotoPerfil(formData));
+  return data?.foto_url || data?.data?.foto_url || '';
+}
+
 export async function crearScheduleAsesor(params) {
   return crearEspacioLibreAsesor(params);
 }

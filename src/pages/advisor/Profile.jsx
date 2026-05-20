@@ -9,12 +9,14 @@ import {
   BookOpen,
   Award,
   Loader2,
+  Upload,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { getCurrentUser } from '../../services/authService';
 import {
   guardarPerfilAsesor,
   obtenerPerfilAsesor,
+  subirFotoPerfilAsesor,
 } from '../../services/advisorService';
 import { obtenerUniversidades } from '../../services/catalogService';
 import { clsx } from 'clsx';
@@ -27,6 +29,7 @@ const AdvisorProfile = () => {
   const [user, setUser] = useState(null);
   const [perfil, setPerfil] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [universidades, setUniversidades] = useState([]);
   const [formData, setFormData] = useState({
@@ -150,6 +153,24 @@ const AdvisorProfile = () => {
     }
   };
 
+  const handlePhotoUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingPhoto(true);
+      const fotoUrl = await subirFotoPerfilAsesor(file);
+      setFormData((prev) => ({ ...prev, foto_url: fotoUrl }));
+      setPerfil((prev) => (prev ? { ...prev, foto_url: fotoUrl } : prev));
+    } catch (error) {
+      console.error('Error uploading advisor photo:', error);
+      alert(error?.message || 'Error al subir la foto');
+    } finally {
+      setUploadingPhoto(false);
+      event.target.value = '';
+    }
+  };
+
   if (loading && !perfil) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
@@ -180,8 +201,16 @@ const AdvisorProfile = () => {
           <div className="glass-card flex flex-col items-center text-center gap-6 p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-ios-blue/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
 
-            <div className="ios-avatar-glass relative z-10 flex h-32 w-32 items-center justify-center rounded-full text-4xl font-bold uppercase">
-              {displayInitial}
+            <div className="ios-avatar-glass relative z-10 flex h-32 w-32 items-center justify-center overflow-hidden rounded-full text-4xl font-bold uppercase">
+              {formData.foto_url ? (
+                <img
+                  src={formData.foto_url}
+                  alt={displayName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                displayInitial
+              )}
               <button
                 onClick={() => setIsEditing(!isEditing)}
                 className="ios-accent-button absolute bottom-0 right-0 rounded-full border-4 border-white p-2.5 transition-transform hover:scale-110"
@@ -415,15 +444,23 @@ const AdvisorProfile = () => {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider ml-1">
-                      Foto URL
+                      Foto de perfil
                     </Label>
-                    <Input
-                      name="foto_url"
-                      value={formData.foto_url}
-                      onChange={handleChange}
-                      className="p-3.5 rounded-2xl border border-slate-200 bg-white"
-                      placeholder="https://..."
-                    />
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 bg-white p-3.5 text-sm font-semibold text-slate-600 transition-colors hover:border-ios-blue hover:text-ios-blue">
+                      {uploadingPhoto ? (
+                        <Loader2 size={16} className="animate-spin" />
+                      ) : (
+                        <Upload size={16} />
+                      )}
+                      {uploadingPhoto ? 'Subiendo...' : 'Subir imagen'}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                        disabled={uploadingPhoto}
+                        className="hidden"
+                      />
+                    </label>
                   </div>
                 </div>
 
