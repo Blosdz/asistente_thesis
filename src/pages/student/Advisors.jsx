@@ -1,8 +1,18 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { ArrowRight, CalendarDays, CheckCircle2, Users } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  BookOpen,
+  CalendarDays,
+  CheckCircle2,
+  Loader2,
+  Users,
+} from 'lucide-react';
 
 import Modal from '../../components/ui/modal';
+import PaymentGatewayModal from '../../components/student/workspace/PaymentGatewayModal';
 import AdvisorsQuickActions from '../../components/student/advisors/AdvisorsQuickActions';
 import AdvisorFiltersBar from '../../components/student/advisors/AdvisorFiltersBar';
 import AdvisorCatalogSection from '../../components/student/advisors/AdvisorCatalogSection';
@@ -21,6 +31,11 @@ import {
 } from '../../services/catalogService';
 import { obtenerMiSuscripcion } from '../../services/suscripcionService';
 import {
+  comprarCurso,
+  formatCourseCurrency,
+  listarCursosDeAsesor,
+} from '../../services/cursosService';
+import {
   buildSlotKey,
   canScheduleRelation,
   formatDateKey,
@@ -38,6 +53,7 @@ import {
 const PAGE_SIZE = 8;
 
 export default function Advisors() {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('browse');
   const [catalogAdvisors, setCatalogAdvisors] = useState([]);
   const [myAdvisors, setMyAdvisors] = useState([]);
@@ -70,6 +86,11 @@ export default function Advisors() {
   const [resultOpen, setResultOpen] = useState(false);
   const [bookingResult, setBookingResult] = useState(null);
   const [reservationSummary, setReservationSummary] = useState(null);
+  const [coursesAdvisor, setCoursesAdvisor] = useState(null);
+  const [advisorCourses, setAdvisorCourses] = useState([]);
+  const [loadingAdvisorCourses, setLoadingAdvisorCourses] = useState(false);
+  const [buyingCourseId, setBuyingCourseId] = useState(null);
+  const [coursePaymentSummary, setCoursePaymentSummary] = useState(null);
 
   const refreshMyAdvisors = useCallback(async () => {
     const data = await obtenerMisAsesores();
@@ -421,6 +442,63 @@ export default function Advisors() {
     setSelectedAdvisorId(advisorId);
   }, []);
 
+  const handleOpenCourses = useCallback(async (advisor) => {
+    if (!advisor?.id) return;
+
+    setCoursesAdvisor(advisor);
+    setActiveSection('advisor-courses');
+    setAdvisorCourses([]);
+
+    try {
+      setLoadingAdvisorCourses(true);
+      const data = await listarCursosDeAsesor(advisor.id);
+      setAdvisorCourses(data || []);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || 'No se pudieron cargar los cursos del asesor');
+    } finally {
+      setLoadingAdvisorCourses(false);
+    }
+  }, []);
+
+  const handleBuyCourse = useCallback(
+    async (course) => {
+      if (!course?.id) return;
+
+      try {
+        setBuyingCourseId(course.id);
+        const result = await comprarCurso(course.id);
+
+        if (result?.pago) {
+          setCoursePaymentSummary({
+            ...result.pago,
+            monto: result.pago.monto || course.precio,
+            moneda: result.pago.moneda || course.moneda,
+            concepto: result.pago.concepto || `curso:${course.titulo}`,
+            estado_pago:
+              result.pago.estado_pago || result.pago.estado || 'pendiente',
+          });
+          toast.success(
+            'Pago generado. Adjunta tu voucher para enviarlo a revisión.',
+          );
+        } else {
+          toast.success(result?.message || 'La compra ya está en proceso.');
+        }
+
+        if (coursesAdvisor?.id) {
+          const data = await listarCursosDeAsesor(coursesAdvisor.id);
+          setAdvisorCourses(data || []);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error(error.message || 'No se pudo iniciar la compra');
+      } finally {
+        setBuyingCourseId(null);
+      }
+    },
+    [coursesAdvisor?.id],
+  );
+
   const handleSelectDay = useCallback(
     (dayKey) => {
       setSelectedDay(dayKey);
@@ -488,11 +566,13 @@ export default function Advisors() {
     <div className="student-advisors-page relative w-full px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-[1480px] flex-col gap-6">
 
-        <AdvisorsQuickActions
-          activeSection={activeSection}
-          onChange={setActiveSection}
-          counts={quickActionCounts}
-        />
+        {activeSection !== 'advisor-courses' ? (
+          <AdvisorsQuickActions
+            activeSection={activeSection}
+            onChange={setActiveSection}
+            counts={quickActionCounts}
+          />
+        ) : null}
 
         {activeSection === 'browse' ? (
           <div className="space-y-5">
@@ -543,6 +623,7 @@ export default function Advisors() {
             advisors={myAdvisors}
             selectedAdvisorId={selectedAdvisorId}
             onSelectAdvisor={handleSelectAdvisor}
+            onOpenCourses={handleOpenCourses}
             onOpenBrowse={() => setActiveSection('browse')}
           />
         ) : null}
@@ -570,6 +651,140 @@ export default function Advisors() {
             subscription={subscription}
             loadingSubscription={loadingSubscription}
           />
+        ) : null}
+
+        {activeSection === 'advisor-courses' ? (
+          <section className="space-y-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setActiveSection('my-advisors')}
+                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Atrás
+                </button>
+                <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  Cursos del asesor
+                </p>
+                <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
+                  {coursesAdvisor?.name || 'Cursos disponibles'}
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
+                  Estos cursos están disponibles porque tienes un vínculo activo
+                  con este asesor. Al comprar, el pago queda pendiente hasta que
+                  administración valide tu voucher.
+                </p>
+              </div>
+
+              {coursesAdvisor ? (
+                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3">
+                  <img
+                    src={coursesAdvisor.avatar}
+                    alt={coursesAdvisor.name}
+                    className="h-12 w-12 rounded-2xl object-cover"
+                  />
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-slate-950">
+                      {coursesAdvisor.name}
+                    </p>
+                    <p className="truncate text-xs text-slate-500">
+                      {coursesAdvisor.career}
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {loadingAdvisorCourses ? (
+              <div className="flex items-center justify-center gap-2 rounded-[28px] border border-slate-200 bg-white p-10 text-sm text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Cargando cursos...
+              </div>
+            ) : advisorCourses.length === 0 ? (
+              <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/75 p-10 text-center">
+                <BookOpen className="mx-auto h-8 w-8 text-slate-400" />
+                <p className="mt-3 text-sm font-semibold text-slate-700">
+                  Este asesor aún no publicó cursos.
+                </p>
+              </div>
+            ) : (
+              <div className="grid gap-4 lg:grid-cols-2">
+                {advisorCourses.map((course) => {
+                  const hasActiveAccess = course.estado_compra === 'activo';
+                  const hasPendingPayment = ['pendiente', 'voucher_subido'].includes(
+                    course.estado_pago,
+                  );
+                  const buying = buyingCourseId === course.id;
+
+                  return (
+                    <article
+                      key={course.id}
+                      className="flex min-h-[240px] flex-col rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_20px_55px_-46px_rgba(15,23,42,0.35)]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-950">
+                            {course.titulo}
+                          </h3>
+                          <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
+                            {course.descripcion || 'Sin descripción registrada.'}
+                          </p>
+                        </div>
+                        <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+                          {course.total_materiales} materiales
+                        </span>
+                      </div>
+
+                      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                        <div className="advisor-inner-blue rounded-2xl bg-slate-50 p-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            Precio
+                          </p>
+                          <p className="mt-2 text-lg font-extrabold text-slate-950">
+                            {formatCourseCurrency(course.precio, course.moneda)}
+                          </p>
+                        </div>
+                        <div className="advisor-inner-blue rounded-2xl bg-slate-50 p-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                            Estado
+                          </p>
+                          <p className="mt-2 text-sm font-bold text-slate-700">
+                            {hasActiveAccess
+                              ? 'Comprado'
+                              : hasPendingPayment
+                                ? 'Pago en revisión'
+                                : 'Disponible'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-auto pt-5">
+                        <button
+                          type="button"
+                          onClick={() => handleBuyCourse(course)}
+                          disabled={buying || hasActiveAccess || hasPendingPayment}
+                          className="ios-accent-button inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {buying ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <BookOpen className="h-4 w-4" />
+                          )}
+                          {hasActiveAccess
+                            ? 'Ya comprado'
+                            : hasPendingPayment
+                              ? 'Pago en revisión'
+                              : 'Comprar curso'}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
         ) : null}
       </div>
 
@@ -695,6 +910,16 @@ export default function Advisors() {
           </button>
         </div>
       </Modal>
+
+      <PaymentGatewayModal
+        open={Boolean(coursePaymentSummary)}
+        paymentSummary={coursePaymentSummary}
+        onClose={() => setCoursePaymentSummary(null)}
+        onProceed={() => {
+          setCoursePaymentSummary(null);
+          navigate('/student/payments');
+        }}
+      />
     </div>
   );
 }

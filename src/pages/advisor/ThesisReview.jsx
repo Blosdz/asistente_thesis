@@ -417,10 +417,10 @@ export default function AdvisorThesisReview() {
                 <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
                   {t.titulo || 'Sin titulo'}
                 </p>
-                {t.tesis_descripcion && (
+                {(t.tesis_descripcion || t.descripcion) && (
                   <p className="text-[10px] text-ios-blue flex items-center gap-1 mt-1 truncate">
                     <FileText className="w-3 h-3 flex-shrink-0" />
-                    {t.tesis_descripcion}
+                    {t.tesis_descripcion || t.descripcion}
                   </p>
                 )}
               </button>

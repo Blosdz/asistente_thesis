@@ -2,12 +2,12 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import {
   Users,
   CalendarDays,
+  BookOpen,
   BookOpenCheck,
   ClipboardCheck,
   User as UserIcon,
   LogOut,
   Settings,
-  Bell,
   KeyRound,
   Copy,
   RefreshCw,
@@ -20,6 +20,8 @@ import {
 } from '../services/advisorService';
 import { toast } from 'react-hot-toast';
 import AnimatedTopNav from '../components/navigation/AnimatedTopNav';
+import NotificationsBell from '../components/notifications/NotificationsBell';
+import UnreadNotificationsPopup from '../components/notifications/UnreadNotificationsPopup';
 
 function getCodigoPublicoTexto(codigoPublico) {
   return codigoPublico?.codigo_publico || codigoPublico?.r_codigo_publico || '';
@@ -149,6 +151,11 @@ const AdvisorLayout = () => {
       path: '/advisor/thesis',
       icon: <BookOpenCheck size={18} />,
     },
+    {
+      label: 'Cursos',
+      path: '/advisor/cursos',
+      icon: <BookOpen size={18} />,
+    },
   ];
 
   if (isLoading) {
@@ -179,6 +186,7 @@ const AdvisorLayout = () => {
 
   return (
     <div className="app-shell font-sans text-gray-900">
+      <UnreadNotificationsPopup />
       <div className="relative z-10 flex min-h-screen flex-col">
         <header className="app-topbar fixed top-0 z-50 w-full rounded-none">
           <div className="flex h-20 w-full items-center justify-between px-8">
@@ -200,12 +208,7 @@ const AdvisorLayout = () => {
             />
 
             <div className="relative flex items-center gap-4" ref={menuRef}>
-              <button
-                className="app-icon-button rounded-full p-2 text-slate-800"
-                aria-label="Notifications"
-              >
-                <Bell size={18} />
-              </button>
+              <NotificationsBell />
               <button
                 className="app-icon-button rounded-full p-2 text-slate-800"
                 aria-label="Settings"

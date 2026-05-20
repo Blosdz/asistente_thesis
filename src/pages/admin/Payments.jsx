@@ -18,6 +18,7 @@ import {
   adminAprobarPagoReserva,
   adminListarPagos,
   adminObtenerPago,
+  adminObtenerVoucherImagen,
   adminVerificarPago,
   adminVerificarPagoPlan,
 } from '../../services/adminService';
@@ -87,7 +88,11 @@ const formatStatusLabel = (value) =>
   (value || 'sin_estado').replaceAll('_', ' ');
 
 const getPaymentId = (payment) =>
-  payment?.pago_id || payment?.id || payment?.payment_id || payment?.paymentId || null;
+  payment?.pago_id ||
+  payment?.id ||
+  payment?.payment_id ||
+  payment?.paymentId ||
+  null;
 
 const isPlanPayment = (payment) => {
   const metadata = payment?.metadata || {};
@@ -98,13 +103,13 @@ const isPlanPayment = (payment) => {
 
   return Boolean(
     payment?.plan_id ||
-      payment?.planId ||
-      metadata?.plan_id ||
-      metadata?.planId ||
-      origenPago === 'tesis_con_plan' ||
-      origenPago === 'plan' ||
-      concepto.startsWith('plan:') ||
-      concepto.includes('plan de tesis'),
+    payment?.planId ||
+    metadata?.plan_id ||
+    metadata?.planId ||
+    origenPago === 'tesis_con_plan' ||
+    origenPago === 'plan' ||
+    concepto.startsWith('plan:') ||
+    concepto.includes('plan de tesis'),
   );
 };
 
@@ -116,7 +121,9 @@ const getPaymentTypeMeta = (payment) => {
     };
   }
 
-  const motivo = String(payment?.motivo || payment?.metadata?.motivo || '').toLowerCase();
+  const motivo = String(
+    payment?.motivo || payment?.metadata?.motivo || '',
+  ).toLowerCase();
   const concepto = String(payment?.concepto || '').toLowerCase();
   const isPresustentacion =
     motivo.includes('pre-sustent') || concepto.includes('pre-sustent');
@@ -130,6 +137,195 @@ const getPaymentTypeMeta = (payment) => {
         label: 'Asesoría',
         className: 'bg-slate-100 text-slate-700',
       };
+};
+
+const getVoucherFileName = (payment) =>
+  payment?.nombre_archivo_voucher || payment?.voucher_nombre || 'voucher';
+
+const hasVoucherFile = (payment) =>
+  Boolean(
+    payment?.documento_drive_id ||
+      payment?.url_archivo_drive ||
+      payment?.nombre_archivo_voucher,
+  );
+
+const inferVoucherMimeType = (blobType, payment) => {
+  const knownType = blobType || payment?.tipo_mime_voucher || '';
+  if (knownType && knownType !== 'application/octet-stream') return knownType;
+
+  const fileName = getVoucherFileName(payment).toLowerCase();
+  if (fileName.endsWith('.pdf')) return 'application/pdf';
+  if (fileName.endsWith('.png')) return 'image/png';
+  if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg')) {
+    return 'image/jpeg';
+  }
+  if (fileName.endsWith('.webp')) return 'image/webp';
+
+  return knownType;
+};
+
+const VoucherPreview = ({ payment, onStatusChange }) => {
+  const paymentId = getPaymentId(payment);
+  const [preview, setPreview] = useState({
+    status: 'idle',
+    url: null,
+    type: null,
+    error: null,
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    let objectUrl = null;
+
+    if (!paymentId || !hasVoucherFile(payment)) {
+      setPreview({
+        status: 'empty',
+        url: null,
+        type: null,
+        error: null,
+      });
+      onStatusChange?.('empty');
+      return undefined;
+    }
+
+    setPreview({
+      status: 'loading',
+      url: null,
+      type: null,
+      error: null,
+    });
+    onStatusChange?.('loading');
+
+    adminObtenerVoucherImagen(paymentId)
+      .then((blob) => {
+        const type = inferVoucherMimeType(blob.type, payment);
+        const canPreview =
+          type.startsWith('image/') || type === 'application/pdf';
+        objectUrl = URL.createObjectURL(blob);
+        if (!isMounted) {
+          URL.revokeObjectURL(objectUrl);
+          return;
+        }
+
+        setPreview({
+          status: canPreview ? 'ready' : 'unsupported',
+          url: objectUrl,
+          type,
+          error: null,
+        });
+        onStatusChange?.(canPreview ? 'ready' : 'unsupported');
+      })
+      .catch((error) => {
+        if (!isMounted) return;
+        console.error('Error loading payment voucher preview:', error);
+        setPreview({
+          status: 'error',
+          url: null,
+          type: null,
+          error: error.message || 'No se pudo cargar el voucher.',
+        });
+        onStatusChange?.('error');
+      });
+
+    return () => {
+      isMounted = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [payment, paymentId, onStatusChange]);
+
+  const mimeType = preview.type || payment?.tipo_mime_voucher || '';
+  const isImage = mimeType.startsWith('image/');
+  const isPdf = mimeType === 'application/pdf';
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+            Voucher del pago
+          </p>
+          <p className="mt-1 text-xs text-slate-500">
+            {getVoucherFileName(payment)}
+          </p>
+        </div>
+        {payment?.url_archivo_drive && (
+          <a
+            href={payment.url_archivo_drive}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Abrir Drive
+          </a>
+        )}
+      </div>
+
+      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+        {preview.status === 'loading' && (
+          <div className="flex h-72 flex-col items-center justify-center gap-3 text-sm text-slate-500">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Cargando comprobante...
+          </div>
+        )}
+
+        {preview.status === 'empty' && (
+          <div className="flex h-72 flex-col items-center justify-center gap-3 px-6 text-center text-sm text-slate-500">
+            <FileText className="h-10 w-10 text-slate-400" />
+            Este pago no tiene un voucher cargado.
+          </div>
+        )}
+
+        {preview.status === 'error' && (
+          <div className="flex h-72 flex-col items-center justify-center gap-3 px-6 text-center text-sm text-rose-600">
+            <FileText className="h-10 w-10" />
+            {preview.error}
+          </div>
+        )}
+
+        {preview.status === 'ready' && isImage && (
+          <img
+            src={preview.url}
+            alt="Vista previa del voucher de pago"
+            className="h-auto max-h-[520px] w-full object-contain"
+          />
+        )}
+
+        {preview.status === 'ready' && isPdf && (
+          <iframe
+            title="Vista previa del voucher de pago"
+            src={preview.url}
+            className="h-[520px] w-full bg-white"
+          />
+        )}
+
+        {preview.status === 'unsupported' && (
+          <div className="flex h-72 flex-col items-center justify-center gap-3 px-6 text-center text-sm text-slate-500">
+            <FileText className="h-10 w-10 text-slate-400" />
+            El voucher está cargado, pero este tipo de archivo no se puede
+            previsualizar aquí.
+          </div>
+        )}
+      </div>
+
+      <div className="mt-3 grid grid-cols-1 gap-2 text-xs text-slate-500 sm:grid-cols-3">
+        <p>
+          <span className="font-semibold text-slate-700">Tipo:</span>{' '}
+          {payment?.tipo_mime_voucher || '—'}
+        </p>
+        <p>
+          <span className="font-semibold text-slate-700">Subido:</span>{' '}
+          {formatDateTime(payment?.subido_en)}
+        </p>
+        <p>
+          <span className="font-semibold text-slate-700">Tamaño:</span>{' '}
+          {payment?.tamano_bytes_voucher
+            ? `${(Number(payment.tamano_bytes_voucher) / 1024 / 1024).toFixed(2)} MB`
+            : '—'}
+        </p>
+      </div>
+    </div>
+  );
 };
 
 const extractValidationCitaId = (payment) =>
@@ -239,6 +435,8 @@ const AdminPayments = () => {
     nota: '',
     enlaceReunion: '',
   });
+  const [verificationPreviewStatus, setVerificationPreviewStatus] =
+    useState('idle');
   const [submittingVerification, setSubmittingVerification] = useState(false);
 
   const loadPayments = useCallback(async () => {
@@ -347,6 +545,7 @@ const AdminPayments = () => {
     const normalizedStatus = (payment?.estado || '').toLowerCase();
     const validationCitaId = extractValidationCitaId(payment);
 
+    setVerificationPreviewStatus('loading');
     setVerificationModal({
       open: true,
       payment,
@@ -360,6 +559,7 @@ const AdminPayments = () => {
   };
 
   const closeVerificationModal = () => {
+    setVerificationPreviewStatus('idle');
     setVerificationModal({
       open: false,
       payment: null,
@@ -375,6 +575,14 @@ const AdminPayments = () => {
     const pagoId = getPaymentId(verificationModal.payment);
     if (!pagoId) {
       toast.error('No se pudo identificar el pago');
+      return;
+    }
+
+    if (
+      verificationModal.estado === 'validado' &&
+      verificationPreviewStatus !== 'ready'
+    ) {
+      toast.error('Revisa primero la vista previa del voucher.');
       return;
     }
 
@@ -464,6 +672,12 @@ const AdminPayments = () => {
   const verificationHasReservation = Boolean(
     extractValidationCitaId(verificationPayment),
   );
+  const handleVerificationPreviewStatus = useCallback((status) => {
+    setVerificationPreviewStatus(status);
+  }, []);
+  const verificationPreviewBlocking =
+    verificationModal.estado === 'validado' &&
+    verificationPreviewStatus !== 'ready';
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 py-10 text-slate-900">
@@ -601,83 +815,86 @@ const AdminPayments = () => {
                   const paymentId = getPaymentId(item);
 
                   return (
-                  <tr key={paymentId || item.codigo_operacion} className="hover:bg-slate-50/80">
-                    <td className="px-6 py-5 align-top">
-                      <div className="flex items-start gap-3">
-                        <div className="inline-flex rounded-2xl bg-slate-100 p-3 text-slate-700">
-                          <CreditCard className="h-4 w-4" />
+                    <tr
+                      key={paymentId || item.codigo_operacion}
+                      className="hover:bg-slate-50/80"
+                    >
+                      <td className="px-6 py-5 align-top">
+                        <div className="flex items-start gap-3">
+                          <div className="inline-flex rounded-2xl bg-slate-100 p-3 text-slate-700">
+                            <CreditCard className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="font-semibold text-slate-900">
+                              {formatCurrency(item.monto)}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              {item.concepto || 'Sin concepto'}
+                            </p>
+                            <span
+                              className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${getPaymentTypeMeta(item).className}`}
+                            >
+                              {getPaymentTypeMeta(item).label}
+                            </span>
+                            <p className="mt-1 font-mono text-[11px] text-slate-400">
+                              {item.codigo_operacion || paymentId}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-semibold text-slate-900">
-                            {formatCurrency(item.monto)}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            {item.concepto || 'Sin concepto'}
-                          </p>
-                          <span
-                            className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${getPaymentTypeMeta(item).className}`}
+                      </td>
+                      <td className="px-6 py-5 align-top">
+                        <p className="font-semibold text-slate-900">
+                          {item.pagador_nombre || 'Usuario'}
+                        </p>
+                        <span
+                          className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${roleBadgeClass(item.pagador_rol)}`}
+                        >
+                          {item.pagador_rol || 'sin rol'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 align-top text-slate-600">
+                        <p className="font-medium text-slate-800">
+                          {item.asesor_nombre || 'Sin asesor'}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          {item.asesor_id || '—'}
+                        </p>
+                      </td>
+                      <td className="px-6 py-5 align-top">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${statusBadgeClass(item.estado)}`}
+                        >
+                          {formatStatusLabel(item.estado)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 align-top text-slate-600">
+                        <p>{formatDateTime(item.verificado_en)}</p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          {item.verificado_por_nombre || 'Sin verificador'}
+                        </p>
+                      </td>
+                      <td className="px-6 py-5 align-top">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openDetail(paymentId)}
+                            disabled={!paymentId}
+                            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
                           >
-                            {getPaymentTypeMeta(item).label}
-                          </span>
-                          <p className="mt-1 font-mono text-[11px] text-slate-400">
-                            {item.codigo_operacion || paymentId}
-                          </p>
+                            <Eye className="h-4 w-4" />
+                            Detalle
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openVerificationModal(item)}
+                            className="ios-accent-button inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition"
+                          >
+                            <ShieldCheck className="h-4 w-4" />
+                            Verificar
+                          </button>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 align-top">
-                      <p className="font-semibold text-slate-900">
-                        {item.pagador_nombre || 'Usuario'}
-                      </p>
-                      <span
-                        className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${roleBadgeClass(item.pagador_rol)}`}
-                      >
-                        {item.pagador_rol || 'sin rol'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 align-top text-slate-600">
-                      <p className="font-medium text-slate-800">
-                        {item.asesor_nombre || 'Sin asesor'}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {item.asesor_id || '—'}
-                      </p>
-                    </td>
-                    <td className="px-6 py-5 align-top">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold uppercase ${statusBadgeClass(item.estado)}`}
-                      >
-                        {formatStatusLabel(item.estado)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 align-top text-slate-600">
-                      <p>{formatDateTime(item.verificado_en)}</p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        {item.verificado_por_nombre || 'Sin verificador'}
-                      </p>
-                    </td>
-                    <td className="px-6 py-5 align-top">
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => openDetail(paymentId)}
-                          disabled={!paymentId}
-                          className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50"
-                        >
-                          <Eye className="h-4 w-4" />
-                          Detalle
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openVerificationModal(item)}
-                          className="ios-accent-button inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition"
-                        >
-                          <ShieldCheck className="h-4 w-4" />
-                          Verificar
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+                    </tr>
                   );
                 })}
             </tbody>
@@ -761,27 +978,7 @@ const AdminPayments = () => {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                Voucher
-              </p>
-              <div className="mt-2 flex flex-col gap-2 text-sm text-slate-700">
-                <p>Archivo: {selectedPayment.nombre_archivo_voucher || 'No registrado'}</p>
-                <p>Tipo MIME: {selectedPayment.tipo_mime_voucher || '—'}</p>
-                <p>Subido: {formatDateTime(selectedPayment.subido_en)}</p>
-                {selectedPayment.url_archivo_drive && (
-                  <a
-                    href={selectedPayment.url_archivo_drive}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex w-fit items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Abrir voucher
-                  </a>
-                )}
-              </div>
-            </div>
+            <VoucherPreview payment={selectedPayment} />
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
@@ -829,9 +1026,16 @@ const AdminPayments = () => {
         onClose={closeVerificationModal}
         title="Verificar pago"
         subtitle="Registra la decisión administrativa y una nota opcional."
+        modalWidth="lg"
         primaryAction={{
-          label: submittingVerification ? 'Guardando...' : 'Guardar decisión',
+          label:
+            verificationPreviewStatus === 'loading'
+              ? 'Cargando voucher...'
+              : submittingVerification
+              ? 'Guardando...'
+              : 'Guardar decisión',
           onClick: handleVerifyPayment,
+          disabled: submittingVerification || verificationPreviewBlocking,
         }}
         secondaryAction={{
           label: 'Cancelar',
@@ -847,8 +1051,20 @@ const AdminPayments = () => {
               {verificationModal.payment?.pagador_nombre || 'Usuario'}
             </p>
             <p className="mt-1 text-xs text-slate-500">
-              {verificationModal.payment?.codigo_operacion || getPaymentId(verificationModal.payment)}
+              {verificationModal.payment?.codigo_operacion ||
+                getPaymentId(verificationModal.payment)}
             </p>
+            <div className="mt-3 rounded-2xl border border-white bg-white px-4 py-3 shadow-sm">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                Monto del pago
+              </p>
+              <p className="mt-1 text-2xl font-black text-slate-900">
+                {formatCurrency(verificationModal.payment?.monto)}
+              </p>
+              <p className="mt-1 text-xs text-slate-500">
+                {verificationModal.payment?.concepto || 'Sin concepto'}
+              </p>
+            </div>
             {verificationIsPlan ? (
               <p className="mt-2 text-xs text-emerald-600">
                 Si validas este pago, se activará o renovará la suscripción del
@@ -861,6 +1077,19 @@ const AdminPayments = () => {
               </p>
             ) : null}
           </div>
+
+          <VoucherPreview
+            payment={verificationModal.payment}
+            onStatusChange={handleVerificationPreviewStatus}
+          />
+
+          {verificationPreviewBlocking && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+              Para validar el pago primero debe cargarse la previsualización del
+              voucher. Si no corresponde aprobarlo, cambia el estado a
+              Rechazado.
+            </div>
+          )}
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">

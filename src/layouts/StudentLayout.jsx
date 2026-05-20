@@ -1,6 +1,7 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import {
   BarChart3,
+  BookOpen,
   BookOpenCheck,
   CalendarCheck2,
   CreditCard,
@@ -13,6 +14,8 @@ import {
 import { useState, useEffect, useRef } from 'react';
 import { getCurrentUser, logout } from '../services/authService';
 import AnimatedTopNav from '../components/navigation/AnimatedTopNav';
+import NotificationsBell from '../components/notifications/NotificationsBell';
+import UnreadNotificationsPopup from '../components/notifications/UnreadNotificationsPopup';
 
 const StudentLayout = () => {
   const navigate = useNavigate();
@@ -76,6 +79,11 @@ const StudentLayout = () => {
       icon: <CalendarCheck2 size={16} />,
     },
     {
+      label: 'Cursos',
+      path: '/student/cursos',
+      icon: <BookOpen size={16} />,
+    },
+    {
       label: 'Presustentación',
       path: '/student/services',
       icon: <Settings size={16} />,
@@ -120,6 +128,7 @@ const StudentLayout = () => {
 
   return (
     <div className="app-shell student-shell font-sans text-gray-900">
+      <UnreadNotificationsPopup />
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
         <header className="app-topbar fixed top-0 z-50 w-full rounded-none">
@@ -141,7 +150,9 @@ const StudentLayout = () => {
               navClassName="student-nav-scroll gap-1"
             />
 
-            <div className="flex items-center gap-4 relative" ref={menuRef}>
+            <div className="flex items-center gap-3 relative" ref={menuRef}>
+              <NotificationsBell />
+
               <button
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}

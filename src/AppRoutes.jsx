@@ -16,9 +16,11 @@ const DataStatistics = lazy(() => import('./pages/student/DataStatistics'));
 const Citas = lazy(() => import('./pages/student/Citas'));
 const Services = lazy(() => import('./pages/student/Services'));
 const Payments = lazy(() => import('./pages/student/Payments'));
+const StudentCourses = lazy(() => import('./pages/student/Courses'));
 const AdvisorCatalog = lazy(() => import('./pages/student/AdvisorCatalog'));
 const ScheduleSession = lazy(() => import('./pages/student/ScheduleSession'));
 const Profile = lazy(() => import('./pages/student/Profile'));
+const NotificationCenter = lazy(() => import('./pages/notifications/NotificationCenter'));
 const AdvisorLayout = lazy(() => import('./layouts/AdvisorLayout'));
 const AdvisorProfile = lazy(() => import('./pages/advisor/Profile'));
 const AdvisorStudents = lazy(() => import('./pages/advisor/Students'));
@@ -26,6 +28,7 @@ const AdvisorReservations = lazy(() => import('./pages/advisor/Reservations'));
 const AdvisorCalendar = lazy(() => import('./pages/advisor/Calendar'));
 const AdvisorThesisReview = lazy(() => import('./pages/advisor/ThesisReview'));
 const AdvisorStudentDetail = lazy(() => import('./pages/advisor/StudentDetail'));
+const AdvisorCourses = lazy(() => import('./pages/advisor/Courses'));
 const AdminLayout = lazy(() => import('./layouts/AdminLayout'));
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 const AdminUsers = lazy(() => import('./pages/admin/Users'));
@@ -120,11 +123,13 @@ const AppRoutes = () => {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="notifications" element={<NotificationCenter />} />
           <Route path="documents" element={<AdditionalDocuments />} />
           <Route path="my-thesis" element={<MyThesisWorkspace />} />
           <Route path="citas" element={<Citas />} />
           {/* mostramos aqu ilas asesorias */}
           <Route path="asesorias" element={<Advisors />} />
+          <Route path="cursos" element={<StudentCourses />} />
           <Route path="planes" element={<PlanesPage />} />
           <Route path="payments" element={<Payments />} />
           <Route path="services" element={<Services />} />
@@ -143,11 +148,13 @@ const AppRoutes = () => {
         >
           <Route index element={<Navigate to="students" replace />} />
           <Route path="profile" element={<AdvisorProfile />} />
+          <Route path="notifications" element={<NotificationCenter />} />
           <Route path="students" element={<AdvisorStudents />} />
           <Route path="reservations" element={<AdvisorReservations />} />
           <Route path="students/:studentId" element={<AdvisorStudentDetail />} />
           <Route path="calendar" element={<AdvisorCalendar />} />
           <Route path="thesis" element={<AdvisorThesisReview />} />
+          <Route path="cursos" element={<AdvisorCourses />} />
         </Route>
 
         <Route
@@ -160,6 +167,7 @@ const AppRoutes = () => {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="notifications" element={<NotificationCenter />} />
           <Route path="users" element={<AdminUsers />} />
           <Route path="payments" element={<AdminPayments />} />
         </Route>

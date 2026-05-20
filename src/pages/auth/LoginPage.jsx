@@ -86,7 +86,7 @@ const LoginPage = () => {
     <AuthLayout
       eyebrow="Acceso seguro"
       title="Tu tesis avanza con"
-      accent="más claridad."
+      accent="claridad."
       description="Ingresa para revisar avances, observaciones, asesores y cotizaciones académicas desde una experiencia conectada."
     >
       <div className="w-full max-w-[430px] rounded-[28px] border border-slate-950/10 bg-white/58 p-7 shadow-[0_28px_74px_rgba(15,23,42,0.14),0_8px_32px_rgba(59,130,246,0.08),inset_0_1px_0_rgba(255,255,255,0.96)] backdrop-blur-[34px] backdrop-saturate-200 sm:p-9">

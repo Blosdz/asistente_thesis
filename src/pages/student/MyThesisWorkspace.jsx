@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Loader2 } from 'lucide-react';
+import { FileText, Loader2, MessageSquare } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { Button } from '../../components/ui/button';
@@ -11,7 +11,7 @@ import WorkspaceTopBar from '../../components/student/workspace/WorkspaceTopBar'
 import AccessManagementModal from '../../components/student/workspace/AccessManagementModal';
 import SuggestionsThreadModal from '../../components/student/workspace/SuggestionsThreadModal';
 import RelatedDocumentsPanel from '../../components/student/workspace/RelatedDocumentsPanel';
-import AcademicAIPanel from '../../components/student/workspace/AcademicAIPanel';
+import AcademicAIChatPanel from '../../components/student/workspace/AcademicAIChatPanel';
 import ThesisPreviewPanel from '../../components/student/workspace/ThesisPreviewPanel';
 import PaymentGatewayModal from '../../components/student/workspace/PaymentGatewayModal';
 import {
@@ -30,7 +30,12 @@ import {
 } from '../../services/advisorService';
 import { obtenerPlanesDisponibles } from '../../services/pagosService';
 import { obtenerPerfilEstudiante } from '../../services/studentService';
-import { getSuggestionId } from '../../lib/suggestionValidation';
+import {
+  getSuggestionAdvisorName,
+  getSuggestionId,
+  getSuggestionStatusMeta,
+  getSuggestionText,
+} from '../../lib/suggestionValidation';
 
 const NIVELES_ACADEMICOS = [
   { value: 'PREGRADO', label: 'Pregrado' },
@@ -474,6 +479,20 @@ export default function MyThesisWorkspace() {
     [selectedThesisId, sugerencias],
   );
 
+  const feedbackReciente = useMemo(() => {
+    return [...sugerenciasVisibles]
+      .sort((a, b) => {
+        const aTime = new Date(
+          a?.actualizado_en || a?.creado_en || a?.created_at || 0,
+        ).getTime();
+        const bTime = new Date(
+          b?.actualizado_en || b?.creado_en || b?.created_at || 0,
+        ).getTime();
+        return (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+      })
+      .slice(0, 3);
+  }, [sugerenciasVisibles]);
+
   const asesoresDeTesis = useMemo(
     () => tesisConAsesores.filter((item) => item.tesis_id === selectedThesisId),
     [selectedThesisId, tesisConAsesores],
@@ -836,60 +855,53 @@ export default function MyThesisWorkspace() {
   }
 
   return (
-    <div className="my-thesis-workspace relative w-full px-4 pb-10 pt-2 text-slate-900 sm:px-6 lg:px-10">
-      <div className="mx-auto flex max-w-[1760px] flex-col gap-8">
-        <WorkspaceTopBar
-          thesesList={thesesList}
-          selectedThesisId={selectedThesisId}
-          onSelectThesis={setSelectedThesisId}
-          onOpenAccesses={() => setShowAccessModal(true)}
-          onOpenCreate={openCreateModal}
-        />
-
-        <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-          <ThesisPreviewPanel
-            selectedThesis={selectedThesis}
-            currentVersion={currentVersion}
-            previewUrl={previewUrl}
+    <div className="my-thesis-workspace relative flex h-[calc(100dvh-6rem)] w-full overflow-hidden px-0 pb-2 text-slate-900">
+      <div className="mx-auto flex min-h-0 w-full max-w-[1760px] flex-1 flex-col gap-3">
+        <div className="shrink-0">
+          <WorkspaceTopBar
+            thesesList={thesesList}
+            selectedThesisId={selectedThesisId}
+            onSelectThesis={setSelectedThesisId}
+            onOpenAccesses={() => setShowAccessModal(true)}
+            onOpenCreate={openCreateModal}
           />
+        </div>
 
-          <aside className="space-y-6">
-            <AcademicAIPanel
-              suggestionCount={sugerenciasVisibles.length}
-              onOpenSuggestions={() => setShowSuggestionsModal(true)}
-            />
-
-            <Card className="rounded-[28px] border-none p-6 shadow-[0_24px_50px_-38px_rgba(15,23,42,0.35)]">
-              <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
-                Estado del workspace
-              </p>
-              <div className="mt-5 space-y-4">
-                <div className="rounded-[18px] bg-slate-50 px-4 py-4">
-                  <p className="text-sm font-medium text-slate-900">
-                    Documento activo
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {currentVersion?.nombre ||
-                      currentVersion?.nombre_archivo ||
-                      'Sin documento seleccionado'}
-                  </p>
-                </div>
-                <div className="rounded-[18px] bg-slate-50 px-4 py-4">
-                  <p className="text-sm font-medium text-slate-900">
-                    Feedback pendiente
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {sugerenciasVisibles.length > 0
-                      ? `${sugerenciasVisibles.length} sugerencia(s) en historial`
-                      : 'Sin sugerencias registradas'}
-                  </p>
-                </div>
-              </div>
-            </Card>
+        <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
+          <section className="flex min-h-0 flex-col gap-2">
             <RelatedDocumentsPanel
               documents={documents}
               currentDocumentId={currentVersion?.id}
               onSelectDocument={seleccionarVersion}
+            />
+
+            <ThesisPreviewPanel
+              selectedThesis={selectedThesis}
+              currentVersion={currentVersion}
+              previewUrl={previewUrl}
+              className="flex-1"
+            />
+          </section>
+
+          <aside className="flex min-h-0 flex-col gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowSuggestionsModal(true)}
+              className="ios-secondary-button h-11 w-full justify-between rounded-xl px-3 text-sm"
+            >
+              <span className="inline-flex min-w-0 items-center gap-2">
+                <MessageSquare className="h-4 w-4" />
+                <span className="truncate">Ver sugerencias del asesor</span>
+              </span>
+              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
+                {sugerenciasVisibles.length}
+              </span>
+            </Button>
+
+            <AcademicAIChatPanel
+              tesisId={selectedThesisId}
+              documentId={currentVersion?.id}
+              className="flex-1"
             />
           </aside>
         </div>

@@ -6,12 +6,13 @@ import {
   User as UserIcon,
   LogOut,
   ShieldCheck,
-  Bell,
   Settings,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { getCurrentUser, logout } from '../services/authService';
 import AnimatedTopNav from '../components/navigation/AnimatedTopNav';
+import NotificationsBell from '../components/notifications/NotificationsBell';
+import UnreadNotificationsPopup from '../components/notifications/UnreadNotificationsPopup';
 
 const navItems = [
   {
@@ -103,6 +104,7 @@ const AdminLayout = () => {
 
   return (
     <div className="app-shell font-sans text-gray-900">
+      <UnreadNotificationsPopup />
       <div className="relative z-10 flex min-h-screen flex-col">
         <header className="app-topbar fixed top-0 z-50 w-full rounded-none">
           <div className="flex h-20 w-full items-center justify-between px-8">
@@ -127,13 +129,7 @@ const AdminLayout = () => {
             />
 
             <div className="relative flex items-center gap-4" ref={menuRef}>
-              <button
-                className="app-icon-button rounded-full p-2 text-slate-800"
-                aria-label="Notifications"
-                type="button"
-              >
-                <Bell size={18} />
-              </button>
+              <NotificationsBell />
               <button
                 className="app-icon-button rounded-full p-2 text-slate-800"
                 aria-label="Settings"

@@ -1,4 +1,4 @@
-import { apiRequest } from './client';
+import { apiBlobRequest, apiRequest } from './client';
 
 export const adminApi = {
   listarUsuarios() {
@@ -15,6 +15,10 @@ export const adminApi = {
 
   obtenerPago(pagoId: string) {
     return apiRequest(`/admin/pagos/${pagoId}`);
+  },
+
+  obtenerVoucherImagen(pagoId: string) {
+    return apiBlobRequest(`/admin/pagos/${pagoId}/voucher-imagen`);
   },
 
   verificarPago(pagoId: string, payload: unknown) {

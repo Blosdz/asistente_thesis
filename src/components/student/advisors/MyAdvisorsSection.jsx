@@ -9,6 +9,7 @@ export default function MyAdvisorsSection({
   advisors,
   selectedAdvisorId,
   onSelectAdvisor,
+  onOpenCourses,
   onOpenBrowse,
 }) {
   const readyCount = advisors.filter((advisor) =>
@@ -71,6 +72,7 @@ export default function MyAdvisorsSection({
               advisor={advisor}
               isSelected={selectedAdvisorId === advisor.id}
               onSelect={onSelectAdvisor}
+              onOpenCourses={onOpenCourses}
             />
           ))}
         </div>

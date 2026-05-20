@@ -29,6 +29,11 @@ export async function adminObtenerPago(pagoId) {
   return unwrap(await adminApi.obtenerPago(pagoId));
 }
 
+export async function adminObtenerVoucherImagen(pagoId) {
+  assertPaymentId(pagoId);
+  return adminApi.obtenerVoucherImagen(pagoId);
+}
+
 export async function adminVerificarPago(
   pagoId,
   {

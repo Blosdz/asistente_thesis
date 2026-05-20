@@ -54,6 +54,30 @@ const normalizarEstudianteAsesor = (item) => {
   };
 };
 
+const normalizarTesisAsignadaAsesor = (item) => {
+  if (!item) return item;
+
+  const tesisId = item.tesis_id || item.tesisId || item.id || null;
+  const estudianteNombres =
+    item.estudiante_nombres || item.nombres || item.r_nombres || '';
+  const estudianteApellidos =
+    item.estudiante_apellidos || item.apellidos || item.r_apellidos || '';
+
+  return {
+    ...item,
+    id: item.id || tesisId,
+    tesis_id: tesisId,
+    estudiante_nombres: estudianteNombres,
+    estudiante_apellidos: estudianteApellidos,
+    estudiante_carrera:
+      item.estudiante_carrera || item.carrera || item.r_carrera || '',
+    titulo: item.titulo || item.tesis_titulo || item.r_tesis_titulo || '',
+    descripcion:
+      item.descripcion || item.tesis_descripcion || item.r_tesis_descripcion || '',
+    estado: item.estado || item.tesis_estado || item.r_tesis_estado || '',
+  };
+};
+
 const flattenTesisConAsesores = (rows) =>
   rows.flatMap((tesis) => {
     const asesores = Array.isArray(tesis?.asesores) ? tesis.asesores : [];
@@ -307,7 +331,9 @@ export async function obtenerMisTesisConAsesores() {
 }
 
 export async function obtenerTesisAsignadasAsesor() {
-  return asArray(await tesisApi.listarAsignadasAsesor(), 'tesis');
+  return asArray(await tesisApi.listarAsignadasAsesor(), 'tesis').map(
+    normalizarTesisAsignadaAsesor,
+  );
 }
 
 export async function getTesisAsesor() {

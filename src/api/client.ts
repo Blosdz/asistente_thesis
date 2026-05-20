@@ -53,7 +53,7 @@ export function clearStoredSession() {
   window.localStorage.removeItem(USER_STORAGE_KEY);
 }
 
-function buildUrl(path: string) {
+export function buildApiUrl(path: string) {
   if (!API_URL) {
     throw new ApiError(
       'Falta configurar VITE_API_URL para consumir el backend NestJS.',
@@ -100,7 +100,7 @@ export async function apiRequest<T = unknown>(
     requestHeaders.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(buildUrl(path), {
+  const response = await fetch(buildApiUrl(path), {
     method,
     headers: requestHeaders,
     body:
@@ -126,6 +126,40 @@ export async function apiRequest<T = unknown>(
   }
 
   return data as T;
+}
+
+export async function apiBlobRequest(
+  path: string,
+  options: RequestOptions = {},
+): Promise<Blob> {
+  const { method = 'GET', headers = {}, auth = true } = options;
+  const token = getStoredToken();
+  const requestHeaders: Record<string, string> = { ...headers };
+
+  if (auth && token) {
+    requestHeaders.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(buildApiUrl(path), {
+    method,
+    headers: requestHeaders,
+  });
+
+  if (!response.ok) {
+    const data = await parseResponse(response);
+
+    if (response.status === 401) {
+      clearStoredSession();
+    }
+
+    throw new ApiError(
+      resolveErrorMessage(data, 'No se pudo completar la solicitud.'),
+      response.status,
+      data,
+    );
+  }
+
+  return response.blob();
 }
 
 export function pendingEndpoint(featureName: string): never {
