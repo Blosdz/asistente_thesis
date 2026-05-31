@@ -1,4 +1,4 @@
-import { Plus, ShieldCheck,Component } from 'lucide-react';
+import { FilePenLine, Plus, ShieldCheck } from 'lucide-react';
 
 import { Button } from '../../ui/button';
 import { Select, SelectItem } from '../../ui/select';
@@ -7,6 +7,7 @@ export default function WorkspaceTopBar({
   thesesList,
   selectedThesisId,
   onSelectThesis,
+  onOpenManualEdit,
   onOpenAccesses,
   onOpenCreate,
 }) {
@@ -41,6 +42,16 @@ export default function WorkspaceTopBar({
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
+        <Button
+          variant="outline"
+          onClick={onOpenManualEdit}
+          disabled={!selectedThesisId}
+          className="ios-secondary-button h-10 rounded-xl px-3 text-sm"
+        >
+          <FilePenLine className="h-4 w-4" />
+          Edición manual
+        </Button>
+
         <Button
           variant="outline"
           onClick={onOpenAccesses}

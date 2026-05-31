@@ -80,7 +80,7 @@ const SignupPage = () => {
             <p className="mx-auto max-w-sm text-sm leading-6 text-slate-500">
               {signupQueued
                 ? 'Tu cuenta quedó registrada en cola. El correo de validación se enviará automáticamente cuando el servicio vuelva a estar disponible.'
-                : 'Tu cuenta fue creada correctamente. La validación por correo se enviará automáticamente para completar el acceso a la plataforma.'}
+                : 'Tu cuenta fue creada correctamente. Te enviamos un correo con el enlace para verificarla y completar el acceso a la plataforma.'}
             </p>
 
             <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-4 text-left text-sm leading-6 text-emerald-800">

@@ -1,4 +1,4 @@
-import { BookOpen, CheckCircle2 } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 
 import { getRelationStatusMeta } from './advisors.utils';
 
@@ -6,7 +6,6 @@ export default function MyAdvisorCard({
   advisor,
   isSelected,
   onSelect,
-  onOpenCourses,
 }) {
   const statusMeta = getRelationStatusMeta(advisor.estado);
 
@@ -80,7 +79,7 @@ export default function MyAdvisorCard({
         ))}
       </div>
 
-      <div className="mt-5 grid gap-2 sm:grid-cols-2">
+      <div className="mt-5">
         <button
           type="button"
           onClick={() => onSelect(advisor.id)}
@@ -92,14 +91,6 @@ export default function MyAdvisorCard({
         >
           <CheckCircle2 className="h-4 w-4" />
           {isSelected ? 'Perfil activo' : 'Seleccionar'}
-        </button>
-        <button
-          type="button"
-          onClick={() => onOpenCourses?.(advisor)}
-          className="advisor-inner-blue inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-        >
-          <BookOpen className="h-4 w-4" />
-          Ver cursos
         </button>
       </div>
     </article>

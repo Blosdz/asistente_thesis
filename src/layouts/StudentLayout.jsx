@@ -9,6 +9,7 @@ import {
   Home,
   LogOut,
   Settings,
+  Hexagon,
   User as UserIcon,
 } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
@@ -94,9 +95,9 @@ const StudentLayout = () => {
       icon: <CreditCard size={16} />,
     },
     {
-      label: 'Estadística',
+      label: 'Colmena',
       path: '/student/statistics',
-      icon: <BarChart3 size={16} />,
+      icon: <Hexagon color="#F5C63D" fill="#F5C63D" size={16}/>,
     },
   ];
 

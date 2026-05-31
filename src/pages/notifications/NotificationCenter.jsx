@@ -385,67 +385,6 @@ export default function NotificationCenter() {
               )}
             </div>
           </main>
-
-          <aside className="rounded-3xl border border-white/80 bg-white/78 p-4 shadow-[0_24px_60px_-46px_rgba(15,23,42,0.42)]">
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-base font-black text-slate-950">
-                Recientes
-              </h3>
-              <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-500">
-                {items.length}
-              </span>
-            </div>
-
-            <div className="mt-4 space-y-3">
-              {recentItems.map((item) => {
-                const meta = typeMeta[item.type] || {
-                  label: 'Info',
-                  tone: 'bg-slate-100 text-slate-600',
-                };
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => openNotification(item)}
-                    className="w-full rounded-2xl border border-slate-200 bg-white px-3 py-3 text-left transition hover:bg-slate-50"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div
-                        className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-                          item.read ? 'bg-slate-300' : 'bg-emerald-600'
-                        }`}
-                      />
-                      <div className="min-w-0">
-                        <p className="line-clamp-2 text-sm font-bold text-slate-900">
-                          {item.title}
-                        </p>
-                        <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">
-                          {item.description}
-                        </p>
-                        <div className="mt-2 flex items-center justify-between gap-2">
-                          <span
-                            className={`rounded-md px-1.5 py-0.5 text-[10px] font-bold ${meta.tone}`}
-                          >
-                            {meta.label}
-                          </span>
-                          <span className="text-[11px] font-medium text-slate-400">
-                            {formatDay(item.created_at || item.createdAt)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-
-              {!loading && recentItems.length === 0 ? (
-                <p className="rounded-2xl bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-                  Sin actividad reciente.
-                </p>
-              ) : null}
-            </div>
-          </aside>
         </div>
       </div>
     </div>

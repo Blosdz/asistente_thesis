@@ -2,12 +2,9 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'rea
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import {
-  ArrowLeft,
   ArrowRight,
-  BookOpen,
   CalendarDays,
   CheckCircle2,
-  Loader2,
   Users,
 } from 'lucide-react';
 
@@ -32,7 +29,6 @@ import {
 import { obtenerMiSuscripcion } from '../../services/suscripcionService';
 import {
   comprarCurso,
-  formatCourseCurrency,
   listarCursosDeAsesor,
 } from '../../services/cursosService';
 import {
@@ -86,9 +82,8 @@ export default function Advisors() {
   const [resultOpen, setResultOpen] = useState(false);
   const [bookingResult, setBookingResult] = useState(null);
   const [reservationSummary, setReservationSummary] = useState(null);
-  const [coursesAdvisor, setCoursesAdvisor] = useState(null);
-  const [advisorCourses, setAdvisorCourses] = useState([]);
-  const [loadingAdvisorCourses, setLoadingAdvisorCourses] = useState(false);
+  const [expandedCoursesAdvisorId, setExpandedCoursesAdvisorId] = useState(null);
+  const [advisorCoursesById, setAdvisorCoursesById] = useState({});
   const [buyingCourseId, setBuyingCourseId] = useState(null);
   const [coursePaymentSummary, setCoursePaymentSummary] = useState(null);
 
@@ -442,27 +437,73 @@ export default function Advisors() {
     setSelectedAdvisorId(advisorId);
   }, []);
 
-  const handleOpenCourses = useCallback(async (advisor) => {
+  const loadAdvisorCourses = useCallback(async (advisor, { force = false } = {}) => {
     if (!advisor?.id) return;
 
-    setCoursesAdvisor(advisor);
-    setActiveSection('advisor-courses');
-    setAdvisorCourses([]);
+    const currentState = advisorCoursesById[advisor.id];
+    if (!force && (currentState?.loading || currentState?.loaded)) {
+      return;
+    }
+
+    setAdvisorCoursesById((current) => ({
+      ...current,
+      [advisor.id]: {
+        items: current[advisor.id]?.items || [],
+        loaded: false,
+        loading: true,
+        error: null,
+      },
+    }));
 
     try {
-      setLoadingAdvisorCourses(true);
       const data = await listarCursosDeAsesor(advisor.id);
-      setAdvisorCourses(data || []);
+      setAdvisorCoursesById((current) => ({
+        ...current,
+        [advisor.id]: {
+          items: data || [],
+          loaded: true,
+          loading: false,
+          error: null,
+        },
+      }));
     } catch (error) {
       console.error(error);
-      toast.error(error.message || 'No se pudieron cargar los cursos del asesor');
-    } finally {
-      setLoadingAdvisorCourses(false);
+      const message = error.message || 'No se pudieron cargar los cursos del asesor';
+      setAdvisorCoursesById((current) => ({
+        ...current,
+        [advisor.id]: {
+          items: current[advisor.id]?.items || [],
+          loaded: false,
+          loading: false,
+          error: message,
+        },
+      }));
+      toast.error(message);
     }
-  }, []);
+  }, [advisorCoursesById]);
+
+  const handleToggleAdvisorCourses = useCallback(
+    async (advisor) => {
+      if (!advisor?.id) return;
+
+      if (expandedCoursesAdvisorId === advisor.id) {
+        setExpandedCoursesAdvisorId(null);
+        return;
+      }
+
+      setExpandedCoursesAdvisorId(advisor.id);
+      await loadAdvisorCourses(advisor);
+    },
+    [expandedCoursesAdvisorId, loadAdvisorCourses],
+  );
+
+  const handleRetryAdvisorCourses = useCallback(
+    (advisor) => loadAdvisorCourses(advisor, { force: true }),
+    [loadAdvisorCourses],
+  );
 
   const handleBuyCourse = useCallback(
-    async (course) => {
+    async (course, advisorId) => {
       if (!course?.id) return;
 
       try {
@@ -485,9 +526,40 @@ export default function Advisors() {
           toast.success(result?.message || 'La compra ya está en proceso.');
         }
 
-        if (coursesAdvisor?.id) {
-          const data = await listarCursosDeAsesor(coursesAdvisor.id);
-          setAdvisorCourses(data || []);
+        if (advisorId) {
+          try {
+            setAdvisorCoursesById((current) => ({
+              ...current,
+              [advisorId]: {
+                items: current[advisorId]?.items || [],
+                loaded: true,
+                loading: true,
+                error: null,
+              },
+            }));
+
+            const data = await listarCursosDeAsesor(advisorId);
+            setAdvisorCoursesById((current) => ({
+              ...current,
+              [advisorId]: {
+                items: data || [],
+                loaded: true,
+                loading: false,
+                error: null,
+              },
+            }));
+          } catch (refreshError) {
+            console.error(refreshError);
+            setAdvisorCoursesById((current) => ({
+              ...current,
+              [advisorId]: {
+                items: current[advisorId]?.items || [],
+                loaded: true,
+                loading: false,
+                error: null,
+              },
+            }));
+          }
         }
       } catch (error) {
         console.error(error);
@@ -496,7 +568,7 @@ export default function Advisors() {
         setBuyingCourseId(null);
       }
     },
-    [coursesAdvisor?.id],
+    [],
   );
 
   const handleSelectDay = useCallback(
@@ -566,13 +638,11 @@ export default function Advisors() {
     <div className="student-advisors-page relative w-full px-4 py-10 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto flex max-w-[1480px] flex-col gap-6">
 
-        {activeSection !== 'advisor-courses' ? (
-          <AdvisorsQuickActions
-            activeSection={activeSection}
-            onChange={setActiveSection}
-            counts={quickActionCounts}
-          />
-        ) : null}
+        <AdvisorsQuickActions
+          activeSection={activeSection}
+          onChange={setActiveSection}
+          counts={quickActionCounts}
+        />
 
         {activeSection === 'browse' ? (
           <div className="space-y-5">
@@ -604,8 +674,15 @@ export default function Advisors() {
               linkedCount={myAdvisors.length}
               linkingAdvisorId={linkingAdvisorId}
               relationsByAdvisorId={relationsByAdvisorId}
+              expandedCoursesAdvisorId={expandedCoursesAdvisorId}
+              advisorCoursesById={advisorCoursesById}
+              buyingCourseId={buyingCourseId}
               onSelectAdvisor={handleSelectAdvisor}
               onContactAdvisor={handleContactAdvisor}
+              onToggleCourses={handleToggleAdvisorCourses}
+              onBuyCourse={handleBuyCourse}
+              onOpenCourse={() => navigate('/student/cursos')}
+              onRetryCourses={handleRetryAdvisorCourses}
               onOpenMyAdvisors={() => setActiveSection('my-advisors')}
               onPrevPage={() => setCurrentPage((page) => Math.max(1, page - 1))}
               onNextPage={() =>
@@ -623,7 +700,6 @@ export default function Advisors() {
             advisors={myAdvisors}
             selectedAdvisorId={selectedAdvisorId}
             onSelectAdvisor={handleSelectAdvisor}
-            onOpenCourses={handleOpenCourses}
             onOpenBrowse={() => setActiveSection('browse')}
           />
         ) : null}
@@ -653,139 +729,6 @@ export default function Advisors() {
           />
         ) : null}
 
-        {activeSection === 'advisor-courses' ? (
-          <section className="space-y-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setActiveSection('my-advisors')}
-                  className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Atrás
-                </button>
-                <p className="mt-5 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Cursos del asesor
-                </p>
-                <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-                  {coursesAdvisor?.name || 'Cursos disponibles'}
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-600">
-                  Estos cursos están disponibles porque tienes un vínculo activo
-                  con este asesor. Al comprar, el pago queda pendiente hasta que
-                  administración valide tu voucher.
-                </p>
-              </div>
-
-              {coursesAdvisor ? (
-                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3">
-                  <img
-                    src={coursesAdvisor.avatar}
-                    alt={coursesAdvisor.name}
-                    className="h-12 w-12 rounded-2xl object-cover"
-                  />
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-slate-950">
-                      {coursesAdvisor.name}
-                    </p>
-                    <p className="truncate text-xs text-slate-500">
-                      {coursesAdvisor.career}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            {loadingAdvisorCourses ? (
-              <div className="flex items-center justify-center gap-2 rounded-[28px] border border-slate-200 bg-white p-10 text-sm text-slate-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Cargando cursos...
-              </div>
-            ) : advisorCourses.length === 0 ? (
-              <div className="rounded-[28px] border border-dashed border-slate-300 bg-white/75 p-10 text-center">
-                <BookOpen className="mx-auto h-8 w-8 text-slate-400" />
-                <p className="mt-3 text-sm font-semibold text-slate-700">
-                  Este asesor aún no publicó cursos.
-                </p>
-              </div>
-            ) : (
-              <div className="grid gap-4 lg:grid-cols-2">
-                {advisorCourses.map((course) => {
-                  const hasActiveAccess = course.estado_compra === 'activo';
-                  const hasPendingPayment = ['pendiente', 'voucher_subido'].includes(
-                    course.estado_pago,
-                  );
-                  const buying = buyingCourseId === course.id;
-
-                  return (
-                    <article
-                      key={course.id}
-                      className="flex min-h-[240px] flex-col rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_20px_55px_-46px_rgba(15,23,42,0.35)]"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h3 className="text-lg font-bold text-slate-950">
-                            {course.titulo}
-                          </h3>
-                          <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
-                            {course.descripcion || 'Sin descripción registrada.'}
-                          </p>
-                        </div>
-                        <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-                          {course.total_materiales} materiales
-                        </span>
-                      </div>
-
-                      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                        <div className="advisor-inner-blue rounded-2xl bg-slate-50 p-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            Precio
-                          </p>
-                          <p className="mt-2 text-lg font-extrabold text-slate-950">
-                            {formatCourseCurrency(course.precio, course.moneda)}
-                          </p>
-                        </div>
-                        <div className="advisor-inner-blue rounded-2xl bg-slate-50 p-4">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
-                            Estado
-                          </p>
-                          <p className="mt-2 text-sm font-bold text-slate-700">
-                            {hasActiveAccess
-                              ? 'Comprado'
-                              : hasPendingPayment
-                                ? 'Pago en revisión'
-                                : 'Disponible'}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="mt-auto pt-5">
-                        <button
-                          type="button"
-                          onClick={() => handleBuyCourse(course)}
-                          disabled={buying || hasActiveAccess || hasPendingPayment}
-                          className="ios-accent-button inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
-                        >
-                          {buying ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <BookOpen className="h-4 w-4" />
-                          )}
-                          {hasActiveAccess
-                            ? 'Ya comprado'
-                            : hasPendingPayment
-                              ? 'Pago en revisión'
-                              : 'Comprar curso'}
-                        </button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-        ) : null}
       </div>
 
       <Modal

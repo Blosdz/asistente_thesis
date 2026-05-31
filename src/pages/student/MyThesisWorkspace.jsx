@@ -13,6 +13,7 @@ import SuggestionsThreadModal from '../../components/student/workspace/Suggestio
 import RelatedDocumentsPanel from '../../components/student/workspace/RelatedDocumentsPanel';
 import AcademicAIChatPanel from '../../components/student/workspace/AcademicAIChatPanel';
 import ThesisPreviewPanel from '../../components/student/workspace/ThesisPreviewPanel';
+import ThesisDocBuilderPanel from '../../components/student/workspace/ThesisDocBuilderPanel';
 import PaymentGatewayModal from '../../components/student/workspace/PaymentGatewayModal';
 import {
   cotizarTesisPlan,
@@ -84,6 +85,7 @@ export default function MyThesisWorkspace() {
   const [misAsesores, setMisAsesores] = useState([]);
   const [tesisConAsesores, setTesisConAsesores] = useState([]);
   const [assigningAdvisor, setAssigningAdvisor] = useState(false);
+  const [showManualEditModal, setShowManualEditModal] = useState(false);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
 
@@ -465,6 +467,12 @@ export default function MyThesisWorkspace() {
     },
     [buildPreviewUrl],
   );
+
+  const handleGeneratedDocx = useCallback(async () => {
+    if (selectedThesisId) {
+      await fetchDocuments(selectedThesisId);
+    }
+  }, [fetchDocuments, selectedThesisId]);
 
   const selectedThesis = useMemo(
     () => thesesList.find((item) => item.id === selectedThesisId),
@@ -862,6 +870,7 @@ export default function MyThesisWorkspace() {
             thesesList={thesesList}
             selectedThesisId={selectedThesisId}
             onSelectThesis={setSelectedThesisId}
+            onOpenManualEdit={() => setShowManualEditModal(true)}
             onOpenAccesses={() => setShowAccessModal(true)}
             onOpenCreate={openCreateModal}
           />
@@ -906,6 +915,21 @@ export default function MyThesisWorkspace() {
           </aside>
         </div>
       </div>
+
+      <Modal
+        open={showManualEditModal}
+        onClose={() => setShowManualEditModal(false)}
+        title="Edición manual"
+        subtitle={selectedThesis?.titulo || 'Documento de tesis'}
+        modalWidth="lg"
+        contentClassName="gap-4 p-4 text-left sm:p-6"
+      >
+        <ThesisDocBuilderPanel
+          tesisId={selectedThesisId}
+          onGenerated={handleGeneratedDocx}
+          className="h-[min(74dvh,760px)] border border-slate-200 shadow-none"
+        />
+      </Modal>
 
       <AccessManagementModal
         open={showAccessModal}

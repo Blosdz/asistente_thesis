@@ -1,6 +1,7 @@
 import { documentosApi } from '../api/documentos.api';
 import { tesisApi } from '../api/tesis.api';
 import { catalogosApi } from '../api/catalogos.api';
+import { docGeneratorApi } from '../api/docGenerator.api';
 import { pagosApi } from '../api/pagos.api';
 import { sugerenciasApi } from '../api/sugerencias.api';
 
@@ -210,4 +211,36 @@ export async function marcarSugerenciaAplicadaEstudiante(sugerenciaId, comentari
       comentario,
     }),
   );
+}
+
+export async function obtenerIndiceTesis(tesisId) {
+  return asArray(await docGeneratorApi.listIndex(tesisId));
+}
+
+export async function crearSeccionIndiceTesis(tesisId, payload) {
+  return unwrap(await docGeneratorApi.createIndexSection(tesisId, payload));
+}
+
+export async function actualizarSeccionIndiceTesis(tesisId, sectionId, payload) {
+  return unwrap(await docGeneratorApi.updateIndexSection(tesisId, sectionId, payload));
+}
+
+export async function eliminarSeccionIndiceTesis(tesisId, sectionId) {
+  return unwrap(await docGeneratorApi.deleteIndexSection(tesisId, sectionId));
+}
+
+export async function obtenerReferenciasTesis(tesisId) {
+  return asArray(await docGeneratorApi.listReferences(tesisId));
+}
+
+export async function crearReferenciaTesis(tesisId, payload) {
+  return unwrap(await docGeneratorApi.createReference(tesisId, payload));
+}
+
+export async function eliminarReferenciaTesis(referenceId) {
+  return unwrap(await docGeneratorApi.deleteReference(referenceId));
+}
+
+export async function generarDocumentoDocxTesis(tesisId) {
+  return unwrap(await tesisApi.generateDocx(tesisId));
 }

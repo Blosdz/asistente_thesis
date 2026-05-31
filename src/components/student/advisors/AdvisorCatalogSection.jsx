@@ -12,8 +12,15 @@ export default function AdvisorCatalogSection({
   linkedCount,
   linkingAdvisorId,
   relationsByAdvisorId,
+  expandedCoursesAdvisorId,
+  advisorCoursesById = {},
+  buyingCourseId,
   onSelectAdvisor,
   onContactAdvisor,
+  onToggleCourses,
+  onBuyCourse,
+  onOpenCourse,
+  onRetryCourses,
   onOpenMyAdvisors,
   onPrevPage,
   onNextPage,
@@ -89,8 +96,15 @@ export default function AdvisorCatalogSection({
                 relation={relationsByAdvisorId.get(advisor.id) || null}
                 isSelected={selectedAdvisorId === advisor.id}
                 linking={linkingAdvisorId === advisor.id}
+                isCoursesOpen={expandedCoursesAdvisorId === advisor.id}
+                coursesState={advisorCoursesById[advisor.id]}
+                buyingCourseId={buyingCourseId}
                 onSelect={onSelectAdvisor}
                 onContact={onContactAdvisor}
+                onToggleCourses={onToggleCourses}
+                onBuyCourse={onBuyCourse}
+                onOpenCourse={onOpenCourse}
+                onRetryCourses={onRetryCourses}
               />
             ))}
           </div>

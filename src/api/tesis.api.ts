@@ -44,4 +44,10 @@ export const tesisApi = {
       body: payload,
     });
   },
+
+  generateDocx(id: string) {
+    return apiRequest(`/tesis/${id}/documentos/docx`, {
+      method: 'POST',
+    });
+  },
 };
