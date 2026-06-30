@@ -85,7 +85,7 @@ export async function openPicker(onSelect) {
   }
 
   const view = new window.google.picker.DocsView(window.google.picker.ViewId.DOCS);
-  view.setMimeTypes('application/vnd.google-apps.document,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  view.setMimeTypes('application/vnd.google-apps.document,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-word.document.macroEnabled.12');
 
   const picker = new window.google.picker.PickerBuilder()
     .enableFeature(window.google.picker.Feature.NAV_HIDDEN)

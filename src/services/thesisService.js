@@ -1,7 +1,33 @@
 import { documentosApi } from '../api/documentos.api';
 import { tesisApi } from '../api/tesis.api';
 import { catalogosApi } from '../api/catalogos.api';
-import { docGeneratorApi } from '../api/docGenerator.api';
+import {
+  appendIndexSectionText,
+  createIndexSection,
+  createReference,
+  deleteIndexSection,
+  deleteReference,
+  downloadGeneratedDocument,
+  extractOutline,
+  extractRawData,
+  generateDocx,
+  getRawData,
+  getRawDocument,
+  getDocumentPreview,
+  insertCitation,
+  insertHeading,
+  insertSubtitle,
+  listIndex,
+  listDocumentReferences,
+  listSections,
+  listReferences,
+  updateReference,
+  updateDocumentReference,
+  updateIndexSection,
+  updateRawData,
+  updateSection,
+  processDocument,
+} from '../api/docGenerator.api';
 import { pagosApi } from '../api/pagos.api';
 import { sugerenciasApi } from '../api/sugerencias.api';
 
@@ -78,6 +104,10 @@ export async function obtenerTiposTesisActivos() {
   return asArray(await catalogosApi.obtenerTiposTesis(), 'data');
 }
 
+export async function obtenerFormatosTesisActivos() {
+  return asArray(await catalogosApi.obtenerFormatosTesis(), 'data');
+}
+
 export async function cotizarTesisPlan(payload) {
   const data = await pagosApi.cotizar({
     planId: payload.plan_id,
@@ -115,6 +145,10 @@ export async function obtenerDetalleTesis(tesisId) {
 
 export async function actualizarEstadoTesis(tesisId, estado) {
   return unwrap(await tesisApi.actualizarEstado(tesisId, estado));
+}
+
+export async function actualizarFormatoDocTesis(tesisId, docThesisFormat) {
+  return unwrap(await tesisApi.actualizarFormatoDoc(tesisId, docThesisFormat));
 }
 
 export async function obtenerDocumentosMiTesis(tesisId) {
@@ -184,6 +218,12 @@ export async function crearCarpetaDriveParaTesis(tesisId) {
   return unwrap(await documentosApi.crearCarpetaDrive(tesisId));
 }
 
+export async function subirCaratulaTesis(tesisId, file) {
+  const formData = new FormData();
+  formData.append('file', file);
+  return unwrap(await tesisApi.subirCaratula(tesisId, formData));
+}
+
 export async function obtenerDocumentosComplementarios(tesisId) {
   return obtenerDocumentosApoyoTesis(tesisId);
 }
@@ -214,33 +254,105 @@ export async function marcarSugerenciaAplicadaEstudiante(sugerenciaId, comentari
 }
 
 export async function obtenerIndiceTesis(tesisId) {
-  return asArray(await docGeneratorApi.listIndex(tesisId));
+  return asArray(await listIndex(tesisId));
 }
 
 export async function crearSeccionIndiceTesis(tesisId, payload) {
-  return unwrap(await docGeneratorApi.createIndexSection(tesisId, payload));
+  return unwrap(await createIndexSection(tesisId, payload));
 }
 
 export async function actualizarSeccionIndiceTesis(tesisId, sectionId, payload) {
-  return unwrap(await docGeneratorApi.updateIndexSection(tesisId, sectionId, payload));
+  return unwrap(await updateIndexSection(tesisId, sectionId, payload));
+}
+
+export async function agregarTextoASeccionIndiceTesis(tesisId, sectionId, text) {
+  return unwrap(
+    await appendIndexSectionText(tesisId, sectionId, { text }),
+  );
 }
 
 export async function eliminarSeccionIndiceTesis(tesisId, sectionId) {
-  return unwrap(await docGeneratorApi.deleteIndexSection(tesisId, sectionId));
+  return unwrap(await deleteIndexSection(tesisId, sectionId));
 }
 
 export async function obtenerReferenciasTesis(tesisId) {
-  return asArray(await docGeneratorApi.listReferences(tesisId));
+  return asArray(await listReferences(tesisId));
 }
 
 export async function crearReferenciaTesis(tesisId, payload) {
-  return unwrap(await docGeneratorApi.createReference(tesisId, payload));
+  return unwrap(await createReference(tesisId, payload));
+}
+
+export async function actualizarReferenciaTesis(referenceId, payload) {
+  return unwrap(await updateReference(referenceId, payload));
 }
 
 export async function eliminarReferenciaTesis(referenceId) {
-  return unwrap(await docGeneratorApi.deleteReference(referenceId));
+  return unwrap(await deleteReference(referenceId));
 }
 
 export async function generarDocumentoDocxTesis(tesisId) {
-  return unwrap(await tesisApi.generateDocx(tesisId));
+  return unwrap(await generateDocx(tesisId));
+}
+
+export async function descargarDocumentoDocxGenerado(filename) {
+  return downloadGeneratedDocument(filename);
+}
+
+export async function obtenerRawDataDocumento(documentId) {
+  return unwrap(await getRawData(documentId));
+}
+
+export async function obtenerDocumentoWordRaw(documentId) {
+  return unwrap(await getRawDocument(documentId));
+}
+
+export async function actualizarRawDataDocumento(documentId, rawData) {
+  return unwrap(
+    await updateRawData(documentId, { raw_data: rawData }),
+  );
+}
+
+export async function extraerRawDataDocumento(documentId) {
+  return unwrap(await extractRawData(documentId));
+}
+
+export async function procesarDocumentoWord(documentId) {
+  return unwrap(await processDocument(documentId));
+}
+
+export async function obtenerSeccionesDocumentoWord(documentId) {
+  return asArray(await listSections(documentId));
+}
+
+export async function actualizarSeccionDocumentoWord(documentId, sectionId, payload) {
+  return unwrap(await updateSection(documentId, sectionId, payload));
+}
+
+export async function obtenerReferenciasDocumentoWord(documentId) {
+  return asArray(await listDocumentReferences(documentId));
+}
+
+export async function actualizarReferenciaDocumentoWord(documentId, referenceId, payload) {
+  return unwrap(await updateDocumentReference(documentId, referenceId, payload));
+}
+
+export async function obtenerPreviewDocumentoWord(documentId) {
+  return unwrap(await getDocumentPreview(documentId));
+}
+
+export async function extraerIndiceDocumentoWord(documentId, replace = false) {
+  return unwrap(await extractOutline(documentId, replace));
+}
+
+export async function insertarCitaDocumentoWord(documentId, payload) {
+  return unwrap(await insertCitation(documentId, payload));
+}
+
+export async function insertarEncabezadoDocumentoWord(documentId, payload) {
+  return unwrap(await insertHeading(documentId, payload));
+}
+
+export async function insertarSubtituloDocumentoWord(documentId, payload) {
+  return unwrap(await insertSubtitle(documentId, payload));
 }

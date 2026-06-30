@@ -12,4 +12,8 @@ export const catalogosApi = {
   obtenerTiposTesis() {
     return apiRequest('/catalogos/tipos-tesis', { auth: false });
   },
+
+  obtenerFormatosTesis() {
+    return apiRequest('/catalogos/doc-thesis-formats');
+  },
 };

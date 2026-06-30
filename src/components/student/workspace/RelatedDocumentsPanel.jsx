@@ -79,10 +79,10 @@ export default function RelatedDocumentsPanel({
   const currentDocumentName =
     currentDocument?.nombre ||
     currentDocument?.nombre_archivo ||
-    'Selecciona un documento';
+    null;
   const currentDocumentType = currentDocument
     ? formatDocumentType(currentDocument)
-    : 'Sin documentos';
+    : null;
 
   return (
     <div ref={dropdownRef} className="relative z-20">
@@ -90,30 +90,29 @@ export default function RelatedDocumentsPanel({
         type="button"
         onClick={() => setIsOpen((current) => !current)}
         disabled={documents.length === 0}
-        className="flex h-11 w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-3 text-left shadow-[0_14px_30px_-26px_rgba(15,23,42,0.45)] transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-70"
+        className="flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-2.5 text-left transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        title={currentDocumentName || 'Sin documentos de tesis'}
       >
         <span className="flex min-w-0 items-center gap-2">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
-            <FileText className="h-4 w-4" />
-          </span>
+          <FileText className="h-3.5 w-3.5 shrink-0 text-slate-400" />
           <span className="min-w-0">
-            <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-              Documento relacionado
+            <span className="block text-[9px] font-bold uppercase tracking-widest text-slate-400 leading-none mb-0.5">
+              Versión del documento
             </span>
-            <span className="block truncate text-xs font-semibold text-slate-900 sm:text-sm">
-              {currentDocumentName}
+            <span className="block truncate text-xs font-semibold text-slate-800">
+              {currentDocumentName || 'Sin documentos'}
             </span>
           </span>
         </span>
 
-        <span className="flex shrink-0 items-center gap-2">
-          <span className="max-w-[7rem] truncate rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
-            {currentDocumentType}
-          </span>
+        <span className="flex shrink-0 items-center gap-1.5">
+          {currentDocumentType && (
+            <span className="hidden max-w-20 truncate rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500 sm:inline">
+              {currentDocumentType}
+            </span>
+          )}
           <ChevronDown
-            className={`h-4 w-4 text-slate-500 transition ${
-              isOpen ? 'rotate-180' : ''
-            }`}
+            className={`h-3.5 w-3.5 text-slate-400 transition ${isOpen ? 'rotate-180' : ''}`}
           />
         </span>
       </button>

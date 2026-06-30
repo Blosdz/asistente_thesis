@@ -1,29 +1,35 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Loader2, MessageSquare } from 'lucide-react';
+import { FileText } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
-import { Select, SelectItem } from '../../components/ui/select';
-import Modal from '../../components/ui/modal';
-import WorkspaceTopBar from '../../components/student/workspace/WorkspaceTopBar';
 import AccessManagementModal from '../../components/student/workspace/AccessManagementModal';
 import SuggestionsThreadModal from '../../components/student/workspace/SuggestionsThreadModal';
-import RelatedDocumentsPanel from '../../components/student/workspace/RelatedDocumentsPanel';
 import AcademicAIChatPanel from '../../components/student/workspace/AcademicAIChatPanel';
 import ThesisPreviewPanel from '../../components/student/workspace/ThesisPreviewPanel';
+import WorkspaceActionNavbar from '../../components/student/workspace/WorkspaceActionNavbar';
 import ThesisDocBuilderPanel from '../../components/student/workspace/ThesisDocBuilderPanel';
+import ThesisCoverUploadPanel from '../../components/student/workspace/ThesisCoverUploadPanel';
+import ThesisManualEditorPanel from '../../components/student/workspace/ThesisManualEditorPanel';
+import ThesisReferencesPanel from '../../components/student/workspace/ThesisReferencesPanel';
 import PaymentGatewayModal from '../../components/student/workspace/PaymentGatewayModal';
 import {
+  actualizarFormatoDocTesis,
   cotizarTesisPlan,
   crearTesisConPlan,
+  extraerIndiceDocumentoWord,
+  obtenerIndiceTesis,
   obtenerMisTesis,
   obtenerSugerenciasMiTesis,
   obtenerTiposTesisActivos,
   obtenerTodosDocumentosMiTesis,
   marcarSugerenciaAplicadaEstudiante,
+  procesarDocumentoWord,
+  subirDocumentoAGoogleDrive,
 } from '../../services/thesisService';
+import { catalogosApi } from '../../api/catalogos.api';
 import {
   asignarMiTesisAAsesor,
   obtenerMisAsesores,
@@ -37,6 +43,7 @@ import {
   getSuggestionStatusMeta,
   getSuggestionText,
 } from '../../lib/suggestionValidation';
+import QuotationModal from '../../components/student/workspace/QuotationModal.jsx';
 
 const NIVELES_ACADEMICOS = [
   { value: 'PREGRADO', label: 'Pregrado' },
@@ -52,23 +59,37 @@ const initialCreateForm = {
   tipo_tesis_id: '',
   nivel_academico: 'PREGRADO',
   requiere_analisis_estadistico: true,
+  doc_thesis_format_uname: '',
 };
 
-const formatCurrency = (value, currency = 'PEN') =>
-  new Intl.NumberFormat('es-PE', {
-    style: 'currency',
-    currency: currency || 'PEN',
-    minimumFractionDigits: 2,
-  }).format(Number(value || 0));
+const WORD_MIME_TYPES = new Set([
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-word.document.macroEnabled.12',
+]);
 
-const formatDate = (value) => {
-  if (!value) return '—';
+const isThesisDocument = (document) =>
+  (document?.source || document?.tipo_documento_categoria || 'tesis') ===
+  'tesis';
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+const isWordDocument = (document) => {
+  const filename = String(
+    document?.nombre_archivo || document?.nombre || document?.file_name || '',
+  ).toLowerCase();
+  const mimeType = String(
+    document?.tipo_mime || document?.mimeType || '',
+  ).toLowerCase();
 
-  return date.toLocaleDateString();
+  return (
+    filename.endsWith('.docx') ||
+    filename.endsWith('.docm') ||
+    WORD_MIME_TYPES.has(mimeType)
+  );
 };
+
+const isEditableThesisDocument = (document) =>
+  isThesisDocument(document) &&
+  isWordDocument(document) &&
+  Boolean(document?.ruta_storage);
 
 export default function MyThesisWorkspace() {
   const navigate = useNavigate();
@@ -85,9 +106,11 @@ export default function MyThesisWorkspace() {
   const [misAsesores, setMisAsesores] = useState([]);
   const [tesisConAsesores, setTesisConAsesores] = useState([]);
   const [assigningAdvisor, setAssigningAdvisor] = useState(false);
-  const [showManualEditModal, setShowManualEditModal] = useState(false);
+  const [activeActionSection, setActiveActionSection] = useState(null);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
+  const [uploadingEditableProgress, setUploadingEditableProgress] =
+    useState(false);
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState(initialCreateForm);
@@ -100,12 +123,19 @@ export default function MyThesisWorkspace() {
   const [loadingCatalogs, setLoadingCatalogs] = useState(true);
   const [creating, setCreating] = useState(false);
   const [createdPaymentSummary, setCreatedPaymentSummary] = useState(null);
+  const [availableFormats, setAvailableFormats] = useState([]);
+  const [thesisIndex, setThesisIndex] = useState([]);
+  const [changingFormat, setChangingFormat] = useState(false);
 
   const buildPreviewUrl = useCallback((url) => {
     if (!url) return null;
 
     const lowerUrl = url.toLowerCase();
-    if (lowerUrl.endsWith('.doc') || lowerUrl.endsWith('.docx')) {
+    if (
+      lowerUrl.endsWith('.doc') ||
+      lowerUrl.endsWith('.docx') ||
+      lowerUrl.endsWith('.docm')
+    ) {
       return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
     }
 
@@ -253,6 +283,50 @@ export default function MyThesisWorkspace() {
     setLoadingCatalogs(false);
   }, []);
 
+  const cargarFormatos = useCallback(async () => {
+    try {
+      const result = await catalogosApi.obtenerFormatosTesis();
+      setAvailableFormats(result?.data || result || []);
+    } catch (error) {
+      console.error('Error loading formats:', error);
+    }
+  }, []);
+
+  const cargarThesisIndex = useCallback(async (thesisId) => {
+    if (!thesisId) {
+      setThesisIndex([]);
+      return;
+    }
+    try {
+      const data = await obtenerIndiceTesis(thesisId);
+      setThesisIndex(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Error loading thesis index:', error);
+      setThesisIndex([]);
+    }
+  }, []);
+
+  const handleFormatChange = useCallback(
+    async (formatUname) => {
+      if (!selectedThesisId || !formatUname || changingFormat) return;
+      try {
+        setChangingFormat(true);
+        await actualizarFormatoDocTesis(selectedThesisId, formatUname);
+        toast.success('Formato actualizado');
+        await Promise.all([
+          fetchTheses(),
+          cargarThesisIndex(selectedThesisId),
+        ]);
+      } catch (error) {
+        console.error('Error updating format:', error);
+        toast.error(error?.message || 'No se pudo actualizar el formato');
+      } finally {
+        setChangingFormat(false);
+      }
+    },
+    [selectedThesisId, changingFormat, cargarThesisIndex],
+  );
+
   const resetCreateFlow = useCallback(() => {
     setCreateForm(initialCreateForm);
     setQuoteData(null);
@@ -275,6 +349,7 @@ export default function MyThesisWorkspace() {
     fetchTheses();
     fetchMisAsesores();
     cargarCatalogosCreacion();
+    cargarFormatos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -295,6 +370,10 @@ export default function MyThesisWorkspace() {
       setSugerencias([]);
     }
   }, [selectedThesisId, cargarSugerencias]);
+
+  useEffect(() => {
+    cargarThesisIndex(selectedThesisId);
+  }, [selectedThesisId, cargarThesisIndex]);
 
   useEffect(() => {
     if (!showCreateModal) return;
@@ -392,13 +471,22 @@ export default function MyThesisWorkspace() {
         estado_tesis: 'pendiente_pago',
       });
 
+      const createdId = newThesis?.tesis_id || newThesis?.id;
+      if (createdId && createForm.doc_thesis_format_uname) {
+        try {
+          await actualizarFormatoDocTesis(createdId, createForm.doc_thesis_format_uname);
+        } catch (fmtErr) {
+          console.error('Format update after creation failed:', fmtErr);
+        }
+      }
+
       toast.success('Tesis creada y pago generado');
       setShowCreateModal(false);
       resetCreateFlow();
 
       await fetchTheses();
-      if (newThesis?.tesis_id || newThesis?.id) {
-        setSelectedThesisId(newThesis?.tesis_id || newThesis?.id);
+      if (createdId) {
+        setSelectedThesisId(createdId);
       }
 
       setCreatedPaymentSummary(newThesis);
@@ -468,16 +556,113 @@ export default function MyThesisWorkspace() {
     [buildPreviewUrl],
   );
 
+  const editableVersion = useMemo(
+    () =>
+      // Edit the version the user selected when it is editable; otherwise fall
+      // back to the most recent editable thesis document.
+      (currentVersion && isEditableThesisDocument(currentVersion)
+        ? currentVersion
+        : null) ||
+      documents.find(isEditableThesisDocument) ||
+      null,
+    [documents, currentVersion],
+  );
+
+  const hasThesisDocuments = useMemo(
+    () => documents.some(isThesisDocument),
+    [documents],
+  );
+
   const handleGeneratedDocx = useCallback(async () => {
     if (selectedThesisId) {
       await fetchDocuments(selectedThesisId);
     }
   }, [fetchDocuments, selectedThesisId]);
 
+  const handleUploadEditableProgress = useCallback(
+    async (file) => {
+      if (!file) return;
+      if (!selectedThesisId) {
+        toast.error('Selecciona una tesis primero');
+        return;
+      }
+
+      try {
+        setUploadingEditableProgress(true);
+        const uploadedDocument = await subirDocumentoAGoogleDrive({
+          tesisId: selectedThesisId,
+          file,
+          modo: 'tesis',
+        });
+        const extraction = uploadedDocument?.reference_extraction;
+        if (extraction?.ok && Number(extraction.created_count || 0) > 0) {
+          toast.success(
+            `Avance subido: ${extraction.created_count} referencia(s) importada(s)`,
+          );
+        } else if (extraction?.ok) {
+          toast.success(
+            'Avance editable subido. No se encontraron referencias nuevas.',
+          );
+        } else if (extraction?.error) {
+          toast.success('Avance editable subido');
+          toast.error(
+            `No se pudieron importar referencias: ${extraction.error}`,
+          );
+        } else {
+          toast.success('Avance editable subido');
+        }
+
+        await fetchDocuments(selectedThesisId);
+
+        const newDocId =
+          uploadedDocument?.document?.id ||
+          uploadedDocument?.id ||
+          uploadedDocument?.documento_id;
+
+        if (newDocId) {
+          try {
+            await procesarDocumentoWord(newDocId);
+            toast.success('Estructura del Word extraída automáticamente');
+          } catch (processError) {
+            console.warn('Auto-process failed (non-blocking):', processError);
+          }
+
+          try {
+            await extraerIndiceDocumentoWord(newDocId);
+            await cargarThesisIndex(selectedThesisId);
+          } catch (outlineError) {
+            console.warn('Auto-outline failed (non-blocking):', outlineError);
+          }
+        }
+      } catch (error) {
+        console.error('Error uploading editable progress:', error);
+        toast.error(error?.message || 'No se pudo subir el avance editable');
+      } finally {
+        setUploadingEditableProgress(false);
+      }
+    },
+    [fetchDocuments, selectedThesisId],
+  );
+
+  const handleThesisUpdated = useCallback((updatedThesis) => {
+    if (!updatedThesis?.id) return;
+
+    setThesesList((current) =>
+      current.map((item) =>
+        item.id === updatedThesis.id ? { ...item, ...updatedThesis } : item,
+      ),
+    );
+  }, []);
+
   const selectedThesis = useMemo(
     () => thesesList.find((item) => item.id === selectedThesisId),
     [thesesList, selectedThesisId],
   );
+
+  const activeFormat = useMemo(() => {
+    const formatUname = selectedThesis?.doc_thesis_format || selectedThesis?.metadata?.doc_thesis_format;
+    return availableFormats.find((f) => f.uname === formatUname) || null;
+  }, [selectedThesis, availableFormats]);
 
   const sugerenciasVisibles = useMemo(
     () =>
@@ -496,7 +681,9 @@ export default function MyThesisWorkspace() {
         const bTime = new Date(
           b?.actualizado_en || b?.creado_en || b?.created_at || 0,
         ).getTime();
-        return (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime);
+        return (
+          (Number.isNaN(bTime) ? 0 : bTime) - (Number.isNaN(aTime) ? 0 : aTime)
+        );
       })
       .slice(0, 3);
   }, [sugerenciasVisibles]);
@@ -517,14 +704,14 @@ export default function MyThesisWorkspace() {
     [asesoresDeTesis, misAsesores],
   );
 
-  const selectedPlanMeta = useMemo(
-    () => planesDisponibles.find((plan) => plan.id === createForm.plan_id),
-    [createForm.plan_id, planesDisponibles],
-  );
-
-  const selectedTipoMeta = useMemo(
-    () => tiposTesis.find((tipo) => tipo.id === createForm.tipo_tesis_id),
-    [createForm.tipo_tesis_id, tiposTesis],
+  const canSubmitCreateThesis = Boolean(
+    createForm.titulo.trim() &&
+    createForm.plan_id &&
+    createForm.tipo_tesis_id &&
+    createForm.nivel_academico &&
+    quoteData &&
+    !quoting &&
+    !creating,
   );
 
   const closePaymentSummaryModal = useCallback(() => {
@@ -539,295 +726,101 @@ export default function MyThesisWorkspace() {
     });
   }, [createdPaymentSummary?.pago_id, navigate]);
 
-  const createThesisModal = (
-    <Modal
-      open={showCreateModal}
-      onClose={closeCreateModal}
-      title="Crear tesis con cotización"
-      subtitle="Completa tus datos, revisa el precio y luego genera el pago pendiente."
-      modalWidth="xl"
-      primaryAction={{
-        label: creating ? 'Creando...' : 'Crear tesis y generar pago',
-        onClick: handleCreateThesis,
-        disabled: creating,
-      }}
-      secondaryAction={{
-        label: 'Cancelar',
-        onClick: closeCreateModal,
-        disabled: creating,
-      }}
-    >
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-        <section className="space-y-5">
-          <div className="grid gap-5 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Título de la tesis
-              </label>
-              <input
-                type="text"
-                value={createForm.titulo}
-                onChange={(e) =>
-                  setCreateForm((current) => ({
-                    ...current,
-                    titulo: e.target.value,
-                  }))
-                }
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                placeholder="Ej: Impacto de la inteligencia artificial en procesos académicos"
-                autoFocus
-              />
-            </div>
+  const renderDefaultWorkspaceLayout = () => (
+    <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
+      <section className="flex min-h-0 flex-col">
+        {activeActionSection === 'cover-upload' ? (
+          <ThesisCoverUploadPanel
+            thesisId={selectedThesisId}
+            thesis={selectedThesis}
+            onBack={() => setActiveActionSection(null)}
+            onThesisUpdated={handleThesisUpdated}
+            className="flex-1"
+          />
+        ) : activeActionSection === 'doc-builder' ? (
+          <ThesisDocBuilderPanel
+            tesisId={selectedThesisId}
+            thesis={selectedThesis}
+            documentId={editableVersion?.id}
+            editableDocument={editableVersion}
+            previewUrl={previewUrl}
+            hasThesisDocuments={hasThesisDocuments}
+            onUploadEditableProgress={handleUploadEditableProgress}
+            uploadingEditableProgress={uploadingEditableProgress}
+            onGenerated={handleGeneratedDocx}
+            onThesisUpdated={handleThesisUpdated}
+            onBack={() => setActiveActionSection(null)}
+            className="flex-1"
+          />
+        ) : (
+          <ThesisPreviewPanel
+            selectedThesis={selectedThesis}
+            currentVersion={currentVersion}
+            previewUrl={previewUrl}
+            className="flex-1"
+          />
+        )}
+      </section>
 
-            <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Descripción
-              </label>
-              <textarea
-                value={createForm.descripcion}
-                onChange={(e) =>
-                  setCreateForm((current) => ({
-                    ...current,
-                    descripcion: e.target.value,
-                  }))
-                }
-                className="w-full resize-none rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                placeholder="Breve contexto del problema de investigación"
-                rows="4"
-              />
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Plan
-              </label>
-              <Select
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
-                value={createForm.plan_id}
-                onChange={(e) =>
-                  setCreateForm((current) => ({
-                    ...current,
-                    plan_id: e.target.value,
-                  }))
-                }
-              >
-                <SelectItem value="">
-                  {loadingCatalogs
-                    ? 'Cargando planes...'
-                    : 'Selecciona un plan'}
-                </SelectItem>
-                {planesDisponibles.map((plan) => (
-                  <SelectItem key={plan.id} value={plan.id}>
-                    {plan.nombre}
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Tipo de tesis
-              </label>
-              <Select
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
-                value={createForm.tipo_tesis_id}
-                onChange={(e) =>
-                  setCreateForm((current) => ({
-                    ...current,
-                    tipo_tesis_id: e.target.value,
-                  }))
-                }
-              >
-                <SelectItem value="">
-                  {loadingCatalogs
-                    ? 'Cargando tipos...'
-                    : 'Selecciona un tipo de tesis'}
-                </SelectItem>
-                {tiposTesis.map((tipo) => (
-                  <SelectItem key={tipo.id} value={tipo.id}>
-                    {tipo.nombre}
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Nivel académico
-              </label>
-              <Select
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
-                value={createForm.nivel_academico}
-                onChange={(e) =>
-                  setCreateForm((current) => ({
-                    ...current,
-                    nivel_academico: e.target.value,
-                  }))
-                }
-              >
-                {NIVELES_ACADEMICOS.map((nivel) => (
-                  <SelectItem key={nivel.value} value={nivel.value}>
-                    {nivel.label}
-                  </SelectItem>
-                ))}
-              </Select>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-sm font-semibold text-slate-700">
-                Análisis estadístico
-              </label>
-              <Select
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-sm"
-                value={createForm.requiere_analisis_estadistico ? 'si' : 'no'}
-                onChange={(e) =>
-                  setCreateForm((current) => ({
-                    ...current,
-                    requiere_analisis_estadistico: e.target.value === 'si',
-                  }))
-                }
-              >
-                <SelectItem value="si">Sí, lo requiere</SelectItem>
-                <SelectItem value="no">No, no lo requiere</SelectItem>
-              </Select>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 text-sm text-slate-600">
-            <p className="font-semibold text-slate-800">
-              Datos usados al crear
-            </p>
-            <p className="mt-2">
-              Estudiante autenticado:{' '}
-              <span className="font-medium text-slate-700">
-                Se tomará desde tu sesión activa
-              </span>
-            </p>
-            <p className="mt-2">
-              Universidad del perfil:{' '}
-              <span className="font-medium text-slate-700">
-                {perfilEstudiante?.universidad_id
-                  ? 'Se enviará la universidad registrada'
-                  : 'No registrada, se enviará como null'}
-              </span>
-            </p>
-            <p className="mt-1">
-              Programa académico: no aplica en esta versión.
-            </p>
-          </div>
-        </section>
-
-        <aside className="space-y-4">
-          <div className="rounded-3xl border border-slate-200 bg-slate-50/80 p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500">
-              Cotización
-            </p>
-            <h3 className="mt-2 text-xl font-black tracking-tight text-slate-900">
-              Resumen del plan
-            </h3>
-
-            {loadingCatalogs ? (
-              <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Cargando catálogos...
-              </div>
-            ) : !planesDisponibles.length || !tiposTesis.length ? (
-              <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-                <p className="font-semibold">
-                  No se pudieron cargar todos los catálogos.
-                </p>
-                <p className="mt-1">
-                  Reintenta la carga para mostrar planes y tipos de tesis.
-                </p>
-                <Button
-                  onClick={cargarCatalogosCreacion}
-                  className="mt-4 h-10 rounded-xl px-4"
-                >
-                  Reintentar
-                </Button>
-              </div>
-            ) : quoting ? (
-              <div className="mt-6 flex items-center gap-2 text-sm text-slate-500">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Calculando cotización...
-              </div>
-            ) : quoteError ? (
-              <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-                {quoteError}
-              </div>
-            ) : quoteData ? (
-              <div className="mt-6 space-y-3 text-sm">
-                <div className="rounded-2xl border border-white bg-white p-4">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                    Configuración
-                  </p>
-                  <p className="mt-2 font-semibold text-slate-900">
-                    {quoteData.plan_nombre ||
-                      selectedPlanMeta?.nombre ||
-                      'Plan'}
-                  </p>
-                  <p className="text-slate-500">
-                    {quoteData.tipo_tesis_nombre ||
-                      selectedTipoMeta?.nombre ||
-                      'Tipo de tesis'}
-                  </p>
-                  <p className="text-slate-500">
-                    Nivel:{' '}
-                    {quoteData.nivel_academico || createForm.nivel_academico}
-                  </p>
-                </div>
-
-                <div className="space-y-3 rounded-2xl border border-white bg-white p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-500">Precio base</span>
-                    <span className="font-semibold text-slate-900">
-                      {formatCurrency(quoteData.precio_base, quoteData.moneda)}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-500">
-                      Recargo por nivel ({quoteData.porcentaje_nivel}%)
-                    </span>
-                    <span className="font-semibold text-slate-900">
-                      {formatCurrency(
-                        quoteData.monto_ajuste_nivel,
-                        quoteData.moneda,
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-500">
-                      Descuento por no análisis
-                    </span>
-                    <span className="font-semibold text-emerald-700">
-                      -{' '}
-                      {formatCurrency(
-                        quoteData.descuento_analisis_estadistico,
-                        quoteData.moneda,
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
-                    <span className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
-                      Total
-                    </span>
-                    <span className="text-2xl font-black tracking-tight text-slate-900">
-                      {formatCurrency(quoteData.precio_total, quoteData.moneda)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-white/80 p-4 text-sm text-slate-500">
-                Selecciona plan, tipo de tesis y nivel académico para calcular
-                el precio final.
-              </div>
-            )}
-          </div>
-        </aside>
-      </div>
-    </Modal>
+      <aside className="flex min-h-0 flex-col">
+        <AcademicAIChatPanel
+          tesisId={selectedThesisId}
+          documentId={editableVersion?.id}
+          className="flex-1"
+        />
+      </aside>
+    </div>
   );
+
+  const renderWorkspaceContent = () => {
+    switch (activeActionSection) {
+      case 'manual-edit':
+        return (
+          <section className="flex min-h-0 w-full flex-1">
+            <ThesisManualEditorPanel
+              thesisId={selectedThesisId}
+              thesis={selectedThesis}
+              documents={documents}
+              currentVersion={currentVersion}
+              documentId={editableVersion?.id}
+              editableDocument={editableVersion}
+              hasThesisDocuments={hasThesisDocuments}
+              onUploadEditableProgress={handleUploadEditableProgress}
+              uploadingEditableProgress={uploadingEditableProgress}
+              onGenerated={handleGeneratedDocx}
+              onBack={() => setActiveActionSection(null)}
+              availableFormats={availableFormats}
+              activeFormat={activeFormat}
+              onFormatChange={handleFormatChange}
+              changingFormat={changingFormat}
+              thesisIndex={thesisIndex}
+              onThesisIndexRefresh={() => cargarThesisIndex(selectedThesisId)}
+              className="flex-1"
+            />
+          </section>
+        );
+
+      case 'references':
+        return (
+          <section className="flex min-h-0 w-full flex-1">
+            <ThesisReferencesPanel
+              thesisId={selectedThesisId}
+              thesis={selectedThesis}
+              activeFormat={activeFormat}
+              availableFormats={availableFormats}
+              onFormatChange={handleFormatChange}
+              changingFormat={changingFormat}
+              documents={documents}
+              onBack={() => setActiveActionSection(null)}
+              className="flex-1"
+            />
+          </section>
+        );
+
+      default:
+        return renderDefaultWorkspaceLayout();
+    }
+  };
 
   if (!loading && thesesList.length === 0) {
     return (
@@ -851,7 +844,26 @@ export default function MyThesisWorkspace() {
           </Button>
         </Card>
 
-        {createThesisModal}
+        <QuotationModal
+          open={showCreateModal}
+          onClose={closeCreateModal}
+          form={createForm}
+          onFormChange={setCreateForm}
+          nivelesAcademicos={NIVELES_ACADEMICOS}
+          planesDisponibles={planesDisponibles}
+          tiposTesis={tiposTesis}
+          availableFormats={availableFormats}
+          perfilEstudiante={perfilEstudiante}
+          loadingCatalogs={loadingCatalogs}
+          onReloadCatalogs={cargarCatalogosCreacion}
+          quoteData={quoteData}
+          quoteError={quoteError}
+          quoting={quoting}
+          creating={creating}
+          canSubmit={canSubmitCreateThesis}
+          onSubmit={handleCreateThesis}
+        />
+
         <PaymentGatewayModal
           open={!!createdPaymentSummary}
           paymentSummary={createdPaymentSummary}
@@ -864,72 +876,25 @@ export default function MyThesisWorkspace() {
 
   return (
     <div className="my-thesis-workspace relative flex h-[calc(100dvh-6rem)] w-full overflow-hidden px-0 pb-2 text-slate-900">
-      <div className="mx-auto flex min-h-0 w-full max-w-[1760px] flex-1 flex-col gap-3">
-        <div className="shrink-0">
-          <WorkspaceTopBar
-            thesesList={thesesList}
-            selectedThesisId={selectedThesisId}
-            onSelectThesis={setSelectedThesisId}
-            onOpenManualEdit={() => setShowManualEditModal(true)}
-            onOpenAccesses={() => setShowAccessModal(true)}
-            onOpenCreate={openCreateModal}
-          />
-        </div>
-
-        <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-          <section className="flex min-h-0 flex-col gap-2">
-            <RelatedDocumentsPanel
-              documents={documents}
-              currentDocumentId={currentVersion?.id}
-              onSelectDocument={seleccionarVersion}
-            />
-
-            <ThesisPreviewPanel
-              selectedThesis={selectedThesis}
-              currentVersion={currentVersion}
-              previewUrl={previewUrl}
-              className="flex-1"
-            />
-          </section>
-
-          <aside className="flex min-h-0 flex-col gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowSuggestionsModal(true)}
-              className="ios-secondary-button h-11 w-full justify-between rounded-xl px-3 text-sm"
-            >
-              <span className="inline-flex min-w-0 items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
-                <span className="truncate">Ver sugerencias del asesor</span>
-              </span>
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-500">
-                {sugerenciasVisibles.length}
-              </span>
-            </Button>
-
-            <AcademicAIChatPanel
-              tesisId={selectedThesisId}
-              documentId={currentVersion?.id}
-              className="flex-1"
-            />
-          </aside>
-        </div>
-      </div>
-
-      <Modal
-        open={showManualEditModal}
-        onClose={() => setShowManualEditModal(false)}
-        title="Edición manual"
-        subtitle={selectedThesis?.titulo || 'Documento de tesis'}
-        modalWidth="lg"
-        contentClassName="gap-4 p-4 text-left sm:p-6"
-      >
-        <ThesisDocBuilderPanel
-          tesisId={selectedThesisId}
-          onGenerated={handleGeneratedDocx}
-          className="h-[min(74dvh,760px)] border border-slate-200 shadow-none"
+      <div className="mx-auto flex min-h-0 w-full max-w-[1760px] flex-1 flex-col gap-2">
+        <WorkspaceActionNavbar
+          activeActionSection={activeActionSection}
+          disabled={!selectedThesisId}
+          onSelectAction={setActiveActionSection}
+          documents={documents}
+          currentDocumentId={currentVersion?.id}
+          onSelectDocument={seleccionarVersion}
+          suggestionsCount={sugerenciasVisibles.length}
+          onOpenSuggestions={() => setShowSuggestionsModal(true)}
+          thesesList={thesesList}
+          selectedThesisId={selectedThesisId}
+          onSelectThesis={setSelectedThesisId}
+          onOpenAccesses={() => setShowAccessModal(true)}
+          onOpenCreate={openCreateModal}
         />
-      </Modal>
+
+        {renderWorkspaceContent()}
+      </div>
 
       <AccessManagementModal
         open={showAccessModal}
@@ -951,7 +916,25 @@ export default function MyThesisWorkspace() {
         onSubmitSuggestion={handleSubmitAppliedSuggestion}
       />
 
-      {createThesisModal}
+      <QuotationModal
+        open={showCreateModal}
+        onClose={closeCreateModal}
+        form={createForm}
+        onFormChange={setCreateForm}
+        nivelesAcademicos={NIVELES_ACADEMICOS}
+        planesDisponibles={planesDisponibles}
+        tiposTesis={tiposTesis}
+        availableFormats={availableFormats}
+        perfilEstudiante={perfilEstudiante}
+        loadingCatalogs={loadingCatalogs}
+        onReloadCatalogs={cargarCatalogosCreacion}
+        quoteData={quoteData}
+        quoteError={quoteError}
+        quoting={quoting}
+        creating={creating}
+        canSubmit={canSubmitCreateThesis}
+        onSubmit={handleCreateThesis}
+      />
       <PaymentGatewayModal
         open={!!createdPaymentSummary}
         paymentSummary={createdPaymentSummary}

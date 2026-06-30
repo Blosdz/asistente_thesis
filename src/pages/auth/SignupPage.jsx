@@ -29,13 +29,11 @@ const SignupPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [signupSuccess, setSignupSuccess] = useState(false);
-  const [signupQueued, setSignupQueued] = useState(false);
 
   const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
     setSignupSuccess(false);
-    setSignupQueued(false);
 
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden.');
@@ -45,14 +43,12 @@ const SignupPage = () => {
     setIsLoading(true);
 
     try {
-      let result;
       if (role === 'student') {
-        result = await registrarEstudiante(email, password, name.trim());
+        await registrarEstudiante(email, password, name.trim());
       } else {
-        result = await registrarAsesor(email, password, name.trim());
+        await registrarAsesor(email, password, name.trim());
       }
 
-      setSignupQueued(Boolean(result?.queued));
       setSignupSuccess(true);
     } catch (err) {
       setError(err.message || 'No pudimos crear la cuenta. Inténtalo nuevamente.');
@@ -78,24 +74,13 @@ const SignupPage = () => {
               Cuenta creada
             </h2>
             <p className="mx-auto max-w-sm text-sm leading-6 text-slate-500">
-              {signupQueued
-                ? 'Tu cuenta quedó registrada en cola. El correo de validación se enviará automáticamente cuando el servicio vuelva a estar disponible.'
-                : 'Tu cuenta fue creada correctamente. Te enviamos un correo con el enlace para verificarla y completar el acceso a la plataforma.'}
+              Tu cuenta fue creada correctamente. Ya puedes iniciar sesión con
+              tu correo y contraseña.
             </p>
 
             <div className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-4 text-left text-sm leading-6 text-emerald-800">
-              {signupQueued ? (
-                <>
-                  La invitación para <strong>{email}</strong> quedó en cola.
-                  Revisaremos el envío automáticamente y podrás validar la
-                  cuenta apenas se procese.
-                </>
-              ) : (
-                <>
-                  Revisa la bandeja de <strong>{email}</strong> y también spam
-                  o promociones si el mensaje tarda unos minutos en aparecer.
-                </>
-              )}
+              El acceso para <strong>{email}</strong> quedó activo. La
+              verificación por correo está desactivada temporalmente.
             </div>
 
             <div className="mt-8 flex flex-col gap-3">
@@ -114,7 +99,6 @@ const SignupPage = () => {
                   setPassword('');
                   setConfirmPassword('');
                   setError('');
-                  setSignupQueued(false);
                 }}
                 className="w-full rounded-[13px] border border-slate-950/10 bg-white/55 py-4 text-center font-semibold text-slate-950 transition-all hover:bg-white/80"
               >

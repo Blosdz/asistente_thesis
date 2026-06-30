@@ -1,76 +1,300 @@
-import { apiRequest } from './client';
+import { apiBlobRequest, apiRequest } from './client';
 
-export const docGeneratorApi = {
-  getThesis(tesisId: string) {
-    return apiRequest(`/ai/tesis/${tesisId}`, { auth: false });
+export const docGeneratorEndpoints = {
+  thesis(tesisId: string) {
+    return `/ai/tesis/${tesisId}`;
   },
 
-  listReferences(tesisId: string) {
-    return apiRequest(`/ai/tesis/${tesisId}/referencias`, { auth: false });
+  references(tesisId: string) {
+    return `/ai/tesis/${tesisId}/referencias`;
   },
 
-  createReference(tesisId: string, payload: unknown) {
-    return apiRequest(`/ai/tesis/${tesisId}/referencias`, {
-      method: 'POST',
-      body: payload,
-      auth: false,
-    });
+  reference(referenceId: string) {
+    return `/ai/tesis/referencias/${referenceId}`;
   },
 
-  updateReference(referenceId: string, payload: unknown) {
-    return apiRequest(`/ai/tesis/referencias/${referenceId}`, {
-      method: 'PATCH',
-      body: payload,
-      auth: false,
-    });
+  index(tesisId: string) {
+    return `/ai/tesis/${tesisId}/indice`;
   },
 
-  deleteReference(referenceId: string) {
-    return apiRequest(`/ai/tesis/referencias/${referenceId}`, {
-      method: 'DELETE',
-      auth: false,
-    });
+  indexSection(tesisId: string, sectionId: string) {
+    return `/ai/tesis/${tesisId}/indice/${sectionId}`;
   },
 
-  listIndex(tesisId: string) {
-    return apiRequest(`/ai/tesis/${tesisId}/indice`, { auth: false });
-  },
-
-  createIndexSection(tesisId: string, payload: unknown) {
-    return apiRequest(`/ai/tesis/${tesisId}/indice`, {
-      method: 'POST',
-      body: payload,
-      auth: false,
-    });
-  },
-
-  replaceIndex(tesisId: string, payload: unknown) {
-    return apiRequest(`/ai/tesis/${tesisId}/indice`, {
-      method: 'PUT',
-      body: payload,
-      auth: false,
-    });
-  },
-
-  updateIndexSection(tesisId: string, sectionId: string, payload: unknown) {
-    return apiRequest(`/ai/tesis/${tesisId}/indice/${sectionId}`, {
-      method: 'PATCH',
-      body: payload,
-      auth: false,
-    });
-  },
-
-  deleteIndexSection(tesisId: string, sectionId: string) {
-    return apiRequest(`/ai/tesis/${tesisId}/indice/${sectionId}`, {
-      method: 'DELETE',
-      auth: false,
-    });
+  indexSectionText(tesisId: string, sectionId: string) {
+    return `/ai/tesis/${tesisId}/indice/${sectionId}/texto`;
   },
 
   generateDocx(tesisId: string) {
-    return apiRequest(`/ai/tesis/${tesisId}/documentos/docx`, {
-      method: 'POST',
-      auth: false,
-    });
+    return `/tesis/${tesisId}/documentos/docx`;
   },
+
+  aiGenerateDocx(tesisId: string) {
+    return `/ai/tesis/${tesisId}/documentos/docx`;
+  },
+
+  rawData(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/raw-data`;
+  },
+
+  rawDocument(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/raw-document`;
+  },
+
+  processDocument(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/process`;
+  },
+
+  extractRawData(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/raw-data/extract`;
+  },
+
+  sections(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/sections`;
+  },
+
+  section(documentId: string, sectionId: string) {
+    return `/ai/tesis/documentos/${documentId}/sections/${sectionId}`;
+  },
+
+  documentReferences(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/references`;
+  },
+
+  documentReference(documentId: string, referenceId: string) {
+    return `/ai/tesis/documentos/${documentId}/references/${referenceId}`;
+  },
+
+  preview(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/preview`;
+  },
+
+  extractOutline(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/outline/extract`;
+  },
+
+  citations(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/citations`;
+  },
+
+  headings(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/headings`;
+  },
+
+  subtitles(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/subtitles`;
+  },
+
+  generatedDocument(filename: string) {
+    return `/ai/tesis/documentos/${encodeURIComponent(filename)}`;
+  },
+};
+
+export function getThesis(tesisId: string) {
+  return apiRequest(docGeneratorEndpoints.thesis(tesisId));
+}
+
+export function listReferences(tesisId: string) {
+  return apiRequest(docGeneratorEndpoints.references(tesisId));
+}
+
+export function createReference(tesisId: string, payload: unknown) {
+  return apiRequest(docGeneratorEndpoints.references(tesisId), {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function updateReference(referenceId: string, payload: unknown) {
+  return apiRequest(docGeneratorEndpoints.reference(referenceId), {
+    method: 'PATCH',
+    body: payload,
+  });
+}
+
+export function deleteReference(referenceId: string) {
+  return apiRequest(docGeneratorEndpoints.reference(referenceId), {
+    method: 'DELETE',
+  });
+}
+
+export function listIndex(tesisId: string) {
+  return apiRequest(docGeneratorEndpoints.index(tesisId));
+}
+
+export function createIndexSection(tesisId: string, payload: unknown) {
+  return apiRequest(docGeneratorEndpoints.index(tesisId), {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function replaceIndex(tesisId: string, payload: unknown) {
+  return apiRequest(docGeneratorEndpoints.index(tesisId), {
+    method: 'PUT',
+    body: payload,
+  });
+}
+
+export function updateIndexSection(
+  tesisId: string,
+  sectionId: string,
+  payload: unknown,
+) {
+  return apiRequest(docGeneratorEndpoints.indexSection(tesisId, sectionId), {
+    method: 'PATCH',
+    body: payload,
+  });
+}
+
+export function appendIndexSectionText(
+  tesisId: string,
+  sectionId: string,
+  payload: unknown,
+) {
+  return apiRequest(docGeneratorEndpoints.indexSectionText(tesisId, sectionId), {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function deleteIndexSection(tesisId: string, sectionId: string) {
+  return apiRequest(docGeneratorEndpoints.indexSection(tesisId, sectionId), {
+    method: 'DELETE',
+  });
+}
+
+export function generateDocx(tesisId: string) {
+  return apiRequest(docGeneratorEndpoints.generateDocx(tesisId), {
+    method: 'POST',
+  });
+}
+
+export function generateAiDocx(tesisId: string) {
+  return apiRequest(docGeneratorEndpoints.aiGenerateDocx(tesisId), {
+    method: 'POST',
+  });
+}
+
+export function getRawData(documentId: string) {
+  return apiRequest(docGeneratorEndpoints.rawData(documentId));
+}
+
+export function getRawDocument(documentId: string) {
+  return apiRequest(docGeneratorEndpoints.rawDocument(documentId));
+}
+
+export function updateRawData(documentId: string, payload: unknown) {
+  return apiRequest(docGeneratorEndpoints.rawData(documentId), {
+    method: 'PATCH',
+    body: payload,
+  });
+}
+
+export function extractRawData(documentId: string) {
+  return apiRequest(docGeneratorEndpoints.extractRawData(documentId), {
+    method: 'POST',
+  });
+}
+
+export function processDocument(documentId: string) {
+  return apiRequest(docGeneratorEndpoints.processDocument(documentId), {
+    method: 'POST',
+  });
+}
+
+export function listSections(documentId: string) {
+  return apiRequest(docGeneratorEndpoints.sections(documentId));
+}
+
+export function updateSection(
+  documentId: string,
+  sectionId: string,
+  payload: unknown,
+) {
+  return apiRequest(docGeneratorEndpoints.section(documentId, sectionId), {
+    method: 'PATCH',
+    body: payload,
+  });
+}
+
+export function listDocumentReferences(documentId: string) {
+  return apiRequest(docGeneratorEndpoints.documentReferences(documentId));
+}
+
+export function updateDocumentReference(
+  documentId: string,
+  referenceId: string,
+  payload: unknown,
+) {
+  return apiRequest(docGeneratorEndpoints.documentReference(documentId, referenceId), {
+    method: 'PATCH',
+    body: payload,
+  });
+}
+
+export function getDocumentPreview(documentId: string) {
+  return apiRequest(docGeneratorEndpoints.preview(documentId));
+}
+
+export function extractOutline(documentId: string, replace = false) {
+  const base = docGeneratorEndpoints.extractOutline(documentId);
+  const url = replace ? `${base}?replace=true` : base;
+  return apiRequest(url, { method: 'POST' });
+}
+
+export function insertCitation(documentId: string, payload: unknown) {
+  return apiRequest(docGeneratorEndpoints.citations(documentId), {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function insertHeading(documentId: string, payload: unknown) {
+  return apiRequest(docGeneratorEndpoints.headings(documentId), {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function insertSubtitle(documentId: string, payload: unknown) {
+  return apiRequest(docGeneratorEndpoints.subtitles(documentId), {
+    method: 'POST',
+    body: payload,
+  });
+}
+
+export function downloadGeneratedDocument(filename: string) {
+  return apiBlobRequest(docGeneratorEndpoints.generatedDocument(filename));
+}
+
+export const docGeneratorApi = {
+  getThesis,
+  listReferences,
+  createReference,
+  updateReference,
+  deleteReference,
+  listIndex,
+  createIndexSection,
+  replaceIndex,
+  updateIndexSection,
+  appendIndexSectionText,
+  deleteIndexSection,
+  generateDocx,
+  generateAiDocx,
+  getRawData,
+  getRawDocument,
+  updateRawData,
+  extractRawData,
+  processDocument,
+  listSections,
+  updateSection,
+  listDocumentReferences,
+  updateDocumentReference,
+  getDocumentPreview,
+  extractOutline,
+  insertCitation,
+  insertHeading,
+  insertSubtitle,
+  downloadGeneratedDocument,
 };

@@ -17,20 +17,6 @@ const widthMap = {
   full: 'max-w-[min(96vw,1320px)]',
 };
 
-/**
- * Multi-purpose glassmorphism modal.
- * Props:
- * - open: boolean to show/hide
- * - onClose: () => void
- * - title: string
- * - subtitle?: string
- * - description?: string | JSX
- * - descriptionSize?: 'sm'|'md'|'lg'|'xl'|'xxl'
- * - modalWidth?: 'md'|'lg'|'xl'|'full'
- * - primaryAction?: { label: string; onClick: () => void; disabled?: boolean }
- * - secondaryAction?: { label: string; onClick: () => void; disabled?: boolean }
- * - children?: ReactNode (custom content below description)
- */
 const Modal = ({
   open,
   onClose,
@@ -59,19 +45,24 @@ const Modal = ({
 
   useEffect(() => {
     if (!open) return undefined;
+
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    // Focus the close button when modal opens
-    if (closeBtnRef.current) {
-      closeBtnRef.current.focus();
-    }
+
+    const focusTimer = window.setTimeout(() => {
+      closeBtnRef.current?.focus();
+    }, 0);
+
     const onKey = (e) => {
       if (e.key === 'Escape') {
         onCloseRef.current?.();
       }
     };
+
     document.addEventListener('keydown', onKey);
+
     return () => {
+      window.clearTimeout(focusTimer);
       document.body.style.overflow = previousOverflow;
       document.removeEventListener('keydown', onKey);
     };
@@ -81,8 +72,9 @@ const Modal = ({
 
   const descClass = sizeMap[descriptionSize] || sizeMap.md;
   const modalWidthClass = widthMap[modalWidth] || widthMap.md;
-  const defaultContentClass =
-    'ios-scroll flex min-h-0 max-h-[calc(100dvh-2rem)] flex-col gap-6 overflow-y-auto p-6 text-center sm:max-h-[calc(100dvh-3rem)] sm:p-8 lg:p-10';
+  const hasDefaultActions =
+    showDefaultActions && (primaryAction || secondaryAction);
+
   const modalContent = (
     <div
       ref={overlayRef}
@@ -94,38 +86,71 @@ const Modal = ({
       }}
     >
       <div className="ios-overlay absolute inset-0" />
+
       <div
-        className={`glass-card-login relative z-10 flex max-h-[calc(100dvh-2rem)] w-full ${modalWidthClass} flex-col overflow-hidden !p-0 animate-in fade-in zoom-in-95 duration-300 sm:max-h-[calc(100dvh-3rem)] ${panelClassName}`}
+        className={[
+          'glass-card-login relative z-10 flex w-full flex-col overflow-hidden !p-0',
+          'max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)]',
+          'animate-in fade-in zoom-in-95 duration-300',
+          modalWidthClass,
+          panelClassName,
+        ].join(' ')}
       >
         <button
           ref={closeBtnRef}
+          type="button"
           onClick={onClose}
-          className={`ios-secondary-button absolute top-5 right-5 z-20 flex h-10 w-10 items-center justify-center rounded-full transition-colors ${closeButtonClassName}`}
+          className={[
+            'ios-secondary-button absolute right-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full transition-colors',
+            closeButtonClassName,
+          ].join(' ')}
           aria-label="Cerrar"
         >
-          <X className={`h-5 w-5 text-slate-500 ${closeIconClassName}`} />
+          <X
+            className={['h-5 w-5 text-slate-500', closeIconClassName].join(' ')}
+          />
         </button>
 
-        <div className={`${defaultContentClass} ${contentClassName}`.trim()}>
-          {showDefaultHeader && (
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">{title}</h2>
-              {subtitle && (
-                <p className="text-sm font-semibold text-slate-500">{subtitle}</p>
-              )}
-            </div>
-          )}
+        {showDefaultHeader && (
+          <header className="shrink-0 space-y-2 px-6 pt-6 text-center sm:px-8 sm:pt-8 lg:px-10 lg:pt-10">
+            <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+              {title}
+            </h2>
 
+            {subtitle && (
+              <p className="text-sm font-semibold text-slate-500">
+                {subtitle}
+              </p>
+            )}
+          </header>
+        )}
+
+        <main
+          data-modal-scroll="true"
+          className={[
+            'ios-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain text-left [overflow-anchor:none]',
+            showDefaultHeader ? 'px-6 py-6 sm:px-8 sm:py-8 lg:px-10' : '',
+            !showDefaultHeader && !contentClassName.includes('p-0')
+              ? 'px-6 py-6 pt-10 sm:px-8 sm:py-8 lg:px-10'
+              : '',
+            contentClassName,
+          ].join(' ')}
+        >
           {description && (
-            <p className={`${descClass} text-slate-700 leading-relaxed max-w-xl`}>{description}</p>
+            <p className={`${descClass} max-w-xl leading-relaxed text-slate-700`}>
+              {description}
+            </p>
           )}
 
-          {children && <div className="w-full text-left">{children}</div>}
+          {children}
+        </main>
 
-          {showDefaultActions && (primaryAction || secondaryAction) && (
-            <div className="mt-2 flex w-full flex-col gap-3 sm:flex-row">
+        {hasDefaultActions && (
+          <footer className="shrink-0 border-t border-slate-200/80 bg-white/95 px-6 py-4 backdrop-blur sm:px-8 lg:px-10">
+            <div className="flex w-full flex-col gap-3 sm:flex-row">
               {secondaryAction && (
                 <button
+                  type="button"
                   onClick={secondaryAction.onClick}
                   disabled={secondaryAction.disabled}
                   className="ios-secondary-button h-12 flex-1 rounded-2xl font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
@@ -133,8 +158,10 @@ const Modal = ({
                   {secondaryAction.label}
                 </button>
               )}
+
               {primaryAction && (
                 <button
+                  type="button"
                   onClick={primaryAction.onClick}
                   disabled={primaryAction.disabled}
                   className="ios-accent-button h-12 flex-1 rounded-2xl font-semibold transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
@@ -143,8 +170,8 @@ const Modal = ({
                 </button>
               )}
             </div>
-          )}
-        </div>
+          </footer>
+        )}
       </div>
     </div>
   );

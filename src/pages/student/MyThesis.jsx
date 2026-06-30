@@ -59,7 +59,7 @@ const MyThesis = () => {
   const buildPreviewUrl = useCallback((url, fileName = '') => {
     if (!url) return null;
     const ext = fileName.split('.').pop()?.toLowerCase();
-    if (ext === 'doc' || ext === 'docx') {
+    if (ext === 'doc' || ext === 'docx' || ext === 'docm') {
       return `https://docs.google.com/gview?url=${encodeURIComponent(url)}&embedded=true`;
     }
 
@@ -207,13 +207,25 @@ const MyThesis = () => {
       setUploading(true);
       const loadingToast = toast.loading('Subiendo documento...');
 
-      await subirDocumentoAGoogleDrive({
+      const uploadedDocument = await subirDocumentoAGoogleDrive({
         tesisId: selectedThesisId,
         file,
       });
 
       toast.dismiss(loadingToast);
-      toast.success('Documento subido con éxito');
+      const extraction = uploadedDocument?.reference_extraction;
+      if (extraction?.ok && Number(extraction.created_count || 0) > 0) {
+        toast.success(
+          `Documento subido: ${extraction.created_count} referencia(s) importada(s)`,
+        );
+      } else if (extraction?.ok) {
+        toast.success('Documento subido. No se encontraron referencias nuevas.');
+      } else if (extraction?.error) {
+        toast.success('Documento subido con éxito');
+        toast.error(`No se pudieron importar referencias: ${extraction.error}`);
+      } else {
+        toast.success('Documento subido con éxito');
+      }
       fetchDocuments(selectedThesisId);
     } catch (err) {
       console.error('Upload error:', err);

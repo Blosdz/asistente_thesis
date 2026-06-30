@@ -1,8 +1,22 @@
 import { useEffect, useRef } from 'react';
-import { Construction, Network } from 'lucide-react';
+import { Network, Hexagon } from 'lucide-react';
+import { getStoredToken } from '../../api/client';
+
+const COLMENA_CALLBACK_URL =
+  import.meta.env.VITE_COLMENA_CALLBACK_URL || 'http://localhost:5174/auth/callback';
 
 export default function DataStatistics() {
   const canvasRef = useRef(null);
+
+  const handleConnectColmena = () => {
+    const token = getStoredToken();
+    if (!token) {
+      window.location.hash = '#/login';
+      return;
+    }
+    const separator = COLMENA_CALLBACK_URL.includes('?') ? '&' : '?';
+    window.location.href = `${COLMENA_CALLBACK_URL}${separator}token=${encodeURIComponent(token)}`;
+  };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -265,31 +279,28 @@ export default function DataStatistics() {
         </div>
 
         <div className="w-full max-w-2xl rounded-[32px] border border-white/90 bg-white/50 px-7 py-10 shadow-[0_10px_40px_rgba(59,130,246,0.1),0_2px_10px_rgba(59,130,246,0.06),inset_0_1px_0_rgba(255,255,255,0.98)] backdrop-blur-[44px] backdrop-saturate-200 sm:px-14 sm:py-12">
-          <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-blue-300/50 bg-blue-100/70 px-5 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-600 backdrop-blur-md">
-            <span className="h-2 w-2 rounded-full bg-blue-400 shadow-[0_0_0_4px_rgba(96,165,250,0.24)]" />
-            En construcción
-          </div>
-
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/70 text-blue-600 shadow-[0_18px_42px_rgba(59,130,246,0.16)]">
-            <Construction className="h-10 w-10" />
-          </div>
-
-          <h1 className="font-serif text-4xl font-normal leading-tight tracking-[-0.02em] text-blue-950 sm:text-5xl">
-            En construcción <span className="italic text-blue-500">Micelio</span>
-          </h1>
-          <p className="mx-auto mt-5 max-w-lg text-sm leading-7 text-slate-600 sm:text-base">
-            Estamos tejiendo una experiencia estadística que conectará tus datos,
-            métricas y lecturas académicas con una lógica visual más orgánica.
-          </p>
-
-          <div className="mx-auto mt-9 w-full max-w-md">
-            <div className="mb-2 flex justify-between text-xs font-semibold uppercase tracking-[0.12em] text-blue-300">
-              <span>Progreso del desarrollo</span>
-              <span>38%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-blue-200/55">
-              <div className="h-full w-[38%] rounded-full bg-gradient-to-r from-blue-300 via-blue-500 to-indigo-400" />
-            </div>
+          <div className="mx-auto w-full max-w-md">
+            <img
+              src="/colmena-logo.png"
+              alt="Colmena"
+              className="mx-auto mb-6 h-24 w-auto drop-shadow-sm"
+            />
+            <p className="mb-6 text-sm leading-6 text-slate-600 sm:text-base">
+              Conecta tu cuenta con{' '}
+              <span className="font-semibold text-blue-700">Colmena</span> para el
+              análisis estadístico de tus datos.
+            </p>
+            <button
+              type="button"
+              onClick={handleConnectColmena}
+              className="flex h-16 w-full items-center justify-center gap-2 rounded-lg border-2 border-[#E6C200] bg-[#FFD700] text-sm font-semibold uppercase tracking-widest text-[#191b23] shadow-md transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+            >
+              <Hexagon className="h-5 w-5 fill-[#191b23]" />
+              Conectar y continuar en Colmena
+            </button>
+            <p className="mt-3 text-center text-xs italic text-slate-400">
+              La vinculación se realizará de forma automática
+            </p>
           </div>
         </div>
       </div>

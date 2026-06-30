@@ -38,10 +38,24 @@ export const tesisApi = {
     });
   },
 
+  actualizarFormatoDoc(id: string, docThesisFormat: string) {
+    return apiRequest(`/tesis/${id}/formato-doc`, {
+      method: 'PATCH',
+      body: { docThesisFormat },
+    });
+  },
+
   asignarAsesor(id: string, payload: unknown) {
     return apiRequest(`/tesis/${id}/asignar-asesor`, {
       method: 'POST',
       body: payload,
+    });
+  },
+
+  subirCaratula(id: string, formData: FormData) {
+    return apiRequest(`/tesis/${id}/caratula`, {
+      method: 'POST',
+      body: formData,
     });
   },
 

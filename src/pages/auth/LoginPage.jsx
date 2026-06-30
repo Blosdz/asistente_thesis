@@ -25,6 +25,21 @@ const LoginPage = () => {
     try {
       const { role } = await loginUsuario(email, password);
 
+      // Si venimos de un cross-login con Colmena, retomamos ese flujo.
+      let pendingSso = null;
+      try {
+        pendingSso = window.sessionStorage.getItem('colmena_sso_redirect');
+        if (pendingSso) {
+          window.sessionStorage.removeItem('colmena_sso_redirect');
+        }
+      } catch {
+        pendingSso = null;
+      }
+      if (pendingSso) {
+        navigate(pendingSso);
+        return;
+      }
+
       if (role === 'asesor') {
         navigate('/advisor/students');
       } else if (role === 'admin') {

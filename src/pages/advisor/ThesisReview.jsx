@@ -92,7 +92,7 @@ export default function AdvisorThesisReview() {
     if (!url) return null;
 
     const lowerUrl = url.toLowerCase();
-    if (lowerUrl.endsWith('.doc') || lowerUrl.endsWith('.docx')) {
+    if (lowerUrl.endsWith('.doc') || lowerUrl.endsWith('.docx') || lowerUrl.endsWith('.docm')) {
       return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
     }
 
@@ -484,7 +484,7 @@ export default function AdvisorThesisReview() {
                   {uploading ? 'Subiendo...' : 'Actualizar Docs'}
                   <input
                     type="file"
-                    accept=".pdf,.doc,.docx"
+                    accept=".pdf,.doc,.docx,.docm"
                     onChange={handleUpload}
                     disabled={uploading}
                     className="hidden"
