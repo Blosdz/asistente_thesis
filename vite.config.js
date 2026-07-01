@@ -21,6 +21,7 @@ export default defineConfig({
     host: 'localhost',
     port: 5173,
     strictPort: true,
+    allowedHosts: ['.trycloudflare.com'],
     hmr: {
       host: 'localhost',
       port: 5173,
