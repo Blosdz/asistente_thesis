@@ -7,6 +7,7 @@ const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'));
 const SignupPage = lazy(() => import('./pages/auth/SignupPage'));
 const VerifyEmailPage = lazy(() => import('./pages/auth/VerifyEmailPage'));
 const SsoColmenaBridge = lazy(() => import('./pages/sso/SsoColmenaBridge'));
+const ColmenaPublicForm = lazy(() => import('./pages/public/ColmenaPublicForm'));
 const LandingPage = lazy(() => import('./components/landing/LandingPage'));
 const LeadChatLauncher = lazy(() => import('./components/landing/LeadChatLauncher'));
 const StudentLayout = lazy(() => import('./layouts/StudentLayout'));
@@ -115,6 +116,7 @@ const AppRoutes = () => {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/sso/colmena" element={<SsoColmenaBridge />} />
+        <Route path="/colmena/forms/:slug" element={<ColmenaPublicForm />} />
 
         <Route
           path="/student/*"

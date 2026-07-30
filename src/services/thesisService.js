@@ -8,7 +8,9 @@ import {
   deleteIndexSection,
   deleteReference,
   downloadGeneratedDocument,
+  downloadEditableDocument,
   extractOutline,
+  extractSectionReferences,
   extractRawData,
   generateDocx,
   getRawData,
@@ -299,6 +301,10 @@ export async function descargarDocumentoDocxGenerado(filename) {
   return downloadGeneratedDocument(filename);
 }
 
+export async function descargarDocumentoEditable(documentId) {
+  return downloadEditableDocument(documentId);
+}
+
 export async function obtenerRawDataDocumento(documentId) {
   return unwrap(await getRawData(documentId));
 }
@@ -343,6 +349,12 @@ export async function obtenerPreviewDocumentoWord(documentId) {
 
 export async function extraerIndiceDocumentoWord(documentId, replace = false) {
   return unwrap(await extractOutline(documentId, replace));
+}
+
+export async function extraerReferenciasSeccionDocumento(documentId, text, heading) {
+  return unwrap(
+    await extractSectionReferences(documentId, { text, heading }),
+  );
 }
 
 export async function insertarCitaDocumentoWord(documentId, payload) {

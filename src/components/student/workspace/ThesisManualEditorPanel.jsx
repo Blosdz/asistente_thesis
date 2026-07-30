@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
   ArrowLeft,
+  BarChart3,
   Bold,
   Bot,
   CirclePlus,
@@ -13,6 +14,7 @@ import {
   GripVertical,
   History,
   Italic,
+  Library,
   List,
   Loader2,
   Plus,
@@ -21,6 +23,7 @@ import {
   Save,
   Send,
   Sparkles,
+  Table2,
   Trash2,
   Underline,
   ZoomIn,
@@ -28,16 +31,16 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
-import { buildApiUrl } from '../../../api/client';
 import {
   actualizarRawDataDocumento,
   actualizarSeccionDocumentoWord,
   actualizarSeccionIndiceTesis,
   crearSeccionIndiceTesis,
+  descargarDocumentoEditable,
   eliminarSeccionIndiceTesis,
   extraerIndiceDocumentoWord,
   extraerRawDataDocumento,
-  generarDocumentoDocxTesis,
+  extraerReferenciasSeccionDocumento,
   obtenerPreviewDocumentoWord,
   obtenerRawDataDocumento,
   procesarDocumentoWord,
@@ -285,11 +288,17 @@ export default function ThesisManualEditorPanel({
   const textareaRef = useRef(null);
   const [citationOpen, setCitationOpen] = useState(false);
   const [citationCursor, setCitationCursor] = useState({ start: 0, end: 0 });
+  const [chartModalOpen, setChartModalOpen] = useState(false);
+  const [baremoModalOpen, setBaremoModalOpen] = useState(false);
+  // Cachés de vista previa resueltas por marcador, ej. `${formId}:${artifactId}`.
+  const [chartPreviewCache, setChartPreviewCache] = useState({});
+  const [baremoPreviewCache, setBaremoPreviewCache] = useState({});
   const [selectedFormat, setSelectedFormat] = useState('H2 - Subtitulo 1');
   const [zoom, setZoom] = useState(100);
   const [loading, setLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [extractingRefs, setExtractingRefs] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [loadError, setLoadError] = useState('');
@@ -463,6 +472,48 @@ export default function ThesisManualEditorPanel({
     }, 0);
   };
 
+  const handleInsertChart = (marker, meta) => {
+    const block = `\n\n${marker}\n\n`;
+    setDraft((prev) =>
+      prev.slice(0, citationCursor.start) + block + prev.slice(citationCursor.end),
+    );
+    if (meta?.dataUrl) {
+      const figure = parseFigureMarker(marker);
+      if (figure) {
+        const key = `${figure.formId}:${figure.artifactId}`;
+        setChartPreviewCache((c) => ({ ...c, [key]: { status: 'ready', dataUrl: meta.dataUrl } }));
+      }
+    }
+    setTimeout(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      const pos = citationCursor.start + block.length;
+      el.focus();
+      el.setSelectionRange(pos, pos);
+    }, 0);
+  };
+
+  const handleInsertBaremo = (marker, meta) => {
+    const block = `\n\n${marker}\n\n`;
+    setDraft((prev) =>
+      prev.slice(0, citationCursor.start) + block + prev.slice(citationCursor.end),
+    );
+    if (meta?.item) {
+      const baremo = parseBaremoMarker(marker);
+      if (baremo) {
+        const key = `${baremo.formId}:${baremo.configId}`;
+        setBaremoPreviewCache((c) => ({ ...c, [key]: { status: 'ready', item: meta.item } }));
+      }
+    }
+    setTimeout(() => {
+      const el = textareaRef.current;
+      if (!el) return;
+      const pos = citationCursor.start + block.length;
+      el.focus();
+      el.setSelectionRange(pos, pos);
+    }, 0);
+  };
+
   const handleEditableProgressInput = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -526,30 +577,89 @@ export default function ThesisManualEditorPanel({
     }
   };
 
-  const handleSave = async () => {
+  const handleExtractSectionReferences = async () => {
     if (!documentId) return;
+    const text = draft.trim();
+    if (!text) {
+      toast.error('Esta sección no tiene texto para analizar');
+      return;
+    }
 
+    try {
+      setExtractingRefs(true);
+      const heading = activeSection ? getSectionTitle(activeSection) : '';
+      const result = await extraerReferenciasSeccionDocumento(
+        documentId,
+        draft,
+        heading,
+      );
+      const extractedCount = result?.extracted_count ?? 0;
+      const createdCount = result?.created_count ?? 0;
+      const skippedCount = result?.skipped_count ?? 0;
+
+      if (extractedCount === 0) {
+        toast('No se detectaron bibliografías en esta sección');
+      } else {
+        const imbuedText = result?.imbued ? ' · documento imbuido' : '';
+        toast.success(
+          `${createdCount} nueva(s), ${skippedCount} ya existían${imbuedText}`,
+        );
+      }
+      await loadDocumentContext();
+    } catch (error) {
+      console.error('Error extracting section references:', error);
+      toast.error(error?.message || 'No se pudieron extraer las bibliografías');
+    } finally {
+      setExtractingRefs(false);
+    }
+  };
+
+  const handleSave = async () => {
     try {
       setSaving(true);
       if (activeSection) {
-        // Resolve the actual document section (may differ from thesis-index section)
-        const docSection = resolveDocSection(activeSection) || activeSection;
-        const updated = await actualizarSeccionDocumentoWord(
-          documentId,
-          getSectionId(docSection),
-          {
+        const docSection = resolveDocSection(activeSection);
+        const isIndexSection = thesisIndex.some(
+          (s) => getSectionId(s) === getSectionId(activeSection),
+        );
+
+        if (docSection && documentId) {
+          // Sección del documento Word
+          const updated = await actualizarSeccionDocumentoWord(
+            documentId,
+            getSectionId(docSection),
+            { content: draft, manual_override: true },
+          );
+          setSections((current) =>
+            current.map((section) =>
+              getSectionId(section) === getSectionId(updated) ? updated : section,
+            ),
+          );
+        } else if (isIndexSection && thesisId) {
+          // Sección del índice de tesis (tesis_sections): guardarla en su propio store.
+          await actualizarSeccionIndiceTesis(thesisId, getSectionId(activeSection), {
             content: draft,
-            manual_override: true,
-          },
-        );
-        setSections((current) =>
-          current.map((section) =>
-            getSectionId(section) === getSectionId(updated) ? updated : section,
-          ),
-        );
-      } else {
+          });
+          await onThesisIndexRefresh?.();
+        } else if (documentId) {
+          const updated = await actualizarSeccionDocumentoWord(
+            documentId,
+            getSectionId(activeSection),
+            { content: draft, manual_override: true },
+          );
+          setSections((current) =>
+            current.map((section) =>
+              getSectionId(section) === getSectionId(updated) ? updated : section,
+            ),
+          );
+        } else {
+          throw new Error('No hay un destino válido para guardar la sección');
+        }
+      } else if (documentId) {
         await actualizarRawDataDocumento(documentId, draft);
         setRawData(draft);
+      } else {
+        return;
       }
       setLastSavedAt(new Date());
       toast.success('Cambios guardados');
@@ -642,28 +752,31 @@ export default function ThesisManualEditorPanel({
   };
 
   const handleGenerateDocx = async () => {
-    if (!thesisId) return;
+    if (!documentId) {
+      toast.error('No hay un Word editable para exportar');
+      return;
+    }
 
     try {
       setGenerating(true);
-      const document = await generarDocumentoDocxTesis(thesisId);
-      toast.success('DOCX generado');
-      await onGenerated?.();
+      // Descarga el DOCX editable tal cual (ya imbuido con las referencias),
+      // sin reconstruirlo ni subirlo a Google Drive.
+      const blob = await descargarDocumentoEditable(documentId);
+      const rawName = getDocumentName(activeDocument) || 'documento.docx';
+      const filename = /\.docm?$/i.test(rawName) ? rawName : `${rawName}.docx`;
 
-      const uploadedUrl =
-        document?.upload?.drive?.webViewLink ||
-        document?.upload?.data?.url_archivo_drive ||
-        document?.drive?.webViewLink ||
-        null;
-
-      if (uploadedUrl) {
-        window.open(uploadedUrl, '_blank', 'noopener,noreferrer');
-      } else if (document?.backend_download_url) {
-        window.open(buildApiUrl(document.backend_download_url), '_blank', 'noopener,noreferrer');
-      }
+      const url = window.URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      window.document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('DOCX exportado');
     } catch (error) {
-      console.error('Error generating DOCX:', error);
-      toast.error(error?.message || 'No se pudo generar el DOCX');
+      console.error('Error exporting DOCX:', error);
+      toast.error(error?.message || 'No se pudo exportar el DOCX');
     } finally {
       setGenerating(false);
     }

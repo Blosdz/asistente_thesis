@@ -73,6 +73,10 @@ export const docGeneratorEndpoints = {
     return `/ai/tesis/documentos/${documentId}/outline/extract`;
   },
 
+  extractSectionReferences(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/references/extract-section`;
+  },
+
   citations(documentId: string) {
     return `/ai/tesis/documentos/${documentId}/citations`;
   },
@@ -87,6 +91,10 @@ export const docGeneratorEndpoints = {
 
   generatedDocument(filename: string) {
     return `/ai/tesis/documentos/${encodeURIComponent(filename)}`;
+  },
+
+  editableDocumentDownload(documentId: string) {
+    return `/ai/tesis/documentos/${documentId}/download`;
   },
 };
 
@@ -243,6 +251,13 @@ export function extractOutline(documentId: string, replace = false) {
   return apiRequest(url, { method: 'POST' });
 }
 
+export function extractSectionReferences(documentId: string, payload: unknown) {
+  return apiRequest(docGeneratorEndpoints.extractSectionReferences(documentId), {
+    method: 'POST',
+    body: payload,
+  });
+}
+
 export function insertCitation(documentId: string, payload: unknown) {
   return apiRequest(docGeneratorEndpoints.citations(documentId), {
     method: 'POST',
@@ -266,6 +281,10 @@ export function insertSubtitle(documentId: string, payload: unknown) {
 
 export function downloadGeneratedDocument(filename: string) {
   return apiBlobRequest(docGeneratorEndpoints.generatedDocument(filename));
+}
+
+export function downloadEditableDocument(documentId: string) {
+  return apiBlobRequest(docGeneratorEndpoints.editableDocumentDownload(documentId));
 }
 
 export const docGeneratorApi = {
@@ -293,8 +312,10 @@ export const docGeneratorApi = {
   updateDocumentReference,
   getDocumentPreview,
   extractOutline,
+  extractSectionReferences,
   insertCitation,
   insertHeading,
   insertSubtitle,
   downloadGeneratedDocument,
+  downloadEditableDocument,
 };
