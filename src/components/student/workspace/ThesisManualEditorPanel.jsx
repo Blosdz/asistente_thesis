@@ -51,6 +51,16 @@ const toolbarButtons = [
   { id: 'italic', label: 'Cursiva', icon: Italic },
   { id: 'underline', label: 'Subrayado', icon: Underline },
 ];
+const normalizeWordFilename = (filename) => {
+  const clean = String(filename || '').trim() || 'documento';
+  const extensionGroup = clean.match(/(?:\.(?:docx|docm))+$/i);
+  if (!extensionGroup) return clean + '.docx';
+  const finalExtension = extensionGroup[0]
+    .match(/\.(?:docx|docm)/gi)
+    .pop()
+    .toLowerCase();
+  return clean.slice(0, extensionGroup.index) + finalExtension;
+};
 
 const getDocumentName = (document) =>
   document?.nombre_archivo ||
@@ -763,7 +773,7 @@ export default function ThesisManualEditorPanel({
       // sin reconstruirlo ni subirlo a Google Drive.
       const blob = await descargarDocumentoEditable(documentId);
       const rawName = getDocumentName(activeDocument) || 'documento.docx';
-      const filename = /\.docm?$/i.test(rawName) ? rawName : `${rawName}.docx`;
+      const filename = normalizeWordFilename(rawName);
 
       const url = window.URL.createObjectURL(blob);
       const link = window.document.createElement('a');
