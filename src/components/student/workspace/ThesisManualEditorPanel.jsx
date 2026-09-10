@@ -1,12 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
-  ArrowLeft,
   BarChart3,
   Bold,
-  Bot,
   CirclePlus,
-  Cloud,
   Download,
   Eye,
   FilePlus2,
@@ -21,8 +18,6 @@ import {
   Quote,
   RefreshCw,
   Save,
-  Send,
-  Sparkles,
   Table2,
   Trash2,
   Underline,
@@ -196,7 +191,7 @@ function SectionNode({
             'flex min-w-0 flex-1 items-center gap-2 rounded-lg border p-2 text-left text-sm transition',
             isActive
               ? 'border-[#0066ff]/20 bg-[#0066ff]/10 text-[#0066ff] shadow-sm'
-              : 'border-transparent text-[#424656] hover:bg-white/60',
+              : 'border-transparent text-[#424656] hover:bg-white',
           ].join(' ')}
         >
           <span className="shrink-0 rounded px-1 text-[9px] font-bold uppercase tracking-widest opacity-40">
@@ -315,6 +310,7 @@ export default function ThesisManualEditorPanel({
   const [lastSavedAt, setLastSavedAt] = useState(null);
   const [addingId, setAddingId] = useState(null);
   const [sincronizando, setSincronizando] = useState(false);
+  const [inspectorTab, setInspectorTab] = useState('estructura');
 
   const activeDocument = editableDocument || currentVersion;
 
@@ -800,98 +796,11 @@ export default function ThesisManualEditorPanel({
 
   return (
     <div
-      className={`flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border border-white/60 bg-[#f0f7ff] text-[#191b24] shadow-[0_24px_60px_rgba(0,80,203,0.10)] ${className}`}
+      className={`flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 ${className}`}
     >
-      <header className="shrink-0 border-b border-white/60 bg-white/55 px-5 py-3 backdrop-blur-md">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex min-w-0 items-center gap-4">
-            {onBack ? (
-              <button
-                type="button"
-                onClick={onBack}
-                className="flex h-9 shrink-0 items-center gap-1 rounded-lg px-2 text-sm font-medium text-[#424656] transition hover:bg-[#0066ff]/10 hover:text-[#0066ff]"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Volver
-              </button>
-            ) : null}
-            <div className="hidden h-7 w-px bg-[#c2c6d8] sm:block" />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded bg-[#0066ff]/10 px-2 py-1 text-[10px] font-bold uppercase text-[#0066ff]">
-                  Edicion Manual
-                </span>
-                {availableFormats.length > 0 && onFormatChange ? (
-                  <select
-                    value={activeFormat?.uname || ''}
-                    onChange={(e) => onFormatChange(e.target.value)}
-                    disabled={changingFormat}
-                    className="h-7 rounded border border-[#c2c6d8]/70 bg-[#e1e2ee] px-2 text-[10px] font-bold text-[#424656] outline-none transition focus:border-[#0066ff] focus:ring-1 focus:ring-[#0066ff]/30 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {availableFormats.map((f) => (
-                      <option key={f.uname} value={f.uname}>
-                        {f.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span className="rounded bg-[#e1e2ee] px-2 py-1 text-[10px] font-bold text-[#424656]">
-                    {activeFormat?.name || thesis?.doc_thesis_format || 'APA 7'}
-                  </span>
-                )}
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#727687]">
-                  <Cloud className="h-3.5 w-3.5" />
-                  {lastSavedAt
-                    ? `Guardado ${lastSavedAt.toLocaleTimeString('es-PE', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}`
-                    : activeDocument
-                      ? getDocumentName(activeDocument)
-                      : 'Sin Word editable'}
-                </span>
-              </div>
-              <h2 className="mt-1 truncate text-lg font-semibold text-[#191b24]">
-                {thesis?.titulo || 'Editor de tesis'}
-              </h2>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={handleProcessWord}
-              disabled={!documentId || processing}
-              className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#0066ff]/40 bg-white/50 px-4 text-sm font-semibold text-[#0066ff] backdrop-blur transition hover:bg-[#0066ff] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {processing ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-              Procesar Word
-            </button>
-            <button
-              type="button"
-              onClick={handleGenerateDocx}
-              disabled={!thesisId || generating}
-              className="inline-flex h-10 items-center gap-2 rounded-lg border border-[#0066ff]/40 bg-white/50 px-4 text-sm font-semibold text-[#0066ff] backdrop-blur transition hover:bg-[#0066ff] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              Exportar DOCX
-            </button>
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={!documentId || saving}
-              className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#0066ff] px-5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(0,102,255,0.22)] transition hover:bg-[#0050cb] disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              Guardar cambios
-            </button>
-          </div>
-        </div>
-      </header>
-
       {!documentId ? (
         <div className="flex min-h-0 flex-1 items-center justify-center p-6">
-          <div className="max-w-xl rounded-2xl border border-dashed border-[#0066ff]/30 bg-white/70 p-8 text-center shadow-[0_10px_30px_rgba(0,102,255,0.05)] backdrop-blur">
+          <div className="max-w-xl rounded-2xl border border-dashed border-[#0066ff]/30 bg-white p-8 text-center shadow-sm ">
             <FileText className="mx-auto h-12 w-12 text-[#0066ff]" />
             <h3 className="mt-4 text-lg font-semibold text-[#191b24]">
               {hasThesisDocuments
@@ -927,9 +836,31 @@ export default function ThesisManualEditorPanel({
           </div>
         </div>
       ) : (
-        <main className="grid min-h-0 flex-1 gap-4 overflow-hidden p-4 xl:grid-cols-[minmax(280px,25%)_minmax(420px,1fr)_minmax(320px,30%)]">
-          <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-[0_10px_30px_rgba(0,102,255,0.05)] backdrop-blur">
-            <div className="flex items-center justify-between border-b border-white/60 bg-white/35 p-4">
+        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4 xl:flex-row">
+          <aside className="flex min-h-0 w-full flex-col gap-3 overflow-hidden xl:order-2 xl:w-[340px]">
+            <div className="flex shrink-0 items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+              {[
+                ['estructura', 'Estructura'],
+                ['preview', 'Preview & Ajustes'],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setInspectorTab(id)}
+                  className={`flex-1 rounded-lg px-2 py-1.5 text-xs font-semibold transition ${
+                    inspectorTab === id
+                      ? 'bg-white text-[#0066ff] shadow-sm'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {inspectorTab === 'estructura' && (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 p-4">
               <h3 className="flex items-center gap-2 text-base font-semibold text-[#191b24]">
                 <List className="h-5 w-5 text-[#0066ff]" />
                 Estructura Word
@@ -955,6 +886,47 @@ export default function ThesisManualEditorPanel({
               </div>
             </div>
 
+            <div className="shrink-0 space-y-2 border-b border-slate-200 bg-slate-50/60 p-3">
+              {availableFormats.length > 0 && onFormatChange ? (
+                <select
+                  value={activeFormat?.uname || ''}
+                  onChange={(e) => onFormatChange(e.target.value)}
+                  disabled={changingFormat}
+                  className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 outline-none transition focus:border-[#0066ff] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {availableFormats.map((f) => (
+                    <option key={f.uname} value={f.uname}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span className="inline-block rounded bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">
+                  {activeFormat?.name || thesis?.doc_thesis_format || 'APA 7'}
+                </span>
+              )}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={handleProcessWord}
+                  disabled={!documentId || processing}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-600 transition hover:border-[#0066ff] hover:text-[#0066ff] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {processing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                  Procesar Word
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGenerateDocx}
+                  disabled={!thesisId || generating}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-600 transition hover:border-[#0066ff] hover:text-[#0066ff] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Download className="h-3.5 w-3.5" />}
+                  Exportar DOCX
+                </button>
+              </div>
+            </div>
+
             <div className="flex-1 space-y-1 overflow-y-auto p-3">
               {loadError ? (
                 <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
@@ -962,7 +934,7 @@ export default function ThesisManualEditorPanel({
                   {loadError}
                 </div>
               ) : !hasStructuredData ? (
-                <div className="rounded-lg border border-dashed border-[#c2c6d8] bg-white/60 p-3 text-sm leading-6 text-[#424656]">
+                <div className="rounded-lg border border-dashed border-[#c2c6d8] bg-white p-3 text-sm leading-6 text-[#424656]">
                   No hay secciones estructuradas. Procesa el Word para extraer
                   encabezados y contenido editable.
                 </div>
@@ -997,7 +969,7 @@ export default function ThesisManualEditorPanel({
                       className={`group flex w-full items-center gap-2 rounded-lg border p-2 text-left transition ${
                         isActive
                           ? 'border-[#0066ff]/20 bg-[#0066ff]/10 text-[#0066ff] shadow-sm'
-                          : 'border-transparent text-[#424656] hover:bg-white/60'
+                          : 'border-transparent text-[#424656] hover:bg-white'
                       }`}
                       style={{ paddingLeft: `${8 + (level - 1) * 16}px` }}
                     >
@@ -1017,7 +989,7 @@ export default function ThesisManualEditorPanel({
               )}
             </div>
 
-            <div className="border-t border-white/60 bg-white/35 p-3 space-y-2">
+            <div className="border-t border-slate-200 bg-slate-50 p-3 space-y-2">
               {thesisIndex.length > 0 ? (
                 <button
                   type="button"
@@ -1044,16 +1016,186 @@ export default function ThesisManualEditorPanel({
                 </button>
               )}
             </div>
+          </div>
+            )}
+            {inspectorTab === 'preview' && (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 p-4">
+              <h3 className="flex items-center gap-2 text-base font-semibold text-[#191b24]">
+                <Eye className="h-5 w-5 text-[#0066ff]" />
+                Preview Word
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={zoomOut}
+                  className="rounded p-1 text-[#424656] transition hover:text-[#0066ff]"
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </button>
+                <span className="w-10 text-center text-sm font-semibold text-[#424656]">
+                  {zoom}%
+                </span>
+                <button
+                  type="button"
+                  onClick={zoomIn}
+                  className="rounded p-1 text-[#424656] transition hover:text-[#0066ff]"
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto bg-slate-100 p-4 md:p-6">
+              <div
+                className="mx-auto w-full max-w-[420px] origin-top border border-[#c2c6d8]/30 bg-white p-8 font-serif text-[11px] leading-[1.8] text-gray-800 shadow-md"
+                style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}
+              >
+                {/* TOC from thesis index */}
+                {thesisIndex.length > 0 && (
+                  <div className="mb-6 border-b border-gray-200 pb-5">
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                      Índice
+                    </p>
+                    {thesisIndex.map((section) => (
+                      <div
+                        key={section.id}
+                        className="flex items-baseline justify-between gap-2 py-0.5"
+                        style={{ paddingLeft: `${((section.level || 1) - 1) * 10}px` }}
+                      >
+                        <span className="truncate text-[10px] text-gray-700">
+                          {section.title || section.heading}
+                        </span>
+                        <span className="shrink-0 text-[9px] text-gray-300">·····</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Content blocks */}
+                {displayPreviewBlocks.length === 0 && thesisIndex.length === 0 ? (
+                  <div className="flex min-h-[200px] items-center justify-center text-center text-xs text-gray-500">
+                    Procesa el Word para generar la vista previa estructurada.
+                  </div>
+                ) : (
+                  (() => {
+                    const useNumbering =
+                      activeFormat?.word_settings_json?.headings?.numbering === 'decimal';
+                    const numberedBlocks = useNumbering
+                      ? applyHeadingNumbering(displayPreviewBlocks)
+                      : displayPreviewBlocks;
+
+                    return numberedBlocks.map((block, index) => {
+                      const isActiveBlock =
+                        activeSection &&
+                        block.section_id &&
+                        String(block.section_id) === String(getSectionId(activeSection));
+
+                      if (block.kind === 'title') {
+                        return (
+                          <h3
+                            key={`${block.kind}-${index}`}
+                            className="mb-5 text-center text-[13px] font-bold uppercase"
+                          >
+                            {block.text}
+                          </h3>
+                        );
+                      }
+
+                      if (block.kind === 'heading') {
+                        const HeadingTag = block.level && block.level <= 2 ? 'h4' : 'h5';
+                        return (
+                          <HeadingTag
+                            key={`${block.kind}-${index}`}
+                            className={`mb-3 mt-5 font-bold ${isActiveBlock ? 'text-[#0066ff]' : ''}`}
+                          >
+                            {block.text}
+                          </HeadingTag>
+                        );
+                      }
+
+                      const renderedText = renderParagraphText(
+                        block.text,
+                        references,
+                        activeFormat,
+                      );
+
+                      return (
+                        <p
+                          key={`${block.kind}-${index}`}
+                          className={`mb-4 text-justify ${isActiveBlock ? 'bg-[#0066ff]/5' : ''}`}
+                        >
+                          {renderedText}
+                        </p>
+                      );
+                    });
+                  })()
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 border-t border-slate-200 bg-white p-3 text-xs font-semibold text-[#424656]">
+              {documentUrl ? (
+                <a
+                  href={documentUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-2 transition hover:text-[#0066ff]"
+                >
+                  <FileText className="h-3.5 w-3.5 text-[#0066ff]" />
+                  Abrir Word
+                </a>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-2">
+                  <FileText className="h-3.5 w-3.5 text-[#0066ff]" />
+                  {getDocumentName(activeDocument)}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-2">
+                <History className="h-3.5 w-3.5 text-[#0066ff]" />
+                {thesisDocumentsCount} docs
+              </span>
+            </div>
+
+            {references.length > 0 ? (
+              <div className="max-h-36 overflow-y-auto border-t border-slate-200 bg-white p-3">
+                <p className="mb-2 text-xs font-bold uppercase text-[#727687]">
+                  Referencias extraidas
+                </p>
+                <div className="space-y-2">
+                  {references.slice(0, 5).map((reference) => (
+                    <p
+                      key={reference.id || reference.title}
+                      className="rounded-lg bg-white px-2 py-2 text-xs leading-5 text-[#424656]"
+                    >
+                      {getReferenceLabel(reference)}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={!documentId || saving}
+              className="mt-auto inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0066ff] px-4 text-sm font-semibold text-white transition hover:bg-[#0050cb] disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              Guardar cambios
+            </button>
           </aside>
 
-          <section className="flex min-h-0 flex-col gap-4 overflow-hidden">
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-[0_10px_30px_rgba(0,102,255,0.05)] backdrop-blur">
-              <div className="flex flex-col gap-3 border-b border-white/60 bg-white/35 p-4 lg:flex-row lg:items-center lg:justify-between">
+          <section className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden xl:order-1">
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm ">
+              <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 p-4 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-wrap items-center gap-3">
                   <select
                     value={selectedFormat}
                     onChange={(event) => setSelectedFormat(event.target.value)}
-                    className="h-9 rounded-md border border-[#c2c6d8]/70 bg-white/60 px-2 text-sm font-medium text-[#191b24] outline-none transition focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20"
+                    className="h-9 rounded-md border border-[#c2c6d8]/70 bg-white px-2 text-sm font-medium text-[#191b24] outline-none transition focus:border-[#0066ff] focus:ring-2 focus:ring-[#0066ff]/20"
                   >
                     <option>H1 - Titulo Principal</option>
                     <option>H2 - Subtitulo 1</option>
@@ -1143,7 +1285,7 @@ export default function ThesisManualEditorPanel({
                 </span>
               </div>
 
-              <div className="min-h-0 flex-1 overflow-y-auto bg-white/60 p-6">
+              <div className="min-h-0 flex-1 overflow-y-auto bg-white p-6">
                 <div className="mb-4">
                   <p className="text-xs font-semibold uppercase text-[#727687]">
                     {activeSection ? `Nivel ${getSectionLevel(activeSection)}` : 'Texto base'}
@@ -1162,210 +1304,8 @@ export default function ThesisManualEditorPanel({
                 />
               </div>
             </div>
-
-            <div className="flex h-[250px] shrink-0 flex-col overflow-hidden rounded-2xl border border-white/60 border-t-[#0066ff] border-t-4 bg-white/70 shadow-[0_10px_30px_rgba(0,102,255,0.05)] backdrop-blur">
-              <div className="flex flex-col gap-2 border-b border-[#0066ff]/10 bg-[#0066ff]/5 p-3 md:flex-row md:items-center md:justify-between">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-[#0066ff]">
-                  <Sparkles className="h-4 w-4" />
-                  Asistente IA
-                </h3>
-                <div className="flex flex-wrap gap-2">
-                  <button className="rounded border border-[#c2c6d8]/40 bg-white px-2 py-1 text-[11px] font-semibold text-[#424656] transition hover:bg-[#ecedfa]">
-                    Mejorar redaccion
-                  </button>
-                  <button className="rounded border border-[#c2c6d8]/40 bg-white px-2 py-1 text-[11px] font-semibold text-[#424656] transition hover:bg-[#ecedfa]">
-                    Buscar referencias
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto bg-white/50 p-4">
-                <div className="flex gap-3">
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-[#0066ff]/20 text-[#0066ff]">
-                    <Bot className="h-4 w-4" />
-                  </div>
-                  <div className="rounded-lg rounded-tl-none border border-[#c2c6d8]/30 bg-white p-3 text-sm leading-6 text-[#424656] shadow-sm">
-                    Puedo trabajar sobre la seccion activa del Word. Usa el
-                    texto ya extraido para pedir mejora de tono, validacion de
-                    citas o sugerencias por apartado.
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-white/60 bg-white/80 p-3">
-                <div className="flex items-center gap-2 rounded-xl border border-[#c2c6d8]/40 bg-[#ecedfa] px-3 py-2 transition focus-within:border-[#0066ff] focus-within:ring-1 focus-within:ring-[#0066ff]">
-                  <input
-                    className="min-w-0 flex-1 border-none bg-transparent p-0 text-sm text-[#191b24] outline-none placeholder:text-[#727687]"
-                    placeholder="Habla con la IA para mejorar esta seccion..."
-                    type="text"
-                  />
-                  <button
-                    type="button"
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#0066ff] text-white transition hover:bg-[#0050cb]"
-                  >
-                    <Send className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
           </section>
 
-          <aside className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/70 shadow-[0_10px_30px_rgba(0,102,255,0.05)] backdrop-blur">
-            <div className="flex items-center justify-between border-b border-white/60 bg-white/35 p-4">
-              <h3 className="flex items-center gap-2 text-base font-semibold text-[#191b24]">
-                <Eye className="h-5 w-5 text-[#0066ff]" />
-                Preview Word
-              </h3>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={zoomOut}
-                  className="rounded p-1 text-[#424656] transition hover:text-[#0066ff]"
-                >
-                  <ZoomOut className="h-4 w-4" />
-                </button>
-                <span className="w-10 text-center text-sm font-semibold text-[#424656]">
-                  {zoom}%
-                </span>
-                <button
-                  type="button"
-                  onClick={zoomIn}
-                  className="rounded p-1 text-[#424656] transition hover:text-[#0066ff]"
-                >
-                  <ZoomIn className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto bg-[#e8f2ff]/50 p-4 md:p-6">
-              <div
-                className="mx-auto w-full max-w-[420px] origin-top border border-[#c2c6d8]/30 bg-white p-8 font-serif text-[11px] leading-[1.8] text-gray-800 shadow-md"
-                style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center' }}
-              >
-                {/* TOC from thesis index */}
-                {thesisIndex.length > 0 && (
-                  <div className="mb-6 border-b border-gray-200 pb-5">
-                    <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                      Índice
-                    </p>
-                    {thesisIndex.map((section) => (
-                      <div
-                        key={section.id}
-                        className="flex items-baseline justify-between gap-2 py-0.5"
-                        style={{ paddingLeft: `${((section.level || 1) - 1) * 10}px` }}
-                      >
-                        <span className="truncate text-[10px] text-gray-700">
-                          {section.title || section.heading}
-                        </span>
-                        <span className="shrink-0 text-[9px] text-gray-300">·····</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Content blocks */}
-                {displayPreviewBlocks.length === 0 && thesisIndex.length === 0 ? (
-                  <div className="flex min-h-[200px] items-center justify-center text-center text-xs text-gray-500">
-                    Procesa el Word para generar la vista previa estructurada.
-                  </div>
-                ) : (
-                  (() => {
-                    const useNumbering =
-                      activeFormat?.word_settings_json?.headings?.numbering === 'decimal';
-                    const numberedBlocks = useNumbering
-                      ? applyHeadingNumbering(displayPreviewBlocks)
-                      : displayPreviewBlocks;
-
-                    return numberedBlocks.map((block, index) => {
-                      const isActiveBlock =
-                        activeSection &&
-                        block.section_id &&
-                        String(block.section_id) === String(getSectionId(activeSection));
-
-                      if (block.kind === 'title') {
-                        return (
-                          <h3
-                            key={`${block.kind}-${index}`}
-                            className="mb-5 text-center text-[13px] font-bold uppercase"
-                          >
-                            {block.text}
-                          </h3>
-                        );
-                      }
-
-                      if (block.kind === 'heading') {
-                        const HeadingTag = block.level && block.level <= 2 ? 'h4' : 'h5';
-                        return (
-                          <HeadingTag
-                            key={`${block.kind}-${index}`}
-                            className={`mb-3 mt-5 font-bold ${isActiveBlock ? 'text-[#0066ff]' : ''}`}
-                          >
-                            {block.text}
-                          </HeadingTag>
-                        );
-                      }
-
-                      const renderedText = renderParagraphText(
-                        block.text,
-                        references,
-                        activeFormat,
-                      );
-
-                      return (
-                        <p
-                          key={`${block.kind}-${index}`}
-                          className={`mb-4 text-justify ${isActiveBlock ? 'bg-[#0066ff]/5' : ''}`}
-                        >
-                          {renderedText}
-                        </p>
-                      );
-                    });
-                  })()
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 border-t border-white/60 bg-white/55 p-3 text-xs font-semibold text-[#424656]">
-              {documentUrl ? (
-                <a
-                  href={documentUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 rounded-lg bg-white/70 px-2 py-2 transition hover:text-[#0066ff]"
-                >
-                  <FileText className="h-3.5 w-3.5 text-[#0066ff]" />
-                  Abrir Word
-                </a>
-              ) : (
-                <span className="inline-flex items-center gap-1 rounded-lg bg-white/70 px-2 py-2">
-                  <FileText className="h-3.5 w-3.5 text-[#0066ff]" />
-                  {getDocumentName(activeDocument)}
-                </span>
-              )}
-              <span className="inline-flex items-center gap-1 rounded-lg bg-white/70 px-2 py-2">
-                <History className="h-3.5 w-3.5 text-[#0066ff]" />
-                {thesisDocumentsCount} docs
-              </span>
-            </div>
-
-            {references.length > 0 ? (
-              <div className="max-h-36 overflow-y-auto border-t border-white/60 bg-white/45 p-3">
-                <p className="mb-2 text-xs font-bold uppercase text-[#727687]">
-                  Referencias extraidas
-                </p>
-                <div className="space-y-2">
-                  {references.slice(0, 5).map((reference) => (
-                    <p
-                      key={reference.id || reference.title}
-                      className="rounded-lg bg-white/70 px-2 py-2 text-xs leading-5 text-[#424656]"
-                    >
-                      {getReferenceLabel(reference)}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </aside>
         </main>
       )}
     </div>
