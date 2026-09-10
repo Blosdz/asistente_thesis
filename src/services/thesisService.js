@@ -192,6 +192,14 @@ export async function subirDocumentoAGoogleDrive({
   return unwrap(await documentosApi.subirArchivo(tesisId, formData));
 }
 
+export async function subirDocumentoTesisLocal({ tesisId, file }) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('modo', 'tesis');
+
+  return unwrap(await documentosApi.subirArchivo(tesisId, formData));
+}
+
 export async function registrarDocumentoTesis({
   tesisId,
   nombreArchivo,

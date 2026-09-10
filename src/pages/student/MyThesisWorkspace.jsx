@@ -16,15 +16,13 @@ import {
   actualizarFormatoDocTesis,
   cotizarTesisPlan,
   crearTesisConPlan,
-  extraerIndiceDocumentoWord,
   obtenerIndiceTesis,
   obtenerMisTesis,
   obtenerSugerenciasMiTesis,
   obtenerTiposTesisActivos,
   obtenerTodosDocumentosMiTesis,
   marcarSugerenciaAplicadaEstudiante,
-  procesarDocumentoWord,
-  subirDocumentoAGoogleDrive,
+  subirDocumentoTesisLocal,
 } from '../../services/thesisService';
 import { catalogosApi } from '../../api/catalogos.api';
 import {
@@ -94,7 +92,6 @@ export default function MyThesisWorkspace() {
   const [selectedThesisId, setSelectedThesisId] = useState('');
   const [documents, setDocuments] = useState([]);
   const [currentVersion, setCurrentVersion] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [sugerencias, setSugerencias] = useState([]);
@@ -123,30 +120,6 @@ export default function MyThesisWorkspace() {
   const [availableFormats, setAvailableFormats] = useState([]);
   const [thesisIndex, setThesisIndex] = useState([]);
   const [changingFormat, setChangingFormat] = useState(false);
-
-  const buildPreviewUrl = useCallback((url) => {
-    if (!url) return null;
-
-    const lowerUrl = url.toLowerCase();
-    if (
-      lowerUrl.endsWith('.doc') ||
-      lowerUrl.endsWith('.docx') ||
-      lowerUrl.endsWith('.docm')
-    ) {
-      return `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(url)}`;
-    }
-
-    const driveUcMatch = url.match(/drive\.google\.com\/uc\?id=([^&]+)/);
-    if (driveUcMatch) {
-      return `https://drive.google.com/file/d/${driveUcMatch[1]}/preview`;
-    }
-
-    if (url.includes('/view')) {
-      return url.replace('/view', '/preview');
-    }
-
-    return url;
-  }, []);
 
   const fetchTheses = async () => {
     try {
@@ -204,12 +177,8 @@ export default function MyThesisWorkspace() {
             ) || docs[0];
           setCurrentVersion(latestInfo);
 
-          const previewSource =
-            latestInfo.url_google_doc || latestInfo.url_archivo_drive;
-          setPreviewUrl(buildPreviewUrl(previewSource));
         } else {
           setCurrentVersion(null);
-          setPreviewUrl(null);
         }
       } catch (error) {
         console.error('Error fetching documents:', error);
@@ -218,7 +187,7 @@ export default function MyThesisWorkspace() {
         setLoading(false);
       }
     },
-    [buildPreviewUrl],
+    [],
   );
 
   const cargarSugerencias = useCallback(async (thesisId) => {
@@ -356,7 +325,6 @@ export default function MyThesisWorkspace() {
     } else {
       setDocuments([]);
       setCurrentVersion(null);
-      setPreviewUrl(null);
     }
   }, [selectedThesisId, fetchDocuments]);
 
@@ -547,10 +515,8 @@ export default function MyThesisWorkspace() {
   const seleccionarVersion = useCallback(
     (doc) => {
       setCurrentVersion(doc);
-      const previewSource = doc?.url_google_doc || doc?.url_archivo_drive;
-      setPreviewUrl(buildPreviewUrl(previewSource));
     },
-    [buildPreviewUrl],
+    [],
   );
 
   const editableVersion = useMemo(
@@ -586,10 +552,9 @@ export default function MyThesisWorkspace() {
 
       try {
         setUploadingEditableProgress(true);
-        const uploadedDocument = await subirDocumentoAGoogleDrive({
+        const uploadedDocument = await subirDocumentoTesisLocal({
           tesisId: selectedThesisId,
           file,
-          modo: 'tesis',
         });
         const extraction = uploadedDocument?.reference_extraction;
         if (extraction?.ok && Number(extraction.created_count || 0) > 0) {
@@ -609,28 +574,10 @@ export default function MyThesisWorkspace() {
           toast.success('Avance editable subido');
         }
 
-        await fetchDocuments(selectedThesisId);
-
-        const newDocId =
-          uploadedDocument?.document?.id ||
-          uploadedDocument?.id ||
-          uploadedDocument?.documento_id;
-
-        if (newDocId) {
-          try {
-            await procesarDocumentoWord(newDocId);
-            toast.success('Estructura del Word extraída automáticamente');
-          } catch (processError) {
-            console.warn('Auto-process failed (non-blocking):', processError);
-          }
-
-          try {
-            await extraerIndiceDocumentoWord(newDocId);
-            await cargarThesisIndex(selectedThesisId);
-          } catch (outlineError) {
-            console.warn('Auto-outline failed (non-blocking):', outlineError);
-          }
-        }
+        await Promise.all([
+          fetchDocuments(selectedThesisId),
+          cargarThesisIndex(selectedThesisId),
+        ]);
       } catch (error) {
         console.error('Error uploading editable progress:', error);
         toast.error(error?.message || 'No se pudo subir el avance editable');
@@ -732,7 +679,6 @@ export default function MyThesisWorkspace() {
       documents={documents}
       currentVersion={currentVersion}
       editableVersion={editableVersion}
-      previewUrl={previewUrl}
       onSelectDocument={seleccionarVersion}
       onOpenAction={setActiveActionSection}
       activeActionSection={activeActionSection}

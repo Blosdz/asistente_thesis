@@ -9,6 +9,7 @@ import {
   Sparkles,
   Upload,
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const DOC_ACTIONS = [
   { id: 'manual-edit', label: 'Edición manual', icon: FilePenLine },
@@ -18,7 +19,10 @@ const DOC_ACTIONS = [
 
 import AcademicAIChatPanel from './AcademicAIChatPanel';
 import RelatedDocumentsPanel from './RelatedDocumentsPanel';
-import { getDocumentPreview } from '../../../api/docGenerator.api';
+import {
+  downloadEditableDocument,
+  getDocumentPreview,
+} from '../../../api/docGenerator.api';
 import { deepseekApi } from '../../../api/deepseek.api';
 import './WorkspaceAiFlow.css';
 
@@ -52,7 +56,6 @@ export default function WorkspaceAiFlow({
   documents = [],
   currentVersion,
   editableVersion,
-  previewUrl,
   onSelectDocument = () => {},
   onOpenAction = () => {},
   activeActionSection = null,
@@ -68,9 +71,10 @@ export default function WorkspaceAiFlow({
   const [view, setView] = useState('split');
   const [previewHtml, setPreviewHtml] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const [history, setHistory] = useState([]);
 
-  const previewDocId = editableVersion?.id || currentVersion?.id || null;
+  const previewDocId = editableVersion?.id || null;
 
   useEffect(() => {
     let ignore = false;
@@ -132,8 +136,26 @@ export default function WorkspaceAiFlow({
 
   const openHistory = useCallback(() => setView('chat'), []);
 
-  const downloadUrl =
-    currentVersion?.url_archivo_drive || currentVersion?.url_google_doc || null;
+  const downloadDocument = useCallback(async () => {
+    if (!previewDocId || downloading) return;
+
+    try {
+      setDownloading(true);
+      const blob = await downloadEditableDocument(previewDocId);
+      const url = window.URL.createObjectURL(blob);
+      const link = window.document.createElement('a');
+      link.href = url;
+      link.download = docName(editableVersion || currentVersion);
+      window.document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error(error?.message || 'No se pudo descargar el DOCX');
+    } finally {
+      setDownloading(false);
+    }
+  }, [currentVersion, downloading, editableVersion, previewDocId]);
 
   const showDoc = view === 'split' || view === 'doc' || Boolean(activeActionSection);
   const showChat = (view === 'split' || view === 'chat') && !activeActionSection;
@@ -298,15 +320,15 @@ export default function WorkspaceAiFlow({
                     <span>{label}</span>
                   </button>
                 ))}
-                {!activeActionSection && downloadUrl && (
-                  <a
+                {!activeActionSection && previewDocId && (
+                  <button
+                    type="button"
                     className="waf-doc-dl"
-                    href={downloadUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                    onClick={downloadDocument}
+                    disabled={downloading}
                   >
-                    <Download size={14} /> .docx
-                  </a>
+                    <Download size={14} /> {downloading ? 'Descargando…' : '.docx'}
+                  </button>
                 )}
               </div>
             </div>
@@ -314,19 +336,11 @@ export default function WorkspaceAiFlow({
             {activeActionSection ? (
               <div className="waf-doc-panel">{actionPanel}</div>
             ) : previewHtml ? (
-              <div className="waf-doc-scroll">
-                <article
-                  className="waf-sheet"
-                  // preview_html lo genera nuestro doc-generator con html.escape en todo el contenido
-                  dangerouslySetInnerHTML={{ __html: previewHtml }}
-                />
-              </div>
-            ) : previewUrl ? (
               <iframe
                 className="waf-doc-frame"
-                src={previewUrl}
-                title="Vista previa de tesis"
-                allow="fullscreen"
+                srcDoc={previewHtml}
+                title="Vista previa DOCX servida por Python"
+                sandbox=""
               />
             ) : (
               <div className="waf-doc-placeholder">
