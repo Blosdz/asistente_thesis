@@ -1,25 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  BookOpen,
   ChevronDown,
-  FilePenLine,
   MessageSquare,
   Plus,
   ShieldCheck,
-  Upload,
 } from 'lucide-react';
 import RelatedDocumentsPanel from './RelatedDocumentsPanel';
 
-const actionItems = [
-  { id: 'manual-edit', label: 'Edición manual', icon: FilePenLine },
-  { id: 'cover-upload', label: 'Carátula', icon: Upload },
-  { id: 'references', label: 'Referencias', icon: BookOpen },
-];
-
 export default function WorkspaceActionNavbar({
-  activeActionSection,
   disabled = false,
-  onSelectAction,
   documents = [],
   currentDocumentId = '',
   onSelectDocument = () => {},
@@ -55,34 +44,6 @@ export default function WorkspaceActionNavbar({
         <span className="hidden shrink-0 text-[13px] font-semibold tracking-tight text-slate-900 sm:block">
           Mi tesis
         </span>
-
-        <div className="hidden h-4 w-px shrink-0 bg-slate-200 sm:block" aria-hidden="true" />
-
-        <nav className="flex items-center gap-1" aria-label="Secciones del workspace">
-          {actionItems.map(({ id, label, icon: Icon }) => {
-            const active = activeActionSection === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => onSelectAction(id)}
-                disabled={disabled}
-                aria-pressed={active}
-                className={[
-                  'flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-all',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500',
-                  'disabled:cursor-not-allowed disabled:opacity-40',
-                  active
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900',
-                ].join(' ')}
-              >
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                <span className="hidden md:inline">{label}</span>
-              </button>
-            );
-          })}
-        </nav>
       </div>
 
       {/* Right: document selector + suggestions + thesis dropdown */}

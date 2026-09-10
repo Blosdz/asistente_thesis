@@ -4,14 +4,13 @@ import {
   ChevronRight,
   Clock3,
   Info,
-  PlusCircle,
+  Plus,
   Repeat,
   Trash2,
+  X,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { Button } from '../../components/ui/button';
-import { Card } from '../../components/ui/card';
-import Modal from '../../components/ui/modal';
+import './Calendar.css';
 import {
   crearEspacioLibreAsesor,
   desactivarEspacioLibreAsesor,
@@ -260,13 +259,7 @@ const initialForm = () => ({
 
 function EstadoBadge({ activo }) {
   return (
-    <span
-      className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${
-        activo === false
-          ? 'border border-rose-300/50 bg-rose-500/20 text-white'
-          : 'border border-emerald-300/50 bg-emerald-500/20 text-white'
-      }`}
-    >
+    <span className={`acv-badge ${activo === false ? 'is-off' : 'is-on'}`}>
       {activo === false ? 'Inactivo' : 'Activo'}
     </span>
   );
@@ -668,611 +661,412 @@ export default function AdvisorCalendar() {
     });
   };
 
+  const monthLabel = formatterMes.format(viewDate);
+
   return (
-    <div className="advisor-calendar-page relative flex w-full flex-1 flex-col items-center overflow-hidden px-4 py-8 sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute left-0 top-0 h-72 w-72 rounded-full bg-blue-100 blur-3xl" />
-        <div className="absolute right-0 top-24 h-80 w-80 rounded-full bg-indigo-100 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-72 w-72 rounded-full bg-slate-100 blur-3xl" />
-      </div>
-      <div className="relative z-10 flex w-full max-w-[1480px] flex-col gap-8">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-blue-600">
-                Calendario
-              </p>
-              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
-                Disponibilidad del asesor
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                Crea espacios libres, revisa tu carga de disponibilidad y mantén
-                una agenda clara para que los estudiantes reserven sin fricción.
-              </p>
-            </div>
-
-            <Button
-              className="ios-accent-button group inline-flex w-full items-center justify-between rounded-2xl px-5 py-4 transition-colors sm:w-auto sm:min-w-[220px]"
-              onClick={() => setShowCreateModal(true)}
-            >
-              <span className="text-base font-bold">
-                Nuevo espacio
-              </span>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/60 transition-colors group-hover:bg-white/80">
-                <PlusCircle className="h-5 w-5 text-sky-700" />
-              </div>
-            </Button>
-          </div>
+    <div className="advisor-calendar-v2">
+      <header className="acv-head">
+        <div>
+          <p className="acv-eyebrow">Calendario</p>
+          <h1 className="acv-title">Disponibilidad del asesor</h1>
+          <p className="acv-lead">
+            Crea espacios libres, revisa tu carga de disponibilidad y mantén una
+            agenda clara para que los estudiantes reserven sin fricción.
+          </p>
         </div>
+        {!showCreateModal && (
+          <button
+            type="button"
+            className="acv-btn acv-btn-primary"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <Plus className="h-4 w-4" />
+            Nuevo espacio
+          </button>
+        )}
+      </header>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-          <Card className="glass-panel lg:col-span-8 rounded-[32px] border border-white/60 p-6 shadow-[0_24px_60px_rgba(15,23,42,0.06)] sm:p-8">
-            <div className="mb-8 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500/90">
-                  Vista mensual
-                </p>
-                <h3 className="mt-2 text-2xl font-bold capitalize text-slate-900">
-                  {formatterMes.format(viewDate)}
-                </h3>
-                <p className="mt-2 text-sm text-slate-500">
-                  Selecciona un día para revisar sus bloques y administrar tu
-                  disponibilidad.
-                </p>
-              </div>
-              <div className="flex gap-2 self-start sm:self-auto">
-                <Button
-                  variant="ghost"
-                  className="rounded-full p-2 text-slate-600"
-                  onClick={() => setViewDate((current) => addMonths(current, -1))}
-                >
-                  <ChevronLeft className="h-5 w-5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="rounded-full p-2 text-slate-600"
-                  onClick={() => setViewDate((current) => addMonths(current, 1))}
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-              </div>
+      <div className={`acv-grid ${showCreateModal ? 'is-creating' : ''}`}>
+        {/* ---------- calendario ---------- */}
+        <section className="acv-panel">
+          <div className="acv-panel-head">
+            <div>
+              <p className="acv-eyebrow acv-eyebrow-sm">Vista mensual</p>
+              <h2 className="acv-month">{monthLabel}</h2>
             </div>
-
-            <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
-              <div className="app-dark-card rounded-2xl p-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em]">
-                  Espacios activos
-                </p>
-                <p className="mt-2 text-2xl font-black tracking-tight">
-                  {espaciosActivos.length}
-                </p>
-              </div>
-              <div className="app-dark-card rounded-2xl p-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em]">
-                  Horas disponibles
-                </p>
-                <p className="mt-2 text-2xl font-black tracking-tight">
-                  {horasDisponibles}
-                </p>
-              </div>
-              <div className="app-dark-card rounded-2xl p-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em]">
-                  Día seleccionado
-                </p>
-                <p className="mt-2 text-sm font-bold capitalize">
-                  {formatterDiaLargo.format(selectedDate)}
-                </p>
-              </div>
+            <div className="acv-nav">
+              <button
+                type="button"
+                onClick={() => setViewDate((c) => addMonths(c, -1))}
+                aria-label="Mes anterior"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewDate((c) => addMonths(c, 1))}
+                aria-label="Mes siguiente"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
             </div>
+          </div>
 
-            <div className="mb-4 grid grid-cols-7 gap-2">
-              {diasSemana.map((day) => (
-                <div
-                  key={day}
-                  className="app-dark-card rounded-xl py-3 text-center text-[11px] font-bold uppercase tracking-[0.18em]"
+          <div className="acv-stats">
+            <div className="acv-stat">
+              <span>Espacios activos</span>
+              <strong>{espaciosActivos.length}</strong>
+            </div>
+            <div className="acv-stat">
+              <span>Horas disponibles</span>
+              <strong>{horasDisponibles}</strong>
+            </div>
+            <div className="acv-stat">
+              <span>Día seleccionado</span>
+              <strong className="acv-stat-day">
+                {formatterDiaLargo.format(selectedDate)}
+              </strong>
+            </div>
+          </div>
+
+          <div className="acv-weekdays">
+            {diasSemana.map((d) => (
+              <span key={d}>{d}</span>
+            ))}
+          </div>
+
+          <div className="acv-days">
+            {calendarDays.map((day) => {
+              const key = toDayKey(day);
+              const blocks = bloquesPorDia[key] ?? [];
+              const outside = !isSameMonth(day, viewDate);
+              const selected = isSameDay(day, selectedDate);
+              const today = isSameDay(day, new Date());
+
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setSelectedDate(day)}
+                  className={[
+                    'acv-day',
+                    outside && 'is-outside',
+                    selected && 'is-selected',
+                    today && 'is-today',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
-                  {day}
-                </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-7 gap-2 xl:gap-3">
-              {calendarDays.map((day) => {
-                const key = toDayKey(day);
-                const blocks = bloquesPorDia[key] ?? [];
-                const isCurrentMonth = isSameMonth(day, viewDate);
-                const isSelected = isSameDay(day, selectedDate);
-                const isToday = isSameDay(day, new Date());
-
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setSelectedDate(day)}
-                    className={[
-                      'relative min-h-[110px] rounded-[22px] border p-3 text-left transition-all lg:min-h-[130px]',
-                      isSelected
-                        ? 'app-dark-card border-white/50 shadow-[0_10px_30px_rgba(37,99,235,0.16)]'
-                        : 'app-dark-card',
-                      isCurrentMonth ? '' : 'opacity-45',
-                    ]
-                      .filter(Boolean)
-                      .join(' ')}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <span
-                        className={[
-                          'inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold',
-                          isToday ? 'bg-blue-600 text-white' : '',
-                        ]
-                          .filter(Boolean)
-                          .join(' ')}
-                      >
-                        {day.getDate()}
-                      </span>
-                      {blocks.length > 0 && (
-                        <span className="rounded-full border border-white/20 bg-white/10 px-2 py-1 text-[10px] font-bold text-white">
-                          {blocks.length}
+                  <span className="acv-day-num">{day.getDate()}</span>
+                  {blocks.length > 0 && (
+                    <span className="acv-day-count">{blocks.length}</span>
+                  )}
+                  {blocks.length > 0 && (
+                    <span className="acv-day-blocks">
+                      {blocks.slice(0, 3).map((b, i) => (
+                        <span
+                          key={`${b.disponibilidad_id}-${i}`}
+                          className="acv-chip"
+                        >
+                          {formatterHora.format(b.inicio)}
                         </span>
+                      ))}
+                      {blocks.length > 3 && (
+                        <span className="acv-more">+{blocks.length - 3}</span>
                       )}
-                    </div>
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
-                    {blocks.length > 0 && (
-                      <div className="absolute bottom-3 left-3 right-3 space-y-1.5">
-                        {blocks.slice(0, 3).map((block, index) => (
-                          <div
-                            key={`${block.disponibilidad_id}-${block.inicio.toISOString()}-${index}`}
-                            className="truncate rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white"
+        {/* ---------- columna lateral ---------- */}
+        <aside className="acv-side">
+          {showCreateModal ? (
+            <div className="acv-panel acv-form">
+              <div className="acv-panel-head">
+                <div>
+                  <p className="acv-eyebrow acv-eyebrow-sm">Nuevo espacio</p>
+                  <h2 className="acv-month">Configurar disponibilidad</h2>
+                </div>
+                <button
+                  type="button"
+                  className="acv-icon-btn"
+                  onClick={() => setShowCreateModal(false)}
+                  aria-label="Cerrar"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              <div className="acv-modes">
+                <button
+                  type="button"
+                  onClick={() => setModoCreacion('unico')}
+                  className={`acv-mode ${!form.recurrente ? 'is-active' : ''}`}
+                >
+                  <strong>Horario único</strong>
+                  <span>Publica una disponibilidad para una fecha concreta.</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModoCreacion('recurrente')}
+                  className={`acv-mode ${form.recurrente ? 'is-active' : ''}`}
+                >
+                  <strong>Horario recurrente</strong>
+                  <span>Repite el mismo horario cada semana dentro de un rango.</span>
+                </button>
+              </div>
+
+              <div className="acv-note">
+                <Info className="h-4 w-4" />
+                <div>
+                  <p>{textoModo}</p>
+                  {resumenRecurrencia && <p className="acv-muted">{resumenRecurrencia}</p>}
+                </div>
+              </div>
+
+              {modalWarnings.length > 0 && (
+                <div className="acv-warn">
+                  <p>Revisa estos datos</p>
+                  {modalWarnings.map((w) => (
+                    <span key={w}>{w}</span>
+                  ))}
+                </div>
+              )}
+
+              <div className="acv-fields">
+                <label className="acv-field">
+                  <span>Inicio del espacio</span>
+                  <input
+                    type="datetime-local"
+                    value={form.inicio}
+                    onChange={(e) => handleInicioChange(e.target.value)}
+                  />
+                </label>
+                <label className="acv-field">
+                  <span>Fin del espacio</span>
+                  <input
+                    type="datetime-local"
+                    value={form.fin}
+                    onChange={(e) =>
+                      setForm((prev) => ({ ...prev, fin: e.target.value }))
+                    }
+                  />
+                </label>
+                <label className="acv-field">
+                  <span>Duración por bloque (min)</span>
+                  <input
+                    type="number"
+                    min={DEFAULT_BLOCK_DURATION_MINUTES}
+                    step="15"
+                    value={form.duracionBloqueMinutos}
+                    onChange={(e) => handleDuracionChange(e.target.value)}
+                  />
+                </label>
+                <label className="acv-check">
+                  <input
+                    type="checkbox"
+                    checked={form.usaBloques}
+                    onChange={(e) => handleUsaBloquesChange(e.target.checked)}
+                  />
+                  Dividir en bloques reservables
+                </label>
+
+                {form.recurrente && (
+                  <>
+                    <div className="acv-field">
+                      <span>Días de la semana</span>
+                      <div className="acv-dow">
+                        {[
+                          { key: 1, label: 'L' },
+                          { key: 2, label: 'M' },
+                          { key: 3, label: 'X' },
+                          { key: 4, label: 'J' },
+                          { key: 5, label: 'V' },
+                          { key: 6, label: 'S' },
+                          { key: 0, label: 'D' },
+                        ].map((d) => (
+                          <button
+                            key={d.key}
+                            type="button"
+                            onClick={() => toggleDiaRecurrencia(d.key)}
+                            className={
+                              form.diasSemana.includes(d.key) ? 'is-active' : ''
+                            }
                           >
-                            {formatterHora.format(block.inicio)}
-                          </div>
+                            {d.label}
+                          </button>
                         ))}
-                        {blocks.length > 3 && (
-                          <p className="text-[10px] font-bold text-white">
-                            +{blocks.length - 3} más
-                          </p>
-                        )}
                       </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </Card>
+                    </div>
+                    <label className="acv-field">
+                      <span>Fecha inicio recurrencia</span>
+                      <input
+                        type="date"
+                        value={form.fechaInicio}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, fechaInicio: e.target.value }))
+                        }
+                      />
+                    </label>
+                    <label className="acv-field">
+                      <span>Fecha fin recurrencia</span>
+                      <input
+                        type="date"
+                        value={form.fechaFin}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, fechaFin: e.target.value }))
+                        }
+                      />
+                    </label>
+                  </>
+                )}
+              </div>
 
-          <aside className="space-y-6 lg:col-span-4">
-            <Card className="glass-panel rounded-[32px] border border-white/60 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              <div className="mb-4">
-                <h4 className="text-xl font-bold text-slate-900">
-                  Próximos espacios
-                </h4>
-                <p className="text-sm text-slate-500">
+              <div className="acv-preview">
+                <p className="acv-eyebrow acv-eyebrow-sm">Vista previa</p>
+                <p>{previewConfig.mensaje}</p>
+                {form.usaBloques && previewConfig.bloques.length > 0 && (
+                  <div className="acv-preview-chips">
+                    {previewConfig.bloques.map((b) => (
+                      <span key={b}>{b}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="acv-form-actions">
+                <button
+                  type="button"
+                  className="acv-btn acv-btn-ghost"
+                  onClick={() => setShowCreateModal(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className="acv-btn acv-btn-primary"
+                  onClick={handleCreateSpace}
+                  disabled={creating || modalWarnings.length > 0}
+                >
+                  {creating ? 'Guardando…' : 'Guardar disponibilidad'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="acv-panel">
+                <p className="acv-eyebrow acv-eyebrow-sm">Próximos espacios</p>
+                <h2 className="acv-month">Agenda</h2>
+                <p className="acv-muted acv-mb">
                   Tus siguientes ventanas activas de disponibilidad.
                 </p>
-              </div>
-
-              <div className="space-y-4">
                 {proximosEspacios.length === 0 ? (
-                  <div className="app-dark-card rounded-2xl p-4 text-sm">
+                  <div className="acv-empty">
                     Aún no tienes espacios futuros registrados.
                   </div>
                 ) : (
-                  proximosEspacios.map((espacio) => (
-                    <div
-                      key={`${espacio.disponibilidad_id}-${espacio.inicio_real}`}
-                      className="app-dark-card rounded-2xl p-4"
-                    >
-                      <div className="flex items-start justify-between gap-3">
+                  <div className="acv-list">
+                    {proximosEspacios.map((e) => (
+                      <div key={`${e.disponibilidad_id}-${e.inicio_real}`} className="acv-item">
                         <div>
-                          <p className="text-sm font-bold">
-                            {formatterFecha.format(new Date(espacio.inicio_real))}
-                          </p>
-                          <p className="mt-1 text-xs">
-                            {formatterHora.format(new Date(espacio.inicio_real))} -{' '}
-                            {formatterHora.format(new Date(espacio.fin_real))}
-                          </p>
+                          <strong>{formatterFecha.format(new Date(e.inicio_real))}</strong>
+                          <span className="acv-muted">
+                            {formatterHora.format(new Date(e.inicio_real))} –{' '}
+                            {formatterHora.format(new Date(e.fin_real))}
+                          </span>
                         </div>
-                        <EstadoBadge activo={espacio.activo} />
+                        <EstadoBadge activo={e.activo} />
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
               </div>
-            </Card>
 
-            <Card className="glass-panel rounded-[32px] border border-white/60 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
-              <div className="mb-4 flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-500">
-                    Espacios del día
-                  </p>
-                  <h4 className="mt-2 text-xl font-bold capitalize text-slate-900">
-                    {formatterDiaLargo.format(selectedDate)}
-                  </h4>
+              <div className="acv-panel">
+                <div className="acv-panel-head">
+                  <div>
+                    <p className="acv-eyebrow acv-eyebrow-sm">Espacios del día</p>
+                    <h2 className="acv-month acv-stat-day">
+                      {formatterDiaLargo.format(selectedDate)}
+                    </h2>
+                  </div>
+                  <span className="acv-count-pill">{espaciosDelDia.length}</span>
                 </div>
-                <div className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
-                  {espaciosDelDia.length}
-                </div>
-              </div>
 
-              <div className="space-y-3">
                 {loading ? (
-                  <p className="text-sm text-slate-500">Cargando espacios...</p>
+                  <p className="acv-muted">Cargando espacios…</p>
                 ) : espaciosDelDia.length === 0 ? (
-                  <div className="app-dark-card rounded-2xl p-5 text-sm">
-                    No tienes espacios registrados para este día. Crea una
-                    franja libre para empezar a recibir reservas.
+                  <div className="acv-empty">
+                    No tienes espacios registrados para este día. Crea una franja
+                    libre para empezar a recibir reservas.
                   </div>
                 ) : (
-                  espaciosDelDia.map((espacio) => {
-                    const blocks = buildBlocksForOccurrence(espacio);
-
-                    return (
-                      <div
-                        key={`${espacio.disponibilidad_id}-${espacio.inicio_real}`}
-                        className="app-dark-card rounded-2xl p-4"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="flex items-center gap-2 text-sm font-bold">
+                  <div className="acv-list">
+                    {espaciosDelDia.map((espacio) => {
+                      const blocks = buildBlocksForOccurrence(espacio);
+                      return (
+                        <div
+                          key={`${espacio.disponibilidad_id}-${espacio.inicio_real}`}
+                          className="acv-item acv-item-col"
+                        >
+                          <div className="acv-item-row">
+                            <strong className="acv-item-time">
                               <Clock3 className="h-4 w-4" />
-                              {formatterHora.format(new Date(espacio.inicio_real))} -{' '}
+                              {formatterHora.format(new Date(espacio.inicio_real))} –{' '}
                               {formatterHora.format(new Date(espacio.fin_real))}
-                            </p>
-                            <p className="mt-1 text-xs">
-                              {espacio.duracion_bloque_minutos} min por bloque
-                            </p>
+                            </strong>
+                            <EstadoBadge activo={espacio.activo} />
                           </div>
-                          <EstadoBadge activo={espacio.activo} />
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {blocks.slice(0, 8).map((block) => (
-                            <span
-                              key={`${espacio.disponibilidad_id}-${block.inicio.toISOString()}`}
-                              className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white"
-                            >
-                              {formatterHora.format(block.inicio)} - {formatterHora.format(block.fin)}
-                            </span>
-                          ))}
-                          {blocks.length > 8 && (
-                            <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white">
-                              +{blocks.length - 8} bloques
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="mt-3 flex items-center justify-between gap-3">
-                          <div className="text-[11px] text-white">
-                            {espacio.recurrente ? (
-                              <span className="inline-flex items-center gap-1">
-                                <Repeat className="h-3.5 w-3.5" />
-                                Recurrente
+                          <span className="acv-muted">
+                            {espacio.duracion_bloque_minutos} min por bloque
+                          </span>
+                          <div className="acv-item-chips">
+                            {blocks.slice(0, 6).map((b) => (
+                              <span key={`${espacio.disponibilidad_id}-${b.inicio.toISOString()}`}>
+                                {formatterHora.format(b.inicio)}
                               </span>
-                            ) : (
-                              'Única vez'
+                            ))}
+                            {blocks.length > 6 && <span>+{blocks.length - 6}</span>}
+                          </div>
+                          <div className="acv-item-row">
+                            <span className="acv-muted acv-item-rec">
+                              {espacio.recurrente ? (
+                                <>
+                                  <Repeat className="h-3.5 w-3.5" />
+                                  Recurrente
+                                </>
+                              ) : (
+                                'Única vez'
+                              )}
+                            </span>
+                            {espacio.activo !== false && (
+                              <button
+                                type="button"
+                                className="acv-del"
+                                onClick={() => handleDesactivar(espacio.disponibilidad_id)}
+                                disabled={desactivandoId === espacio.disponibilidad_id}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                {desactivandoId === espacio.disponibilidad_id
+                                  ? 'Desactivando…'
+                                  : 'Desactivar'}
+                              </button>
                             )}
                           </div>
-                          {espacio.activo !== false && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleDesactivar(espacio.disponibilidad_id)
-                              }
-                              disabled={desactivandoId === espacio.disponibilidad_id}
-                              className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 transition hover:text-rose-700 disabled:opacity-60"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              {desactivandoId === espacio.disponibilidad_id
-                                ? 'Desactivando...'
-                                : 'Desactivar'}
-                            </button>
-                          )}
                         </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </Card>
-          </aside>
-        </div>
-      </div>
-
-      <Modal
-        open={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        title="Configurar disponibilidad"
-        modalWidth="xl"
-        subtitle="Publica un horario único o recurrente."
-        primaryAction={{
-          label: creating ? 'Guardando...' : 'Guardar disponibilidad',
-          onClick: handleCreateSpace,
-        }}
-        secondaryAction={{
-          label: 'Cancelar',
-          onClick: () => setShowCreateModal(false),
-        }}
-      >
-        <div className="space-y-5 text-left">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <button
-              type="button"
-              onClick={() => setModoCreacion('unico')}
-              className={`rounded-2xl border p-4 text-left transition ${
-                !form.recurrente
-                  ? 'border-blue-500 bg-blue-50 shadow-sm'
-                  : 'border-slate-200 bg-white hover:border-slate-300'
-              }`}
-            >
-              <p className="text-sm font-bold text-slate-900">Horario único</p>
-              <p className="mt-1 text-xs leading-5 text-slate-600">
-                Publica una disponibilidad para una fecha concreta.
-              </p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setModoCreacion('recurrente')}
-              className={`rounded-2xl border p-4 text-left transition ${
-                form.recurrente
-                  ? 'border-blue-500 bg-blue-50 shadow-sm'
-                  : 'border-slate-200 bg-white hover:border-slate-300'
-              }`}
-            >
-              <p className="text-sm font-bold text-slate-900">
-                Horario recurrente
-              </p>
-              <p className="mt-1 text-xs leading-5 text-slate-600">
-                Repite el mismo horario cada semana dentro de un rango.
-              </p>
-            </button>
-          </div>
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-            <div className="flex items-start gap-3">
-              <div className="mt-0.5 rounded-full bg-slate-200 p-2 text-slate-700">
-                <Info className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">{textoModo}</p>
-                {resumenRecurrencia && (
-                  <p className="mt-1 text-sm text-slate-600">
-                    {resumenRecurrencia}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {modalWarnings.length > 0 && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-              <p className="text-sm font-semibold text-amber-900">
-                Revisa estos datos
-              </p>
-              <div className="mt-2 space-y-1">
-                {modalWarnings.map((warning) => (
-                  <p key={warning} className="text-sm text-amber-800">
-                    {warning}
-                  </p>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Inicio del espacio
-            </label>
-            <input
-              type="datetime-local"
-              value={form.inicio}
-              onChange={(e) => handleInicioChange(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Fin del espacio
-            </label>
-            <input
-              type="datetime-local"
-              value={form.fin}
-              onChange={(e) =>
-                setForm((prev) => ({ ...prev, fin: e.target.value }))
-              }
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Duración por bloque
-            </label>
-            <input
-              type="number"
-              min={DEFAULT_BLOCK_DURATION_MINUTES}
-              step="15"
-              value={form.duracionBloqueMinutos}
-              onChange={(e) => handleDuracionChange(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-            />
-            <p className="mt-2 text-xs text-slate-500">
-              {bloquesHelper}
-            </p>
-          </div>
-
-          <div className="flex items-end">
-            <div className="w-full">
-              <label className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={form.usaBloques}
-                  onChange={(e) => handleUsaBloquesChange(e.target.checked)}
-                />
-                Dividir en bloques reservables
-              </label>
-              <p className="mt-2 text-xs text-slate-500">{bloquesHelper}</p>
-            </div>
-          </div>
-          </div>
-
-          {form.recurrente && (
-            <>
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Días de la semana
-                </label>
-                <div className="grid grid-cols-7 gap-2">
-                  {[
-                    { key: 1, label: 'L' },
-                    { key: 2, label: 'M' },
-                    { key: 3, label: 'X' },
-                    { key: 4, label: 'J' },
-                    { key: 5, label: 'V' },
-                    { key: 6, label: 'S' },
-                    { key: 0, label: 'D' },
-                  ].map((day) => {
-                    const isActive = form.diasSemana.includes(day.key);
-                    return (
-                      <button
-                        key={day.key}
-                        type="button"
-                        onClick={() => toggleDiaRecurrencia(day.key)}
-                        className={`rounded-xl border px-0 py-3 text-sm font-bold transition ${
-                          isActive
-                            ? 'border-blue-500 bg-blue-50 text-blue-700'
-                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
-                        }`}
-                      >
-                        {day.label}
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mt-2 text-xs text-slate-500">
-                  Puedes elegir varios días. Se creará una recurrencia por cada día seleccionado.
-                </p>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Fecha inicio recurrencia
-                </label>
-                <input
-                  type="date"
-                  value={form.fechaInicio}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, fechaInicio: e.target.value }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                />
-              </div>
-
-              <div className="sm:col-span-2">
-                <label className="mb-2 block text-sm font-semibold text-slate-700">
-                  Fecha fin recurrencia
-                </label>
-                <input
-                  type="date"
-                  value={form.fechaFin}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, fechaFin: e.target.value }))
-                  }
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                />
-              </div>
-
-              {resumenRecurrencia && (
-                <div className="sm:col-span-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-                  {resumenRecurrencia}
-                </div>
-              )}
-            </>
-          )}
-
-          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4">
-            <p className="text-sm font-semibold text-slate-900">
-              Vista previa de tu disponibilidad
-            </p>
-            <p className="mt-2 text-sm text-slate-600">
-              {previewConfig.mensaje}
-            </p>
-
-            {previewConfig.valido && (
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl bg-white p-3">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                    Franja base
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">
-                    {formatterHora.format(new Date(form.inicio))} -{' '}
-                    {formatterHora.format(new Date(form.fin))}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-white p-3">
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                    Resultado visible
-                  </p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">
-                    {form.usaBloques
-                      ? `${previewConfig.cantidadBloques || 0} bloque(s)`
-                      : '1 franja continua'}
-                  </p>
-                  {form.usaBloques && !previewConfig.encajaExacto && (
-                    <p className="mt-2 text-xs text-amber-700">
-                      Sobran {previewConfig.minutosSobrantes} min fuera de bloque.
-                    </p>
-                  )}
-                </div>
-                {form.recurrente && form.fechaInicio && form.fechaFin && (
-                  <div className="rounded-xl bg-white p-3 sm:col-span-2">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                      Vigencia
-                    </p>
-                    <p className="mt-2 text-sm font-semibold text-slate-900">
-                      Del {formatterFechaCompleta.format(new Date(form.fechaInicio))} al{' '}
-                      {formatterFechaCompleta.format(new Date(form.fechaFin))}
-                    </p>
+                      );
+                    })}
                   </div>
                 )}
-                {form.usaBloques &&
-                  !previewConfig.encajaExacto &&
-                  previewConfig.sugerenciasDuracion.length > 0 && (
-                    <div className="rounded-xl bg-white p-3 sm:col-span-2">
-                      <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                        Duraciones que sí encajan
-                      </p>
-                      <p className="mt-2 text-sm font-semibold text-slate-900">
-                        {previewConfig.sugerenciasDuracion.join(', ')} min
-                      </p>
-                    </div>
-                  )}
               </div>
-            )}
-
-            {form.usaBloques && previewConfig.bloques.length > 0 && (
-              <div className="mt-4">
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
-                  Bloques reservables
-                </p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {previewConfig.bloques.map((bloque) => (
-                    <span
-                      key={bloque}
-                      className="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700"
-                    >
-                      {bloque}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </Modal>
+            </>
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

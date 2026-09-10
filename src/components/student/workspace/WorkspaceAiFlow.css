@@ -1,0 +1,362 @@
+/* my-thesis: rail de tesis/documentos/historial + hoja Word + chat */
+.waf {
+  --waf-line: rgba(15, 23, 42, 0.08);
+  --waf-muted: #64748b;
+  --waf-accent: #0059b5;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1;
+  gap: 10px;
+}
+
+.waf-switcher {
+  align-self: flex-start;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  background: #eef1f6;
+  border-radius: 999px;
+}
+.waf-switcher button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  color: var(--waf-muted);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.waf-switcher button.is-active {
+  background: #fff;
+  color: #0f172a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.waf-body {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr) minmax(0, 380px);
+  gap: 10px;
+  min-height: 0;
+  flex: 1;
+}
+.waf-body.view-chat {
+  grid-template-columns: 264px minmax(0, 1fr);
+}
+.waf-body.view-doc,
+.waf-body.has-action {
+  grid-template-columns: 264px minmax(0, 1fr);
+}
+@media (max-width: 1200px) {
+  .waf-body,
+  .waf-body.view-chat,
+  .waf-body.view-doc,
+  .waf-body.has-action {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+}
+
+.waf-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--waf-line);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.waf-rail-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--waf-line);
+}
+.waf-select {
+  width: 100%;
+  border: 1px solid var(--waf-line);
+  background: #f8fafc;
+  border-radius: 9px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+.waf-rail-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.waf-rail-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid var(--waf-line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+}
+.waf-rail-btn:hover {
+  background: #f1f5f9;
+  color: var(--waf-accent);
+}
+.waf-rail-badge {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-radius: 999px;
+  padding: 0 6px;
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.waf-rail h4 {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--waf-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.waf-rail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.waf-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 7px 8px;
+  font-size: 13px;
+  color: #334155;
+  cursor: pointer;
+}
+.waf-rail-item:hover {
+  background: #f1f5f9;
+}
+.waf-rail-item.is-active {
+  background: #e6effb;
+  color: var(--waf-accent);
+}
+.waf-rail-item .waf-ico {
+  flex-shrink: 0;
+  color: var(--waf-accent);
+}
+.waf-rail-item .waf-txt {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.waf-rail-item .waf-time {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #94a3b8;
+}
+.waf-rail-empty {
+  font-size: 12px;
+  color: #94a3b8;
+  padding: 4px 8px;
+  line-height: 1.5;
+}
+
+/* ---------- hoja Word ---------- */
+.waf-doc {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+  border: 1px solid var(--waf-line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.waf-doc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #f6f8fc;
+  border-bottom: 1px solid var(--waf-line);
+}
+.waf-doc-head .waf-w {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.waf-doc-badge {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--waf-accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.waf-doc-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.waf-doc-sub {
+  font-size: 11px;
+  color: var(--waf-muted);
+}
+.waf-doc-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.waf-doc-act,
+.waf-doc-dl {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  border: 1px solid var(--waf-line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.waf-doc-act:hover,
+.waf-doc-dl:hover {
+  background: #f1f5f9;
+  color: var(--waf-accent);
+}
+.waf-doc-act.is-active {
+  background: var(--waf-accent);
+  border-color: var(--waf-accent);
+  color: #fff;
+}
+.waf-doc-dl {
+  color: var(--waf-accent);
+}
+
+.waf-doc-panel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  background: #fff;
+}
+.waf-doc-panel > * {
+  flex: 1;
+  min-height: 0;
+}
+
+.waf-doc-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: #eef1f6;
+  padding: 20px;
+}
+.waf-sheet {
+  max-width: 720px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: 56px 64px;
+  font-family: 'Times New Roman', Georgia, serif;
+  font-size: 15px;
+  line-height: 1.7;
+  color: #1a1a1a;
+}
+.waf-sheet h1 {
+  font-size: 20px;
+  text-align: center;
+  margin: 0 0 24px;
+}
+.waf-sheet h2 {
+  font-size: 17px;
+  margin: 22px 0 10px;
+}
+.waf-sheet h3 {
+  font-size: 15px;
+  margin: 18px 0 8px;
+}
+.waf-sheet p {
+  margin: 0 0 12px;
+  text-align: justify;
+}
+.waf-sheet ol,
+.waf-sheet ul {
+  padding-left: 28px;
+  margin: 0 0 12px;
+}
+.waf-sheet li {
+  margin-bottom: 6px;
+}
+
+.waf-doc-placeholder {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  color: #94a3b8;
+  padding: 40px;
+}
+.waf-doc-placeholder .waf-ph-ico {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+.waf-doc-frame {
+  flex: 1;
+  min-height: 0;
+  border: 0;
+  width: 100%;
+}
+
+.waf-chat {
+  min-height: 0;
+  display: flex;
+}
+.waf-chat > * {
+  flex: 1;
+  min-height: 0;
+}

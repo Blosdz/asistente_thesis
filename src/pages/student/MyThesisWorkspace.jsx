@@ -7,10 +7,7 @@ import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import AccessManagementModal from '../../components/student/workspace/AccessManagementModal';
 import SuggestionsThreadModal from '../../components/student/workspace/SuggestionsThreadModal';
-import AcademicAIChatPanel from '../../components/student/workspace/AcademicAIChatPanel';
-import ThesisPreviewPanel from '../../components/student/workspace/ThesisPreviewPanel';
-import WorkspaceActionNavbar from '../../components/student/workspace/WorkspaceActionNavbar';
-import ThesisDocBuilderPanel from '../../components/student/workspace/ThesisDocBuilderPanel';
+import WorkspaceAiFlow from '../../components/student/workspace/WorkspaceAiFlow';
 import ThesisCoverUploadPanel from '../../components/student/workspace/ThesisCoverUploadPanel';
 import ThesisManualEditorPanel from '../../components/student/workspace/ThesisManualEditorPanel';
 import ThesisReferencesPanel from '../../components/student/workspace/ThesisReferencesPanel';
@@ -726,99 +723,81 @@ export default function MyThesisWorkspace() {
     });
   }, [createdPaymentSummary?.pago_id, navigate]);
 
-  const renderDefaultWorkspaceLayout = () => (
-    <div className="grid min-h-0 flex-1 gap-3 xl:grid-cols-[minmax(0,2fr)_minmax(300px,1fr)]">
-      <section className="flex min-h-0 flex-col">
-        {activeActionSection === 'cover-upload' ? (
-          <ThesisCoverUploadPanel
+  const closeActionModal = () => setActiveActionSection(null);
+
+  const renderWorkspaceContent = () => (
+    <WorkspaceAiFlow
+      selectedThesis={selectedThesis}
+      tesisId={selectedThesisId}
+      documents={documents}
+      currentVersion={currentVersion}
+      editableVersion={editableVersion}
+      previewUrl={previewUrl}
+      onSelectDocument={seleccionarVersion}
+      onOpenAction={setActiveActionSection}
+      activeActionSection={activeActionSection}
+      actionPanel={renderActionPanel()}
+      thesesList={thesesList}
+      selectedThesisId={selectedThesisId}
+      onSelectThesis={setSelectedThesisId}
+      suggestionsCount={sugerenciasVisibles.length}
+      onOpenSuggestions={() => setShowSuggestionsModal(true)}
+      onOpenAccesses={() => setShowAccessModal(true)}
+      onOpenCreate={openCreateModal}
+    />
+  );
+
+  const renderActionPanel = () => {
+    switch (activeActionSection) {
+      case 'manual-edit':
+        return (
+          <ThesisManualEditorPanel
             thesisId={selectedThesisId}
             thesis={selectedThesis}
-            onBack={() => setActiveActionSection(null)}
-            onThesisUpdated={handleThesisUpdated}
-            className="flex-1"
-          />
-        ) : activeActionSection === 'doc-builder' ? (
-          <ThesisDocBuilderPanel
-            tesisId={selectedThesisId}
-            thesis={selectedThesis}
+            documents={documents}
+            currentVersion={currentVersion}
             documentId={editableVersion?.id}
             editableDocument={editableVersion}
-            previewUrl={previewUrl}
             hasThesisDocuments={hasThesisDocuments}
             onUploadEditableProgress={handleUploadEditableProgress}
             uploadingEditableProgress={uploadingEditableProgress}
             onGenerated={handleGeneratedDocx}
-            onThesisUpdated={handleThesisUpdated}
-            onBack={() => setActiveActionSection(null)}
+            onBack={closeActionModal}
+            availableFormats={availableFormats}
+            activeFormat={activeFormat}
+            onFormatChange={handleFormatChange}
+            changingFormat={changingFormat}
+            thesisIndex={thesisIndex}
+            onThesisIndexRefresh={() => cargarThesisIndex(selectedThesisId)}
             className="flex-1"
           />
-        ) : (
-          <ThesisPreviewPanel
-            selectedThesis={selectedThesis}
-            currentVersion={currentVersion}
-            previewUrl={previewUrl}
-            className="flex-1"
-          />
-        )}
-      </section>
-
-      <aside className="flex min-h-0 flex-col">
-        <AcademicAIChatPanel
-          tesisId={selectedThesisId}
-          documentId={editableVersion?.id}
-          className="flex-1"
-        />
-      </aside>
-    </div>
-  );
-
-  const renderWorkspaceContent = () => {
-    switch (activeActionSection) {
-      case 'manual-edit':
-        return (
-          <section className="flex min-h-0 w-full flex-1">
-            <ThesisManualEditorPanel
-              thesisId={selectedThesisId}
-              thesis={selectedThesis}
-              documents={documents}
-              currentVersion={currentVersion}
-              documentId={editableVersion?.id}
-              editableDocument={editableVersion}
-              hasThesisDocuments={hasThesisDocuments}
-              onUploadEditableProgress={handleUploadEditableProgress}
-              uploadingEditableProgress={uploadingEditableProgress}
-              onGenerated={handleGeneratedDocx}
-              onBack={() => setActiveActionSection(null)}
-              availableFormats={availableFormats}
-              activeFormat={activeFormat}
-              onFormatChange={handleFormatChange}
-              changingFormat={changingFormat}
-              thesisIndex={thesisIndex}
-              onThesisIndexRefresh={() => cargarThesisIndex(selectedThesisId)}
-              className="flex-1"
-            />
-          </section>
         );
-
+      case 'cover-upload':
+        return (
+          <ThesisCoverUploadPanel
+            thesisId={selectedThesisId}
+            thesis={selectedThesis}
+            onBack={closeActionModal}
+            onThesisUpdated={handleThesisUpdated}
+            className="flex-1"
+          />
+        );
       case 'references':
         return (
-          <section className="flex min-h-0 w-full flex-1">
-            <ThesisReferencesPanel
-              thesisId={selectedThesisId}
-              thesis={selectedThesis}
-              activeFormat={activeFormat}
-              availableFormats={availableFormats}
-              onFormatChange={handleFormatChange}
-              changingFormat={changingFormat}
-              documents={documents}
-              onBack={() => setActiveActionSection(null)}
-              className="flex-1"
-            />
-          </section>
+          <ThesisReferencesPanel
+            thesisId={selectedThesisId}
+            thesis={selectedThesis}
+            activeFormat={activeFormat}
+            availableFormats={availableFormats}
+            onFormatChange={handleFormatChange}
+            changingFormat={changingFormat}
+            documents={documents}
+            onBack={closeActionModal}
+            className="flex-1"
+          />
         );
-
       default:
-        return renderDefaultWorkspaceLayout();
+        return null;
     }
   };
 
@@ -877,22 +856,6 @@ export default function MyThesisWorkspace() {
   return (
     <div className="my-thesis-workspace relative flex h-[calc(100dvh-6rem)] w-full overflow-hidden px-0 pb-2 text-slate-900">
       <div className="mx-auto flex min-h-0 w-full max-w-[1760px] flex-1 flex-col gap-2">
-        <WorkspaceActionNavbar
-          activeActionSection={activeActionSection}
-          disabled={!selectedThesisId}
-          onSelectAction={setActiveActionSection}
-          documents={documents}
-          currentDocumentId={currentVersion?.id}
-          onSelectDocument={seleccionarVersion}
-          suggestionsCount={sugerenciasVisibles.length}
-          onOpenSuggestions={() => setShowSuggestionsModal(true)}
-          thesesList={thesesList}
-          selectedThesisId={selectedThesisId}
-          onSelectThesis={setSelectedThesisId}
-          onOpenAccesses={() => setShowAccessModal(true)}
-          onOpenCreate={openCreateModal}
-        />
-
         {renderWorkspaceContent()}
       </div>
 
