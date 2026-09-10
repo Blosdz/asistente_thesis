@@ -51,6 +51,16 @@ const toolbarButtons = [
   { id: 'italic', label: 'Cursiva', icon: Italic },
   { id: 'underline', label: 'Subrayado', icon: Underline },
 ];
+const normalizeWordFilename = (filename) => {
+  const clean = String(filename || '').trim() || 'documento';
+  const extensionGroup = clean.match(/(?:\.(?:docx|docm))+$/i);
+  if (!extensionGroup) return clean + '.docx';
+  const finalExtension = extensionGroup[0]
+    .match(/\.(?:docx|docm)/gi)
+    .pop()
+    .toLowerCase();
+  return clean.slice(0, extensionGroup.index) + finalExtension;
+};
 
 const getDocumentName = (document) =>
   document?.nombre_archivo ||
@@ -763,7 +773,7 @@ export default function ThesisManualEditorPanel({
       // sin reconstruirlo ni subirlo a Google Drive.
       const blob = await descargarDocumentoEditable(documentId);
       const rawName = getDocumentName(activeDocument) || 'documento.docx';
-      const filename = /\.docm?$/i.test(rawName) ? rawName : `${rawName}.docx`;
+      const filename = normalizeWordFilename(rawName);
 
       const url = window.URL.createObjectURL(blob);
       const link = window.document.createElement('a');
@@ -1111,6 +1121,21 @@ export default function ThesisManualEditorPanel({
                       </>
                     )}
                   </div>
+                  <div className="h-5 w-px bg-[#c2c6d8]/70" />
+                  <button
+                    type="button"
+                    title="Detecta la bibliografía de esta sección, la crea como referencias de la tesis y la imbuye en el Word con el formato de la tesis"
+                    disabled={!documentId || !draft.trim() || extractingRefs}
+                    onClick={handleExtractSectionReferences}
+                    className="inline-flex h-8 items-center gap-1 rounded px-2 text-xs font-semibold text-[#424656] transition hover:bg-white/90 hover:text-[#191b24] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {extractingRefs ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Library className="h-4 w-4" />
+                    )}
+                    Extraer referencias
+                  </button>
                 </div>
 
                 <span className="text-xs font-semibold text-[#727687]">

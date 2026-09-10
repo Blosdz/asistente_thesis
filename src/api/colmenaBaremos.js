@@ -1,14 +1,19 @@
 // Cliente ligero contra la API del backend de Colmena para listar baremos
 // (escalas de puntuación) de un formulario e insertarlos en la tesis.
-import { apiRequest } from './client';
+import { apiRequest, getStoredToken } from './client';
 
 const COLMENA_API_BASE = (
   import.meta.env.VITE_COLMENA_API_BASE_URL || 'http://127.0.0.1:8080'
 ).replace(/\/+$/, '');
 
 async function getJson(path) {
+  // Colmena acepta el mismo JWT de AppThesis como Bearer (cross-login).
+  const token = getStoredToken();
   const response = await fetch(`${COLMENA_API_BASE}${path}`, {
-    headers: { Accept: 'application/json' },
+    headers: {
+      Accept: 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
   if (!response.ok) {
     throw new Error(`Colmena API ${response.status}: ${path}`);
