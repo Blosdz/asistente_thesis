@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import {
@@ -171,30 +171,30 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState(dashboardInicial);
 
-  useEffect(() => {
-    const cargarDashboard = async () => {
-      try {
-        setLoading(true);
-        const data = await obtenerDashboardEstudianteBase();
-        setDashboard({
-          resumen: { ...resumenInicial, ...(data?.resumen ?? {}) },
-          perfil: data?.perfil ?? null,
-          tesis: data?.tesis ?? [],
-          suscripcion: data?.suscripcion ?? null,
-          citas: data?.citas ?? [],
-          pagos: data?.pagos ?? [],
-          asesores: data?.asesores ?? [],
-        });
-      } catch (error) {
-        console.error('Error cargando dashboard de estudiante:', error);
-        toast.error('No se pudo cargar el dashboard del estudiante.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    cargarDashboard();
+  const cargarDashboard = useCallback(async ({ silent = false } = {}) => {
+    try {
+      if (!silent) setLoading(true);
+      const data = await obtenerDashboardEstudianteBase();
+      setDashboard({
+        resumen: { ...resumenInicial, ...(data?.resumen ?? {}) },
+        perfil: data?.perfil ?? null,
+        tesis: data?.tesis ?? [],
+        suscripcion: data?.suscripcion ?? null,
+        citas: data?.citas ?? [],
+        pagos: data?.pagos ?? [],
+        asesores: data?.asesores ?? [],
+      });
+    } catch (error) {
+      console.error('Error cargando dashboard de estudiante:', error);
+      if (!silent) toast.error('No se pudo cargar el dashboard del estudiante.');
+    } finally {
+      if (!silent) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    cargarDashboard();
+  }, [cargarDashboard]);
 
   const perfilNombre = useMemo(
     () => getStudentName(dashboard.perfil),
@@ -634,6 +634,7 @@ export default function Dashboard() {
             <AdvisorConnectionCard
               advisor={asesoresNormalizados[0]}
               onOpenAdvisors={() => navigate('/student/asesorias')}
+              onConnected={() => cargarDashboard({ silent: true })}
             />
 
             <SubscriptionSummaryCard

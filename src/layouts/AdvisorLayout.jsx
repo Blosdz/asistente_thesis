@@ -1,10 +1,10 @@
 import { Outlet, useNavigate } from 'react-router-dom';
 import {
+  LayoutDashboard,
   Users,
   CalendarDays,
   BookOpen,
   BookOpenCheck,
-  ClipboardCheck,
   User as UserIcon,
   LogOut,
   Settings,
@@ -132,14 +132,14 @@ const AdvisorLayout = () => {
 
   const navItems = [
     {
+      label: 'Panel',
+      path: '/advisor/dashboard',
+      icon: <LayoutDashboard size={18} />,
+    },
+    {
       label: 'Estudiantes',
       path: '/advisor/students',
       icon: <Users size={18} />,
-    },
-    {
-      label: 'Reservas',
-      path: '/advisor/reservations',
-      icon: <ClipboardCheck size={18} />,
     },
     {
       label: 'Calendario',
@@ -195,7 +195,7 @@ const AdvisorLayout = () => {
                 {user?.email || 'Advisor'}
               </p>
               <p className="text-sm font-medium text-slate-500">
-                Panel de asesor
+                Panel de asesor académico
               </p>
             </div>
 

@@ -74,6 +74,7 @@ const Modal = ({
   const modalWidthClass = widthMap[modalWidth] || widthMap.md;
   const hasDefaultActions =
     showDefaultActions && (primaryAction || secondaryAction);
+  const noContentPadding = contentClassName.includes('p-0');
 
   const modalContent = (
     <div
@@ -85,13 +86,14 @@ const Modal = ({
         }
       }}
     >
-      <div className="ios-overlay absolute inset-0" />
+      <div className="absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]" />
 
       <div
         className={[
-          'glass-card-login relative z-10 flex w-full flex-col overflow-hidden !p-0',
+          'relative z-10 flex w-full flex-col overflow-hidden rounded-[28px] bg-white',
+          'shadow-[0_28px_90px_-16px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5',
           'max-h-[calc(100dvh-2rem)] sm:max-h-[calc(100dvh-3rem)]',
-          'animate-in fade-in zoom-in-95 duration-300',
+          'animate-in fade-in zoom-in-95 duration-200',
           modalWidthClass,
           panelClassName,
         ].join(' ')}
@@ -101,26 +103,24 @@ const Modal = ({
           type="button"
           onClick={onClose}
           className={[
-            'ios-secondary-button absolute right-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full transition-colors',
+            'absolute right-4 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full',
+            'bg-slate-100 text-slate-400 transition hover:bg-slate-200 hover:text-slate-600',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40',
             closeButtonClassName,
           ].join(' ')}
           aria-label="Cerrar"
         >
-          <X
-            className={['h-5 w-5 text-slate-500', closeIconClassName].join(' ')}
-          />
+          <X className={['h-4 w-4', closeIconClassName].join(' ')} />
         </button>
 
         {showDefaultHeader && (
-          <header className="shrink-0 space-y-2 px-6 pt-6 text-center sm:px-8 sm:pt-8 lg:px-10 lg:pt-10">
-            <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+          <header className="shrink-0 px-6 pb-1 pr-14 pt-6 text-left sm:px-8 sm:pt-7">
+            <h2 className="text-xl font-bold tracking-tight text-slate-900 sm:text-[1.5rem]">
               {title}
             </h2>
 
             {subtitle && (
-              <p className="text-sm font-semibold text-slate-500">
-                {subtitle}
-              </p>
+              <p className="mt-1 text-sm text-slate-500">{subtitle}</p>
             )}
           </header>
         )}
@@ -129,15 +129,13 @@ const Modal = ({
           data-modal-scroll="true"
           className={[
             'ios-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain text-left [overflow-anchor:none]',
-            showDefaultHeader ? 'px-6 py-6 sm:px-8 sm:py-8 lg:px-10' : '',
-            !showDefaultHeader && !contentClassName.includes('p-0')
-              ? 'px-6 py-6 pt-10 sm:px-8 sm:py-8 lg:px-10'
-              : '',
+            showDefaultHeader && !noContentPadding ? 'px-6 py-5 sm:px-8' : '',
+            !showDefaultHeader && !noContentPadding ? 'px-6 pb-6 pt-14 sm:px-8' : '',
             contentClassName,
           ].join(' ')}
         >
           {description && (
-            <p className={`${descClass} max-w-xl leading-relaxed text-slate-700`}>
+            <p className={`${descClass} max-w-xl leading-relaxed text-slate-600`}>
               {description}
             </p>
           )}
@@ -146,17 +144,19 @@ const Modal = ({
         </main>
 
         {hasDefaultActions && (
-          <footer className="shrink-0 border-t border-slate-200/80 bg-white/95 px-6 py-4 backdrop-blur sm:px-8 lg:px-10">
-            <div className="flex w-full flex-col gap-3 sm:flex-row">
-              {secondaryAction && (
+          <footer className="shrink-0 border-t border-slate-100 bg-slate-50/60 px-6 py-3.5 sm:px-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              {secondaryAction ? (
                 <button
                   type="button"
                   onClick={secondaryAction.onClick}
                   disabled={secondaryAction.disabled}
-                  className="ios-secondary-button h-12 flex-1 rounded-2xl font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {secondaryAction.label}
                 </button>
+              ) : (
+                <span />
               )}
 
               {primaryAction && (
@@ -164,7 +164,7 @@ const Modal = ({
                   type="button"
                   onClick={primaryAction.onClick}
                   disabled={primaryAction.disabled}
-                  className="ios-accent-button h-12 flex-1 rounded-2xl font-semibold transition active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-500/25 transition hover:bg-blue-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {primaryAction.label}
                 </button>

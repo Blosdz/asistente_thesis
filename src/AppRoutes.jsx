@@ -25,9 +25,9 @@ const ScheduleSession = lazy(() => import('./pages/student/ScheduleSession'));
 const Profile = lazy(() => import('./pages/student/Profile'));
 const NotificationCenter = lazy(() => import('./pages/notifications/NotificationCenter'));
 const AdvisorLayout = lazy(() => import('./layouts/AdvisorLayout'));
+const AdvisorDashboard = lazy(() => import('./pages/advisor/Dashboard'));
 const AdvisorProfile = lazy(() => import('./pages/advisor/Profile'));
 const AdvisorStudents = lazy(() => import('./pages/advisor/Students'));
-const AdvisorReservations = lazy(() => import('./pages/advisor/Reservations'));
 const AdvisorCalendar = lazy(() => import('./pages/advisor/Calendar'));
 const AdvisorThesisReview = lazy(() => import('./pages/advisor/ThesisReview'));
 const AdvisorStudentDetail = lazy(() => import('./pages/advisor/StudentDetail'));
@@ -152,11 +152,15 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="students" replace />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdvisorDashboard />} />
           <Route path="profile" element={<AdvisorProfile />} />
           <Route path="notifications" element={<NotificationCenter />} />
           <Route path="students" element={<AdvisorStudents />} />
-          <Route path="reservations" element={<AdvisorReservations />} />
+          <Route
+            path="reservations"
+            element={<Navigate to="/advisor/calendar" replace />}
+          />
           <Route path="students/:studentId" element={<AdvisorStudentDetail />} />
           <Route path="calendar" element={<AdvisorCalendar />} />
           <Route path="thesis" element={<AdvisorThesisReview />} />

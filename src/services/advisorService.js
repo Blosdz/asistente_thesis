@@ -51,6 +51,16 @@ const normalizarEstudianteAsesor = (item) => {
     r_tesis_titulo: item.r_tesis_titulo || item.tesis_titulo || item.titulo || '',
     r_tesis_estado: item.r_tesis_estado || item.tesis_estado || '',
     r_reunion_inicio: item.r_reunion_inicio || item.reunion_inicio || null,
+    r_prox_reunion_inicio:
+      item.r_prox_reunion_inicio || item.prox_reunion_inicio || null,
+    r_prox_reunion_estado:
+      item.r_prox_reunion_estado || item.prox_reunion_estado || null,
+    r_avance_pct:
+      item.r_avance_pct ?? item.avance_pct ?? null,
+    r_avance_fuente: item.r_avance_fuente || item.avance_fuente || null,
+    r_modulos_completados:
+      item.r_modulos_completados ?? item.modulos_completados ?? null,
+    r_modulos_total: item.r_modulos_total ?? item.modulos_total ?? null,
   };
 };
 
