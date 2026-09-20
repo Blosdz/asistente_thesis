@@ -1,6 +1,5 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
-  BarChart3,
   BookOpen,
   BookOpenCheck,
   CalendarCheck2,
@@ -17,9 +16,12 @@ import { getCurrentUser, logout } from '../services/authService';
 import AnimatedTopNav from '../components/navigation/AnimatedTopNav';
 import NotificationsBell from '../components/notifications/NotificationsBell';
 import UnreadNotificationsPopup from '../components/notifications/UnreadNotificationsPopup';
+import { avatarGradientFrom, initialsFrom } from '../lib/avatarGradient';
+import AcademicFrame, { AcademicBrand } from './AcademicFrame';
 
 const StudentLayout = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const menuRef = useRef(null);
@@ -27,7 +29,8 @@ const StudentLayout = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        await getCurrentUser();
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
       } catch (error) {
         console.error('Failed to fetch user:', error);
         navigate('/login');
@@ -128,20 +131,13 @@ const StudentLayout = () => {
   }
 
   return (
-    <div className="app-shell student-shell font-sans text-gray-900">
+    <div className="app-shell student-shell academic-shell font-sans text-gray-900">
       <UnreadNotificationsPopup />
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Header */}
         <header className="app-topbar fixed top-0 z-50 w-full rounded-none">
-          <div className="flex min-h-20 w-full items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-            <div className="hidden min-w-0 flex-col sm:flex">
-              <span className="text-sm font-black tracking-[-0.01em] text-slate-950 heading-ubuntu">
-                AppThesis
-              </span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-blue-700">
-                Student
-              </span>
-            </div>
+          <div className="academic-header-inner">
+            <AcademicBrand role="student" />
 
             <AnimatedTopNav
               ariaLabel="Navegación de estudiante"
@@ -157,11 +153,12 @@ const StudentLayout = () => {
               <button
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
-                className="app-icon-button flex h-10 w-10 items-center justify-center rounded-full text-slate-900 transition-shadow hover:shadow-md"
+                className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr ${avatarGradientFrom(user?.user_metadata?.nombre || user?.email)} text-sm font-bold text-white shadow ring-2 ring-white transition-shadow hover:shadow-md`}
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
+                aria-label="Menú de estudiante"
               >
-                <UserIcon size={18} />
+                {initialsFrom(user?.user_metadata?.nombre || user?.email)}
               </button>
 
               {menuOpen && (
@@ -193,9 +190,7 @@ const StudentLayout = () => {
         </header>
 
         {/* Main Content Area */}
-        <main className="w-full px-4 sm:px-8 flex-1 pt-24">
-          <Outlet />
-        </main>
+        <AcademicFrame role="student" />
       </div>
     </div>
   );

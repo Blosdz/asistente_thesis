@@ -18,7 +18,7 @@ export default function ThesisProgressCard({
 
   return (
     <motion.section variants={reducedMotion ? undefined : itemVariants}>
-      <Card className="rounded-[32px] border border-white/70 bg-white/80 p-6 shadow-[0_20px_55px_rgba(15,23,42,0.08)] backdrop-blur sm:p-8">
+      <Card variant="glass" className="!rounded-[32px] !p-6 sm:!p-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">

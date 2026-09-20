@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   BookOpen,
-  Columns2,
   Download,
   FilePenLine,
   FileText,
   MessageSquare,
-  Sparkles,
   Upload,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -19,18 +17,14 @@ const DOC_ACTIONS = [
 
 import AcademicAIChatPanel from './AcademicAIChatPanel';
 import RelatedDocumentsPanel from './RelatedDocumentsPanel';
+import SuggestionsSidebar from './SuggestionsSidebar';
 import {
   downloadEditableDocument,
   getDocumentPreview,
 } from '../../../api/docGenerator.api';
 import { deepseekApi } from '../../../api/deepseek.api';
+import { buildDocumentPreview } from '../../../lib/documentPreview';
 import './WorkspaceAiFlow.css';
-
-const VIEWS = [
-  { id: 'split', label: 'Vista dividida', icon: Columns2 },
-  { id: 'doc', label: 'Documento', icon: FileText },
-  { id: 'chat', label: 'Chat con IA', icon: Sparkles },
-];
 
 function timeAgo(value) {
   if (!value) return '';
@@ -47,7 +41,7 @@ function timeAgo(value) {
   return new Date(then).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' });
 }
 
-const docName = (doc) =>
+export const docName = (doc) =>
   doc?.nombre || doc?.nombre_archivo || doc?.file_name || 'Documento';
 
 export default function WorkspaceAiFlow({
@@ -63,12 +57,18 @@ export default function WorkspaceAiFlow({
   thesesList = [],
   selectedThesisId = '',
   onSelectThesis = () => {},
-  suggestionsCount = 0,
-  onOpenSuggestions = () => {},
   onOpenAccesses = () => {},
   onOpenCreate = () => {},
+  view = 'split',
+  onChangeView = () => {},
+  showSuggestionsSidebar = false,
+  onCloseSuggestionsSidebar = () => {},
+  onOpenSuggestionsModal = () => {},
+  suggestions = [],
+  loadingSuggestions = false,
+  updatingSuggestionId = null,
+  onSubmitSuggestion = () => {},
 }) {
-  const [view, setView] = useState('split');
   const [previewHtml, setPreviewHtml] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -134,7 +134,7 @@ export default function WorkspaceAiFlow({
     [documents],
   );
 
-  const openHistory = useCallback(() => setView('chat'), []);
+  const openHistory = useCallback(() => onChangeView('chat'), [onChangeView]);
 
   const downloadDocument = useCallback(async () => {
     if (!previewDocId || downloading) return;
@@ -158,30 +158,21 @@ export default function WorkspaceAiFlow({
   }, [currentVersion, downloading, editableVersion, previewDocId]);
 
   const showDoc = view === 'split' || view === 'doc' || Boolean(activeActionSection);
-  const showChat = (view === 'split' || view === 'chat') && !activeActionSection;
+  const showChat = (view === 'split' || view === 'chat') && !activeActionSection && !showSuggestionsSidebar;
+  const documentPreview = useMemo(() => buildDocumentPreview(previewHtml), [previewHtml]);
 
   return (
     <div className="waf">
-      <div className="waf-switcher">
-        {VIEWS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            className={view === id ? 'is-active' : ''}
-            onClick={() => setView(id)}
-          >
-            <Icon size={15} />
-            {label}
-          </button>
-        ))}
-      </div>
-
-      <div className={`waf-body view-${view} ${activeActionSection ? 'has-action' : ''}`}>
+      <div
+        className={`waf-body view-${view} ${activeActionSection ? 'has-action' : ''} ${showSuggestionsSidebar ? 'has-suggestions' : ''}`}
+      >
         <div className="waf-rail">
           <div className="waf-rail-controls">
+            <label htmlFor="workspace-project" className="waf-project-label">Proyecto activo</label>
             {thesesList.length > 0 && (
               <select
                 className="waf-select"
+                id="workspace-project"
                 value={selectedThesisId}
                 onChange={(e) => onSelectThesis(e.target.value)}
                 aria-label="Tesis activa"
@@ -201,20 +192,15 @@ export default function WorkspaceAiFlow({
             />
 
             <div className="waf-rail-btns">
-              <button
-                type="button"
-                className="waf-rail-btn"
-                onClick={onOpenSuggestions}
-              >
-                <MessageSquare size={14} /> Sugerencias
-                {suggestionsCount > 0 && (
-                  <span className="waf-rail-badge">{suggestionsCount}</span>
-                )}
-              </button>
               <button type="button" className="waf-rail-btn" onClick={onOpenAccesses}>
                 Accesos
               </button>
-              <button type="button" className="waf-rail-btn" onClick={onOpenCreate}>
+              <button
+                type="button"
+                className="ios-glass-dashed-btn waf-rail-btn"
+                style={{ borderStyle: 'dashed' }}
+                onClick={onOpenCreate}
+              >
                 Nueva tesis
               </button>
             </div>
@@ -338,8 +324,8 @@ export default function WorkspaceAiFlow({
             ) : previewHtml ? (
               <iframe
                 className="waf-doc-frame"
-                srcDoc={previewHtml}
-                title="Vista previa DOCX servida por Python"
+                srcDoc={documentPreview}
+                title="Vista previa del documento de tesis"
                 sandbox=""
               />
             ) : (
@@ -366,6 +352,18 @@ export default function WorkspaceAiFlow({
               className="flex-1"
             />
           </div>
+        )}
+
+        {showSuggestionsSidebar && (
+          <SuggestionsSidebar
+            onClose={onCloseSuggestionsSidebar}
+            onOpenModal={onOpenSuggestionsModal}
+            thesisTitle={selectedThesis?.titulo}
+            suggestions={suggestions}
+            loading={loadingSuggestions}
+            updatingSuggestionId={updatingSuggestionId}
+            onSubmitSuggestion={onSubmitSuggestion}
+          />
         )}
       </div>
     </div>

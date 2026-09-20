@@ -336,7 +336,7 @@ export default function AdvisorStudents() {
             type="button"
             onClick={handleExport}
             disabled={filtered.length === 0}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+            className="ios-secondary-button inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold disabled:opacity-50"
           >
             <Download className="h-4 w-4" />
             Exportar listado
@@ -344,7 +344,7 @@ export default function AdvisorStudents() {
           <button
             type="button"
             onClick={() => setShowCodeModal(true)}
-            className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm shadow-blue-500/30 transition hover:bg-blue-700"
+            className="ios-accent-button inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold"
           >
             <UserPlus className="h-4 w-4" />
             Vincular estudiante
@@ -353,10 +353,10 @@ export default function AdvisorStudents() {
       </div>
 
       {/* card principal */}
-      <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="glass-card mt-6 !rounded-2xl !p-5">
         {/* toolbar */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-1 rounded-full bg-slate-100 p-1">
+          <div className="ios-segmented">
             {TABS.map((t) => (
               <button
                 key={t.value}
@@ -365,11 +365,7 @@ export default function AdvisorStudents() {
                   setTab(t.value);
                   setPage(0);
                 }}
-                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
-                  tab === t.value
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-800'
-                }`}
+                className={`ios-segmented-btn ${tab === t.value ? 'is-active' : ''}`}
               >
                 {t.label}
                 <span className="ml-1 text-slate-400">{tabCounts[t.value]}</span>
@@ -388,7 +384,7 @@ export default function AdvisorStudents() {
                   setPage(0);
                 }}
                 placeholder="Buscar por nombre, correo o tema…"
-                className="w-full rounded-full border border-slate-200 bg-white py-2 pl-10 pr-4 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500/30"
+                className="ios-glass-dropdown w-full rounded-full py-2 pl-10 pr-4 text-sm text-slate-900 outline-none"
               />
             </div>
             <select
@@ -397,7 +393,7 @@ export default function AdvisorStudents() {
                 setCarrera(e.target.value);
                 setPage(0);
               }}
-              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none"
+              className="select-pro-glass rounded-full px-3 py-2 text-xs font-medium text-slate-700 outline-none"
             >
               <option value="todas">Carrera: Todas</option>
               {carreras.map((c) => (
@@ -409,7 +405,7 @@ export default function AdvisorStudents() {
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 outline-none"
+              className="select-pro-glass rounded-full px-3 py-2 text-xs font-medium text-slate-700 outline-none"
             >
               {SORTS.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -664,7 +660,7 @@ export default function AdvisorStudents() {
               Solicitud pendiente
             </span>
 
-            <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-4 shadow-[0_1px_3px_rgba(15,23,42,0.04)]">
+            <div className="glass-card flex items-center gap-3 !rounded-2xl !p-4">
               <span
                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-sm font-bold ${avatarColor(
                   fullName(modal.student),

@@ -7,7 +7,9 @@ import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import AccessManagementModal from '../../components/student/workspace/AccessManagementModal';
 import SuggestionsThreadModal from '../../components/student/workspace/SuggestionsThreadModal';
-import WorkspaceAiFlow from '../../components/student/workspace/WorkspaceAiFlow';
+import WorkspaceAiFlow, { docName } from '../../components/student/workspace/WorkspaceAiFlow';
+import WorkspaceToolbar from '../../components/student/workspace/WorkspaceToolbar';
+import ViewTools from '../../components/navigation/ViewTools';
 import ThesisCoverUploadPanel from '../../components/student/workspace/ThesisCoverUploadPanel';
 import ThesisManualEditorPanel from '../../components/student/workspace/ThesisManualEditorPanel';
 import ThesisReferencesPanel from '../../components/student/workspace/ThesisReferencesPanel';
@@ -103,6 +105,8 @@ export default function MyThesisWorkspace() {
   const [activeActionSection, setActiveActionSection] = useState(null);
   const [showAccessModal, setShowAccessModal] = useState(false);
   const [showSuggestionsModal, setShowSuggestionsModal] = useState(false);
+  const [view, setView] = useState('doc');
+  const [showSuggestionsSidebar, setShowSuggestionsSidebar] = useState(true);
   const [uploadingEditableProgress, setUploadingEditableProgress] =
     useState(false);
 
@@ -686,10 +690,20 @@ export default function MyThesisWorkspace() {
       thesesList={thesesList}
       selectedThesisId={selectedThesisId}
       onSelectThesis={setSelectedThesisId}
-      suggestionsCount={sugerenciasVisibles.length}
-      onOpenSuggestions={() => setShowSuggestionsModal(true)}
       onOpenAccesses={() => setShowAccessModal(true)}
       onOpenCreate={openCreateModal}
+      view={view}
+      onChangeView={(nextView) => {
+        setView(nextView);
+        if (nextView !== 'doc') setShowSuggestionsSidebar(false);
+      }}
+      showSuggestionsSidebar={showSuggestionsSidebar}
+      onCloseSuggestionsSidebar={() => setShowSuggestionsSidebar(false)}
+      onOpenSuggestionsModal={() => setShowSuggestionsModal(true)}
+      suggestions={sugerenciasVisibles}
+      loadingSuggestions={loadingSugerencias}
+      updatingSuggestionId={updatingSuggestionId}
+      onSubmitSuggestion={handleSubmitAppliedSuggestion}
     />
   );
 
@@ -750,7 +764,7 @@ export default function MyThesisWorkspace() {
   if (!loading && thesesList.length === 0) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 py-10">
-        <Card className="w-full max-w-xl rounded-[32px] border-none p-12 text-center shadow-[0_36px_90px_-58px_rgba(15,23,42,0.4)]">
+        <Card variant="glass" className="w-full max-w-xl !rounded-[32px] !p-12 text-center">
           <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-600">
             <FileText className="h-10 w-10" />
           </div>
@@ -800,8 +814,26 @@ export default function MyThesisWorkspace() {
   }
 
   return (
-    <div className="my-thesis-workspace relative flex h-[calc(100dvh-6rem)] w-full overflow-hidden px-0 pb-2 text-slate-900">
-      <div className="mx-auto flex min-h-0 w-full max-w-[1760px] flex-1 flex-col gap-2">
+    <div className="my-thesis-workspace relative flex h-full min-h-0 w-full flex-col overflow-hidden text-slate-900">
+      <ViewTools>
+        <WorkspaceToolbar
+          view={view}
+          onChangeView={(nextView) => {
+            setView(nextView);
+            if (nextView !== 'doc') setShowSuggestionsSidebar(false);
+          }}
+          documentName={
+            currentVersion ? docName(currentVersion) : selectedThesis?.titulo
+          }
+          suggestionsCount={sugerenciasVisibles.length}
+          suggestionsSidebarOpen={showSuggestionsSidebar}
+          onToggleSuggestionsSidebar={() =>
+            setShowSuggestionsSidebar((v) => !v)
+          }
+          onOpenSuggestionsModal={() => setShowSuggestionsModal(true)}
+        />
+      </ViewTools>
+      <div className="flex min-h-0 w-full flex-1 flex-col">
         {renderWorkspaceContent()}
       </div>
 

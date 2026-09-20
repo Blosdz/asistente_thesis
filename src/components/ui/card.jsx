@@ -11,8 +11,17 @@ const cleanCardClassName = (className = '') =>
     .filter((item) => item && !blocksGlassEffect(item))
     .join(' ');
 
-export const Card = forwardRef(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn(' border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 shadow-[0_14px_40px_rgba(15,23,42,0.05) p-6', cleanCardClassName(className))} {...props} />
+export const Card = forwardRef(({ className, variant = 'default', ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      variant === 'glass'
+        ? 'glass-card'
+        : 'border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-slate-50 shadow-[0_14px_40px_rgba(15,23,42,0.05)] p-6',
+      variant === 'glass' ? cleanCardClassName(className) : className,
+    )}
+    {...props}
+  />
 ));
 
 Card.displayName = 'Card';

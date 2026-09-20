@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -7,7 +7,6 @@ import {
   BookOpenCheck,
   User as UserIcon,
   LogOut,
-  Settings,
   KeyRound,
   Copy,
   RefreshCw,
@@ -22,6 +21,8 @@ import { toast } from 'react-hot-toast';
 import AnimatedTopNav from '../components/navigation/AnimatedTopNav';
 import NotificationsBell from '../components/notifications/NotificationsBell';
 import UnreadNotificationsPopup from '../components/notifications/UnreadNotificationsPopup';
+import { avatarGradientFrom, initialsFrom } from '../lib/avatarGradient';
+import AcademicFrame, { AcademicBrand } from './AcademicFrame';
 
 function getCodigoPublicoTexto(codigoPublico) {
   return codigoPublico?.codigo_publico || codigoPublico?.r_codigo_publico || '';
@@ -185,23 +186,16 @@ const AdvisorLayout = () => {
   }
 
   return (
-    <div className="app-shell font-sans text-gray-900">
+    <div className="app-shell student-shell academic-shell font-sans text-gray-900">
       <UnreadNotificationsPopup />
       <div className="relative z-10 flex min-h-screen flex-col">
         <header className="app-topbar fixed top-0 z-50 w-full rounded-none">
-          <div className="flex h-20 w-full items-center justify-between px-8">
-            <div className="min-w-0">
-              <p className="truncate text-lg font-bold tracking-tight text-slate-900">
-                {user?.email || 'Advisor'}
-              </p>
-              <p className="text-sm font-medium text-slate-500">
-                Panel de asesor académico
-              </p>
-            </div>
+          <div className="academic-header-inner">
+            <AcademicBrand role="advisor" />
 
             <AnimatedTopNav
               ariaLabel="Navegación de asesor"
-              className="hidden rounded-full px-2 py-1 md:flex"
+              className="min-w-0 px-2 py-1"
               items={navItems}
               linkClassName="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f4f1eb]"
               navClassName="gap-2"
@@ -210,23 +204,27 @@ const AdvisorLayout = () => {
             <div className="relative flex items-center gap-4" ref={menuRef}>
               <NotificationsBell />
               <button
-                className="app-icon-button rounded-full p-2 text-slate-800"
-                aria-label="Settings"
-              >
-                <Settings size={18} />
-              </button>
-              <button
                 type="button"
                 onClick={() => setMenuOpen((v) => !v)}
-                className="app-icon-button flex h-10 w-10 items-center justify-center rounded-full text-slate-900 transition-shadow hover:shadow-md"
+                className={`flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr ${avatarGradientFrom(user?.user_metadata?.nombre || user?.email)} text-sm font-bold text-white shadow ring-2 ring-white transition-shadow hover:shadow-md`}
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
+                aria-label="Menú de profesor"
               >
-                <UserIcon size={18} />
+                {initialsFrom(user?.user_metadata?.nombre || user?.email)}
               </button>
 
               {menuOpen && (
                 <div className="app-menu absolute right-0 top-12 z-20 w-72 rounded-2xl p-3 text-sm">
+                  <div className="px-1 pb-2">
+                    <p className="truncate text-sm font-bold text-slate-900">
+                      {user?.email || 'Asesor'}
+                    </p>
+                    <p className="text-xs font-medium text-slate-500">
+                      Panel de asesor académico
+                    </p>
+                  </div>
+
                   <div className="rounded-2xl border border-white/70 bg-white/68 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.86)]">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -250,7 +248,7 @@ const AdvisorLayout = () => {
                         type="button"
                         onClick={handleCopyCodigo}
                         disabled={!codigoTexto}
-                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/70 bg-white/74 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-60"
+                        className="ios-secondary-button inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <Copy size={14} />
                         Copiar
@@ -259,7 +257,7 @@ const AdvisorLayout = () => {
                         type="button"
                         onClick={handleGenerateCodigo}
                         disabled={codigoLoading}
-                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                        className="ios-accent-button inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-70"
                       >
                         <RefreshCw size={14} className={codigoLoading ? 'animate-spin' : ''} />
                         {codigoTexto ? 'Regenerar' : 'Generar'}
@@ -296,9 +294,7 @@ const AdvisorLayout = () => {
 
         </header>
 
-        <main className="w-full flex-1 px-4 pt-24 sm:px-8">
-          <Outlet />
-        </main>
+        <AcademicFrame role="advisor" />
       </div>
     </div>
   );

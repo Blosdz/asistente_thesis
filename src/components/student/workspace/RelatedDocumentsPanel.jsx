@@ -90,7 +90,8 @@ export default function RelatedDocumentsPanel({
         type="button"
         onClick={() => setIsOpen((current) => !current)}
         disabled={documents.length === 0}
-        className="flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white px-2.5 text-left transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        aria-expanded={isOpen}
+        className="ios-glass-dropdown flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-xl px-2.5 text-left transition disabled:cursor-not-allowed disabled:opacity-60"
         title={currentDocumentName || 'Sin documentos de tesis'}
       >
         <span className="flex min-w-0 items-center gap-2">
@@ -118,7 +119,7 @@ export default function RelatedDocumentsPanel({
       </button>
 
       {isOpen ? (
-        <div className="absolute left-0 right-0 top-full z-30 mt-2 max-h-80 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-[0_24px_60px_-34px_rgba(15,23,42,0.45)]">
+        <div className="ios-glass-dropdown-panel absolute left-0 right-0 top-full z-30 mt-2 max-h-80 overflow-y-auto p-2">
           {documents.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
               No hay documentos vinculados todavía.

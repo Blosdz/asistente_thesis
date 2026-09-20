@@ -14,6 +14,7 @@ const widthMap = {
   md: 'max-w-xl',
   lg: 'max-w-3xl',
   xl: 'max-w-5xl',
+  access: 'max-w-[1080px]',
   full: 'max-w-[min(96vw,1320px)]',
 };
 
@@ -130,12 +131,16 @@ const Modal = ({
           className={[
             'ios-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain text-left [overflow-anchor:none]',
             showDefaultHeader && !noContentPadding ? 'px-6 py-5 sm:px-8' : '',
-            !showDefaultHeader && !noContentPadding ? 'px-6 pb-6 pt-14 sm:px-8' : '',
+            !showDefaultHeader && !noContentPadding
+              ? 'px-6 pb-6 pt-14 sm:px-8'
+              : '',
             contentClassName,
           ].join(' ')}
         >
           {description && (
-            <p className={`${descClass} max-w-xl leading-relaxed text-slate-600`}>
+            <p
+              className={`${descClass} max-w-xl leading-relaxed text-slate-600`}
+            >
               {description}
             </p>
           )}

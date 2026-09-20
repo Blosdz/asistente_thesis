@@ -10,33 +10,6 @@
   gap: 10px;
 }
 
-.waf-switcher {
-  align-self: flex-start;
-  display: inline-flex;
-  gap: 2px;
-  padding: 3px;
-  background: #eef1f6;
-  border-radius: 999px;
-}
-.waf-switcher button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: none;
-  background: transparent;
-  color: var(--waf-muted);
-  font-size: 13px;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-}
-.waf-switcher button.is-active {
-  background: #fff;
-  color: #0f172a;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
 .waf-body {
   display: grid;
   grid-template-columns: 264px minmax(0, 1fr) minmax(0, 380px);
@@ -51,6 +24,38 @@
 .waf-body.has-action {
   grid-template-columns: 264px minmax(0, 1fr);
 }
+
+/* Sidebar de sugerencias: columna fija adicional al final del grid */
+.waf-body.has-suggestions {
+  grid-template-columns: 264px minmax(0, 1fr) minmax(0, 380px) 384px;
+}
+.waf-body.has-suggestions.view-chat,
+.waf-body.has-suggestions.view-doc,
+.waf-body.has-suggestions.has-action {
+  grid-template-columns: 264px minmax(0, 1fr) 384px;
+}
+
+@media (max-width: 1400px) {
+  /* con el sidebar abierto en pantallas medianas, pasa a overlay para no romper el grid */
+  .waf-body.has-suggestions {
+    position: relative;
+    grid-template-columns: 264px minmax(0, 1fr) minmax(0, 380px);
+  }
+  .waf-body.has-suggestions.view-chat,
+  .waf-body.has-suggestions.view-doc,
+  .waf-body.has-suggestions.has-action {
+    grid-template-columns: 264px minmax(0, 1fr);
+  }
+  .waf-body.has-suggestions .waf-suggestions {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 360px;
+    z-index: 20;
+  }
+}
+
 @media (max-width: 1200px) {
   .waf-body,
   .waf-body.view-chat,
@@ -58,6 +63,10 @@
   .waf-body.has-action {
     grid-template-columns: 1fr;
     overflow-y: auto;
+  }
+  .waf-body.has-suggestions .waf-suggestions {
+    position: static;
+    width: auto;
   }
 }
 
@@ -67,9 +76,15 @@
   gap: 14px;
   min-height: 0;
   overflow-y: auto;
-  background: #fff;
-  border: 1px solid var(--waf-line);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 40px rgba(59, 130, 246, 0.1),
+    0 20px 48px rgba(148, 163, 184, 0.18);
+  backdrop-filter: blur(26px) saturate(200%);
+  -webkit-backdrop-filter: blur(26px) saturate(200%);
+  border-radius: 20px;
   padding: 14px;
 }
 
@@ -82,13 +97,18 @@
 }
 .waf-select {
   width: 100%;
-  border: 1px solid var(--waf-line);
-  background: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.55);
   border-radius: 9px;
   padding: 8px 10px;
   font-size: 13px;
   font-weight: 600;
   color: #0f172a;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    0 10px 24px rgba(148, 163, 184, 0.12);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
 }
 .waf-rail-btns {
   display: flex;
@@ -99,17 +119,19 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid var(--waf-line);
-  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 999px;
   padding: 5px 10px;
   font-size: 12px;
   font-weight: 600;
   color: #334155;
   cursor: pointer;
+  backdrop-filter: blur(12px) saturate(170%);
+  -webkit-backdrop-filter: blur(12px) saturate(170%);
 }
 .waf-rail-btn:hover {
-  background: #f1f5f9;
+  background: rgba(255, 255, 255, 0.72);
   color: var(--waf-accent);
 }
 .waf-rail-badge {
@@ -182,13 +204,19 @@
 }
 
 /* ---------- hoja Word ---------- */
+/* El marco (.waf-doc/.waf-doc-head) es "chrome" y va en glass; el contenido
+   (.waf-doc-scroll/.waf-sheet/.waf-doc-frame más abajo) simula papel y se
+   mantiene opaco para que un documento largo siga siendo legible. */
 .waf-doc {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: #fff;
-  border: 1px solid var(--waf-line);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  box-shadow: 0 0 40px rgba(59, 130, 246, 0.08);
+  backdrop-filter: blur(22px) saturate(200%);
+  -webkit-backdrop-filter: blur(22px) saturate(200%);
   overflow: hidden;
 }
 .waf-doc-head {
@@ -197,8 +225,14 @@
   justify-content: space-between;
   gap: 10px;
   padding: 10px 14px;
-  background: #f6f8fc;
-  border-bottom: 1px solid var(--waf-line);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.82) 0%,
+    rgba(239, 246, 255, 0.62) 100%
+  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
 }
 .waf-doc-head .waf-w {
   display: flex;
@@ -247,8 +281,10 @@
   font-size: 12px;
   font-weight: 600;
   color: #334155;
-  border: 1px solid var(--waf-line);
-  background: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
   border-radius: 999px;
   padding: 6px 12px;
   cursor: pointer;
@@ -256,7 +292,7 @@
 }
 .waf-doc-act:hover,
 .waf-doc-dl:hover {
-  background: #f1f5f9;
+  background: rgba(255, 255, 255, 0.85);
   color: var(--waf-accent);
 }
 .waf-doc-act.is-active {

@@ -18,14 +18,14 @@ import {
 } from '../../services/advisorService';
 
 const DetailField = ({ icon: Icon, label, value, multiline = false }) => (
-  <div className="app-dark-card rounded-xl px-3.5 py-2.5">
-    <label className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] opacity-60">
+  <div className="rounded-xl border border-[rgba(255,255,255,0.7)] bg-[rgba(255,255,255,0.55)] px-3.5 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] backdrop-blur-md">
+    <label className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
       <Icon className="h-3.5 w-3.5" />
       {label}
     </label>
     <p
       className={[
-        'break-words text-sm font-semibold leading-5 opacity-95',
+        'break-words text-sm font-semibold leading-5 text-slate-900',
         multiline ? 'min-h-[70px]' : 'min-h-[20px]',
       ].join(' ')}
     >
@@ -173,20 +173,19 @@ const AdvisorStudentDetail = () => {
               {estadoRelacion}
             </span>
             {relationId && (
-              <div className="app-dark-card rounded-xl p-2">
-                <Select
-                  className="w-full rounded-lg px-3 py-2 text-xs font-bold"
-                  value=""
-                  onChange={(e) => cambiarEstadoRelacion(e.target.value)}
-                  disabled={changingState}
-                >
-                  <SelectItem value="" disabled>
-                    Seleccionar
-                  </SelectItem>
-                  <SelectItem value="activo">Aceptar</SelectItem>
-                  <SelectItem value="cancelado">Negar</SelectItem>
-                </Select>
-              </div>
+              <Select
+                variant="glass"
+                className="w-full rounded-xl px-3 py-2 text-xs font-bold"
+                value=""
+                onChange={(e) => cambiarEstadoRelacion(e.target.value)}
+                disabled={changingState}
+              >
+                <SelectItem value="" disabled>
+                  Seleccionar
+                </SelectItem>
+                <SelectItem value="activo">Aceptar</SelectItem>
+                <SelectItem value="cancelado">Negar</SelectItem>
+              </Select>
             )}
           </div>
         </div>

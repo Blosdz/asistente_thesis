@@ -364,7 +364,7 @@ const Payments = () => {
         <main className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
             <section className="space-y-4 lg:col-span-4">
-              <Card className="p-5">
+              <Card variant="glass" className="!p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
@@ -420,7 +420,7 @@ const Payments = () => {
             </section>
 
             <section className="space-y-6 lg:col-span-8">
-              <Card className="p-0">
+              <Card variant="glass" className="!p-0">
                 <div className="flex items-center justify-between border-b border-slate-200/60 px-5 py-4">
                   <div>
                     <h2 className="text-base font-semibold tracking-tight">
@@ -565,7 +565,7 @@ const Payments = () => {
                 </div>
               </Card>
 
-              <Card className="p-0">
+              <Card variant="glass" className="!p-0">
                 <div className="flex items-center justify-between border-b border-slate-200/60 px-5 py-4">
                   <div>
                     <h2 className="text-base font-semibold tracking-tight">

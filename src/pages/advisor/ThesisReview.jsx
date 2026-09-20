@@ -17,6 +17,8 @@ import { Input } from '../../components/ui/input';
 import { Select, SelectItem } from '../../components/ui/select';
 import { toast } from 'react-hot-toast';
 import Modal from '../../components/ui/modal';
+import ViewTools from '../../components/navigation/ViewTools';
+import '../../components/student/workspace/WorkspaceToolbar.css';
 
 import {
   getTesisAsesor,
@@ -65,6 +67,7 @@ const normalizeSuggestionTone = (codigo = '', nombre = '') => {
 };
 
 export default function AdvisorThesisReview() {
+  const [reviewView, setReviewView] = useState('split');
   const [thesisList, setThesisList] = useState([]);
   const [selectedThesisId, setSelectedThesisId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -369,8 +372,19 @@ export default function AdvisorThesisReview() {
   }
 
   return (
-    <div className="w-full h-[calc(100vh-100px)] py-6 flex gap-4 animate-fade-in fade-in slide-in-from-bottom-4 duration-700 max-w-[1600px] mx-auto px-4 lg:px-6">
-      <aside className="hidden lg:flex flex-col w-[320px] bg-white/60 border border-slate-200/60 rounded-3xl p-5 shadow-sm h-full overflow-y-auto custom-scrollbar flex-shrink-0">
+    <div className={`advisor-review ${reviewView === 'doc' ? 'is-document' : reviewView === 'feedback' ? 'is-feedback' : ''}`}>
+      <ViewTools>
+        <div className="wtb" role="group" aria-label="Herramientas de revisión">
+          <div className="wtb-switcher ios-segmented">
+            {[['split', 'Vista dividida'], ['doc', 'Documento'], ['feedback', 'Sugerencias']].map(([id, label]) => (
+              <button key={id} type="button" aria-pressed={reviewView === id} className={`ios-segmented-btn ${reviewView === id ? 'is-active' : ''}`} onClick={() => setReviewView(id)}>{label}</button>
+            ))}
+          </div>
+          <div className="wtb-doc-indicator"><FileText size={14} /><span className="wtb-doc-name">{currentVersion?.nombre || currentVersion?.nombre_archivo || currentThesis?.titulo || 'Selecciona una tesis'}</span></div>
+          <div className="wtb-actions"><span className="wtb-badge">{pendingAdvisorValidations} por validar</span></div>
+        </div>
+      </ViewTools>
+      <aside className="advisor-review-rail flex-col h-full overflow-y-auto custom-scrollbar flex-shrink-0">
         <div className="mb-6">
           <h2 className="text-xl font-black text-slate-900 tracking-tight">
             Tesis Asignadas
@@ -435,7 +449,7 @@ export default function AdvisorThesisReview() {
         </div>
       </aside>
 
-      <section className="flex-1 bg-white/60 border border-slate-200/60 rounded-3xl h-full flex flex-col p-6 shadow-[0_12px_40px_rgba(0,88,188,0.06)] overflow-hidden">
+      <section className="advisor-review-paper flex-1 h-full flex flex-col overflow-hidden">
         {currentThesis ? (
           <>
             <div className="mb-6 flex flex-col md:flex-row md:items-start justify-between gap-4 flex-shrink-0">
@@ -588,7 +602,7 @@ export default function AdvisorThesisReview() {
       </section>
 
       {currentThesis && (
-        <aside className="hidden xl:flex w-[340px] bg-white/60 backdrop-blur-xl rounded-3xl p-6 flex-col shadow-sm border border-slate-200/60 h-full flex-shrink-0">
+        <aside className="advisor-review-feedback flex-col h-full flex-shrink-0">
           <div className="mb-6 flex items-start justify-between gap-3">
             <div>
               <h2 className="text-xl font-black text-slate-900 tracking-tight">

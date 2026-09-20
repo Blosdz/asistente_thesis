@@ -216,7 +216,7 @@ const AdditionalDocuments = () => {
         ) : (
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
             <aside className="flex flex-col gap-3 lg:col-span-4">
-              <Card className="p-4 sm:p-5">
+              <Card variant="glass" className="!p-4 sm:!p-5">
                 <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-blue-500">
                   Thesis Selection
                 </h3>
@@ -244,7 +244,7 @@ const AdditionalDocuments = () => {
                 )}
               </Card>
 
-              <Card className="p-4 sm:p-5">
+              <Card variant="glass" className="!p-4 sm:!p-5">
                 <h3 className="mb-3 text-[11px] font-bold uppercase tracking-[0.28em] text-blue-500">
                   Helper Document Categories
                 </h3>
@@ -324,7 +324,7 @@ const AdditionalDocuments = () => {
             </aside>
 
             <article className="flex flex-col gap-4 lg:col-span-8">
-              <Card className="p-4 sm:p-6 lg:p-6">
+              <Card variant="glass" className="!p-4 sm:!p-6 lg:!p-6">
                 <div className="group relative mb-5">
                   <div className=" bg-gradient-to-br from-blue-50 via-white to-slate-50   relative flex flex-col items-center justify-center rounded-[24px] p-6 text-center sm:p-8 border-slate-200">
                     <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-white/10 text-black transition-transform duration-500 group-hover:scale-105">

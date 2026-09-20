@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestionar accesos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Aptos', 'Avenir Next', 'Segoe UI Variable', 'Segoe UI', 'sans-serif'],
+            display: ['Aptos Display', 'Avenir Next', 'Segoe UI Variable Display', 'Segoe UI', 'sans-serif']
+          },
+          colors: {
+            primary: '#007AFF',
+            'ios-blue': '#007AFF',
+            'ios-bg': '#F2F2F7'
+          }
+        }
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer base {
+      * { box-sizing: border-box; }
+      html { font-family: Aptos, "Avenir Next", "Segoe UI Variable", "Segoe UI", sans-serif; }
+    }
+    @layer utilities {
+      .modal-enter { animation: modal-enter 200ms cubic-bezier(.4, 0, .2, 1) both; }
+      .overlay-enter { animation: overlay-enter 180ms cubic-bezier(.4, 0, .2, 1) both; }
+      .ios-scroll { -webkit-overflow-scrolling: touch; scrollbar-gutter: stable; }
+      .ios-scroll::-webkit-scrollbar { width: 8px; }
+      .ios-scroll::-webkit-scrollbar-thumb { background: rgb(203 213 225); border: 2px solid white; border-radius: 9999px; }
+      .spinner { animation: spin 1s linear infinite; }
+      @keyframes modal-enter { from { opacity: 0; transform: scale(.95); } to { opacity: 1; transform: scale(1); } }
+      @keyframes overlay-enter { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @media (prefers-reduced-motion: reduce) {
+        .modal-enter, .overlay-enter, .spinner { animation-duration: 1ms; }
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="app-root" class="relative min-h-screen overflow-hidden bg-slate-50 font-sans text-slate-900">
+    <div class="absolute inset-0 bg-slate-50"></div>
+
+    <div id="modal-overlay" class="fixed inset-0 z-[9999] flex h-dvh w-full items-center justify-center overflow-hidden p-4 sm:p-6" role="presentation">
+      <div id="modal-backdrop" class="overlay-enter absolute inset-0 bg-slate-900/25 backdrop-blur-[2px]" aria-hidden="true"></div>
+
+      <section id="access-dialog" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-describedby="modal-subtitle" class="modal-enter relative z-10 flex max-h-[calc(100dvh-2rem)] w-full max-w-[1080px] flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_28px_90px_-16px_rgba(15,23,42,0.28)] ring-1 ring-slate-900/5 sm:max-h-[calc(100dvh-3rem)]">
+        <header class="shrink-0 border-b border-slate-100 bg-white px-5 py-5 pr-16 text-left sm:px-7 sm:py-6 sm:pr-20">
+          <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+            <div class="min-w-0">
+              <h2 id="modal-title" class="font-display text-[1.375rem] font-semibold tracking-tight text-slate-950 sm:text-2xl">Gestionar accesos</h2>
+              <p id="modal-subtitle" class="mt-1.5 max-w-3xl truncate text-sm text-slate-500">
+                <span class="font-medium text-slate-700">Tesis:</span>
+                Sistema inteligente para la detección temprana de enfermedades cardiovasculares
+              </p>
+            </div>
+            <div class="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700">
+              <span class="h-2 w-2 rounded-full bg-blue-600" aria-hidden="true"></span>
+              <span>2 asesores asignados</span>
+            </div>
+          </div>
+        </header>
+
+        <button id="modal-close-button" type="button" aria-label="Cerrar gestión de accesos" class="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition duration-200 hover:bg-slate-200 hover:text-slate-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 sm:right-6 sm:top-5">
+          <iconify-icon icon="lucide:x" class="text-lg"></iconify-icon>
+        </button>
+
+        <main data-modal-scroll="true" class="ios-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-50 px-5 py-5 text-left [overflow-anchor:none] sm:px-7 sm:py-6">
+          <div class="grid grid-cols-1 gap-5 lg:grid-cols-[0.88fr_1.12fr] lg:gap-6">
+            <section aria-labelledby="current-access-title" class="min-w-0">
+              <div class="mb-3 flex items-center justify-between gap-3 px-1">
+                <div>
+                  <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Accesos actuales</p>
+                  <h3 id="current-access-title" class="mt-1 text-base font-semibold tracking-tight text-slate-950">Asesores con permiso</h3>
+                </div>
+                <span class="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700" aria-label="2 asesores asignados">2 asignados</span>
+              </div>
+
+              <div class="space-y-3">
+                <article class="rounded-[18px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.20)]">
+                  <div class="flex items-start gap-3">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-semibold text-white" aria-hidden="true">AM</div>
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-sm font-semibold text-slate-950">Dra. Ana Martínez</p>
+                      <p class="mt-1 text-xs text-slate-500">Asesora principal</p>
+                    </div>
+                    <span class="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Con acceso</span>
+                  </div>
+                  <div class="mt-4 flex items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
+                    <iconify-icon icon="lucide:shield-check" class="shrink-0 text-base text-slate-400"></iconify-icon>
+                    <span>Permiso de revisión de la tesis</span>
+                  </div>
+                </article>
+
+                <article class="rounded-[18px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.20)]">
+                  <div class="flex items-start gap-3">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-700 text-sm font-semibold text-white" aria-hidden="true">CR</div>
+                    <div class="min-w-0 flex-1">
+                      <p class="truncate text-sm font-semibold text-slate-950">Dr. Carlos Ramírez</p>
+                      <p class="mt-1 text-xs text-slate-500">Coasesor</p>
+                    </div>
+                    <span class="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Con acceso</span>
+                  </div>
+                  <div class="mt-4 flex items-center gap-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
+                    <iconify-icon icon="lucide:shield-check" class="shrink-0 text-base text-slate-400"></iconify-icon>
+                    <span>Permiso de revisión de la tesis</span>
+                  </div>
+                </article>
+              </div>
+            </section>
+
+            <section aria-labelledby="grant-access-title" class="min-w-0">
+              <div class="mb-3 px-1">
+                <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Otorgar nuevos permisos</p>
+                <h3 id="grant-access-title" class="mt-1 text-base font-semibold tracking-tight text-slate-950">Selecciona un asesor disponible</h3>
+              </div>
+
+              <div class="rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_-16px_rgba(15,23,42,0.20)] sm:p-5">
+                <div class="relative">
+                  <label for="advisor-search" class="sr-only">Buscar asesor por nombre, carrera o correo</label>
+                  <iconify-icon icon="lucide:search" class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400"></iconify-icon>
+                  <input id="advisor-search" type="search" placeholder="Buscar por nombre, carrera o correo" autocomplete="off" aria-controls="advisor-list" class="h-12 w-full rounded-xl border border-slate-300 bg-slate-50 pl-11 pr-14 text-sm text-slate-950 outline-none transition duration-200 placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10">
+                  <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-semibold text-slate-400" aria-hidden="true">ESC</span>
+                </div>
+
+                <p class="mt-2 px-1 text-xs text-slate-500">Busca entre los asesores vinculados disponibles para esta tesis.</p>
+
+                <div id="advisor-list" class="mt-4 space-y-2.5" aria-live="polite">
+                  <article data-advisor data-search="luis fernando torres ingeniería de sistemas luis.torres universidad" class="flex flex-col gap-3 rounded-[16px] border border-slate-200 bg-slate-50 p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex min-w-0 items-center gap-3">
+                      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700" aria-hidden="true">LT</div>
+                      <div class="min-w-0">
+                        <p class="truncate text-sm font-semibold text-slate-950">Dr. Luis Fernando Torres</p>
+                        <p class="mt-0.5 truncate text-xs text-slate-500">Ingeniería de Sistemas</p>
+                      </div>
+                    </div>
+                    <button type="button" data-assign aria-label="Dar acceso al Dr. Luis Fernando Torres" class="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm shadow-blue-500/25 transition duration-200 hover:bg-blue-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60">
+                      <iconify-icon icon="lucide:shield-check" class="text-base"></iconify-icon>
+                      <span>Dar acceso</span>
+                    </button>
+                  </article>
+
+                  <article data-advisor data-search="mariana gómez ciencias de la computación mariana gomez" class="flex flex-col gap-3 rounded-[16px] border border-slate-200 bg-slate-50 p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex min-w-0 items-center gap-3">
+                      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700" aria-hidden="true">MG</div>
+                      <div class="min-w-0">
+                        <p class="truncate text-sm font-semibold text-slate-950">Dra. Mariana Gómez</p>
+                        <p class="mt-0.5 truncate text-xs text-slate-500">Ciencias de la Computación</p>
+                      </div>
+                    </div>
+                    <button type="button" data-assign aria-label="Dar acceso a la Dra. Mariana Gómez" class="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm shadow-blue-500/25 transition duration-200 hover:bg-blue-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60">
+                      <iconify-icon icon="lucide:shield-check" class="text-base"></iconify-icon>
+                      <span>Dar acceso</span>
+                    </button>
+                  </article>
+
+                  <article data-advisor data-search="josé alejandro pérez ingeniería electrónica jose perez" class="flex flex-col gap-3 rounded-[16px] border border-slate-200 bg-slate-50 p-3.5 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex min-w-0 items-center gap-3">
+                      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700" aria-hidden="true">JP</div>
+                      <div class="min-w-0">
+                        <p class="truncate text-sm font-semibold text-slate-950">Dr. José Alejandro Pérez</p>
+                        <p class="mt-0.5 truncate text-xs text-slate-500">Ingeniería Electrónica</p>
+                      </div>
+                    </div>
+                    <button type="button" data-assign aria-label="Dar acceso al Dr. José Alejandro Pérez" class="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm shadow-blue-500/25 transition duration-200 hover:bg-blue-700 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60">
+                      <iconify-icon icon="lucide:shield-check" class="text-base"></iconify-icon>
+                      <span>Dar acceso</span>
+                    </button>
+                  </article>
+                </div>
+
+                <div id="search-empty" class="mt-4 hidden rounded-[16px] border border-dashed border-slate-200 bg-slate-50 px-4 py-7 text-center" role="status">
+                  <div class="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-400 ring-1 ring-slate-200">
+                    <iconify-icon icon="lucide:user-search" class="text-lg"></iconify-icon>
+                  </div>
+                  <p class="mt-3 text-sm font-semibold text-slate-700">No encontramos asesores</p>
+                  <p class="mt-1 text-xs text-slate-500">Prueba con otro nombre, carrera o correo.</p>
+                </div>
+
+                <p id="assignment-status" class="sr-only" role="status" aria-live="assertive"></p>
+              </div>
+            </section>
+          </div>
+        </main>
+
+        <footer class="shrink-0 border-t border-slate-100 bg-white px-5 py-3.5 sm:px-7">
+          <div class="flex items-center justify-end">
+            <button id="modal-secondary-close" type="button" class="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition duration-200 hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2">Cerrar</button>
+          </div>
+        </footer>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const overlay = document.getElementById('modal-overlay');
+    const backdrop = document.getElementById('modal-backdrop');
+    const dialog = document.getElementById('access-dialog');
+    const closeButton = document.getElementById('modal-close-button');
+    const secondaryClose = document.getElementById('modal-secondary-close');
+    const searchInput = document.getElementById('advisor-search');
+    const advisorRows = [...document.querySelectorAll('[data-advisor]')];
+    const emptyState = document.getElementById('search-empty');
+    const assignmentStatus = document.getElementById('assignment-status');
+    const assignButtons = [...document.querySelectorAll('[data-assign]')];
+
+    function closeModal() {
+      overlay.classList.add('hidden');
+    }
+
+    function getFocusableElements() {
+      return [...dialog.querySelectorAll('button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+        .filter((element) => !element.classList.contains('hidden'));
+    }
+
+    closeButton.addEventListener('click', closeModal);
+    secondaryClose.addEventListener('click', closeModal);
+    backdrop.addEventListener('click', closeModal);
+
+    document.addEventListener('keydown', (event) => {
+      if (overlay.classList.contains('hidden')) return;
+
+      if (event.key === 'Escape') {
+        closeModal();
+        return;
+      }
+
+      if (event.key === 'Tab') {
+        const focusable = getFocusableElements();
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+    });
+
+    searchInput.addEventListener('input', () => {
+      const term = searchInput.value.trim().toLocaleLowerCase('es');
+      let visible = 0;
+
+      advisorRows.forEach((row) => {
+        const matches = row.dataset.search.toLocaleLowerCase('es').includes(term);
+        row.classList.toggle('hidden', !matches);
+        if (matches) visible += 1;
+      });
+
+      emptyState.classList.toggle('hidden', visible !== 0);
+    });
+
+    assignButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const advisorName = button.getAttribute('aria-label').replace(/^Dar acceso (al|a la) /, '');
+        assignmentStatus.textContent = `Otorgando acceso a ${advisorName}`;
+
+        assignButtons.forEach((item) => {
+          item.disabled = true;
+        });
+
+        button.innerHTML = '<iconify-icon icon="lucide:loader-2" class="spinner text-base"></iconify-icon><span>Otorgando...</span>';
+
+        window.setTimeout(() => {
+          assignButtons.forEach((item) => {
+            item.disabled = false;
+            item.innerHTML = '<iconify-icon icon="lucide:shield-check" class="text-base"></iconify-icon><span>Dar acceso</span>';
+          });
+          assignmentStatus.textContent = `Acceso procesado para ${advisorName}`;
+        }, 1800);
+      });
+    });
+
+    window.setTimeout(() => closeButton.focus(), 0);
+  </script>
+</body>
+</html>
