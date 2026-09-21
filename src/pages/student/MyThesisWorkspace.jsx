@@ -561,7 +561,9 @@ export default function MyThesisWorkspace() {
           file,
         });
         const extraction = uploadedDocument?.reference_extraction;
-        if (extraction?.ok && Number(extraction.created_count || 0) > 0) {
+        if (extraction?.queued) {
+          toast.success('Avance subido. Referencias en procesamiento.');
+        } else if (extraction?.ok && Number(extraction.created_count || 0) > 0) {
           toast.success(
             `Avance subido: ${extraction.created_count} referencia(s) importada(s)`,
           );
@@ -745,6 +747,10 @@ export default function MyThesisWorkspace() {
       case 'references':
         return (
           <ThesisReferencesPanel
+            key={`${selectedThesisId}:${currentVersion?.id || "library"}`}
+            document={currentVersion}
+            onUploadEditableProgress={handleUploadEditableProgress}
+            onUpdated={handleGeneratedDocx}
             thesisId={selectedThesisId}
             thesis={selectedThesis}
             activeFormat={activeFormat}

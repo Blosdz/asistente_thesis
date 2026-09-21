@@ -755,3 +755,9 @@ Agregué `AT.current_auth_usuario_id()` y una función local `auth.uid()` de com
 - `npx eslint "{src,apps,libs,test}/**/*.ts"` pasó.
 - `npx jest --watchman=false` pasó.
 - `npm run test` falló inicialmente por Watchman/socket del sandbox, no por tests.
+
+## Bibliografía integrada
+
+Contrato implementado en `thesis-backend/docs/bibliography-api.md`. Base autenticada `/tesis/:tesisId/bibliografia`.
+GET workspace?document_id=UUID; POST referencias; PATCH/DELETE referencias/:id; POST preview y resolver-doi; POST importaciones (multipart file); GET importaciones/:id y /archivo; POST documentos/:id/extraer y /sincronizar; PUT estilo; POST exportaciones; GET operaciones/:id y /archivo; GET plantilla.
+Escrituras `{reference, expected_version?, document_id?, sync_document, expected_revision?}`. Revisiones SHA-256; tareas 202 `{operation_id,status,stage}` consultables hasta succeeded/partial/failed. Referencias incluyen autores completos, formatted, citation_count y review_status. Las normas y previews vienen de Python. Documento no editable permite biblioteca y exportación.

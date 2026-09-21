@@ -1,3 +1,5 @@
+import ReferenceFormModal from './ReferenceFormModal';
+import { bibliographyApi } from '../../../api/bibliography.api';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertCircle,
@@ -285,6 +287,15 @@ export default function ThesisManualEditorPanel({
 }) {
   const [sections, setSections] = useState([]);
   const [references, setReferences] = useState([]);
+  const [referenceFormOpen, setReferenceFormOpen] = useState(false);
+  const [referenceSaving, setReferenceSaving] = useState(false);
+  const [referenceDirty, setReferenceDirty] = useState(false);
+  const referencePreview = useCallback(reference => bibliographyApi.preview(thesisId, { reference, style: (activeFormat?.uname || 'APA7').toUpperCase() }), [thesisId, activeFormat?.uname]);
+  const closeReferenceForm = () => {
+    if (referenceDirty && !window.confirm('¿Descartar los cambios de la referencia?')) return;
+    setReferenceFormOpen(false); setReferenceDirty(false);
+    setTimeout(() => { textareaRef.current?.focus(); textareaRef.current?.setSelectionRange(citationCursor.start, citationCursor.end); }, 0);
+  };
   const [rawData, setRawData] = useState('');
   const [previewBlocks, setPreviewBlocks] = useState([]);
   const [activeSectionId, setActiveSectionId] = useState('');
@@ -399,7 +410,7 @@ export default function ThesisManualEditorPanel({
       const nextRawData = snapshot.raw_data || '';
 
       setSections(nextSections);
-      setReferences(nextReferences);
+      setReferences((await bibliographyApi.workspace(thesisId)).references);
       setRawData(nextRawData);
       setPreviewBlocks(nextBlocks);
 
@@ -536,7 +547,7 @@ export default function ThesisManualEditorPanel({
       const nextSections = Array.isArray(snapshot?.sections) ? snapshot.sections : [];
       const nextReferences = Array.isArray(snapshot?.references) ? snapshot.references : [];
       setSections(nextSections);
-      setReferences(nextReferences);
+      setReferences((await bibliographyApi.workspace(thesisId)).references);
       setRawData(snapshot?.raw_data || '');
       const firstSection = nextSections[0] || null;
       setActiveSectionId(getSectionId(firstSection));
@@ -798,6 +809,27 @@ export default function ThesisManualEditorPanel({
     <div
       className={`flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 text-slate-900 ${className}`}
     >
+      <ReferenceFormModal
+        open={referenceFormOpen}
+        onDirtyChange={setReferenceDirty}
+        onCancel={closeReferenceForm}
+        onPreview={referencePreview}
+        onResolveDoi={doi => bibliographyApi.doi(thesisId, doi)}
+        saving={referenceSaving}
+        onSave={async reference => {
+          setReferenceSaving(true);
+          try {
+            await bibliographyApi.save(thesisId, undefined, { reference, sync_document: false });
+            const data = await bibliographyApi.workspace(thesisId);
+            setReferences(data.references);
+            setReferenceFormOpen(false);
+            setReferenceDirty(false);
+            setTimeout(() => { textareaRef.current?.focus(); textareaRef.current?.setSelectionRange(citationCursor.start, citationCursor.end); }, 0);
+          } finally {
+            setReferenceSaving(false);
+          }
+        }}
+      />
       {!documentId ? (
         <div className="flex min-h-0 flex-1 items-center justify-center p-6">
           <div className="max-w-xl rounded-2xl border border-dashed border-[#0066ff]/30 bg-white p-8 text-center shadow-sm ">
@@ -1220,6 +1252,7 @@ export default function ThesisManualEditorPanel({
                     })}
                   </div>
                   <div className="h-5 w-px bg-[#c2c6d8]/70" />
+                  <button type="button" className="h-8 rounded px-2 text-xs font-semibold text-blue-700" onClick={() => { const el = textareaRef.current; setCitationCursor({ start: el?.selectionStart ?? draft.length, end: el?.selectionEnd ?? draft.length }); setReferenceFormOpen(true); }}>Agregar referencia</button>
                   <div className="relative">
                     <button
                       type="button"
