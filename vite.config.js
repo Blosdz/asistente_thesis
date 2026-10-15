@@ -21,7 +21,6 @@ export default defineConfig({
     host: 'localhost',
     port: 5173,
     strictPort: true,
-    allowedHosts: ['.trycloudflare.com'],
     hmr: {
       host: 'localhost',
       port: 5173,
@@ -35,6 +34,7 @@ export default defineConfig({
     host: 'localhost',
     port: 4173,
     strictPort: true,
+    allowedHosts: ['micelio-server.tail2b4243.ts.net'],
   },
   optimizeDeps: {
     entries: ['index.html', 'src/main.jsx'],
